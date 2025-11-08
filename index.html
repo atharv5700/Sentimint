@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-g" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sentimint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'mint': {
+                'DEFAULT': '#1FC7A6',
+                'light': '#E9FFF7',
+                'dark': '#043228',
+              },
+              'coral': {
+                'DEFAULT': '#FF7043',
+                'light': '#FFF0EB',
+              },
+              // Material Design 3 Light Theme Colors
+              'primary': 'rgb(var(--color-primary) / <alpha-value>)',
+              'on-primary': 'rgb(var(--color-on-primary) / <alpha-value>)',
+              'primary-container': 'rgb(var(--color-primary-container) / <alpha-value>)',
+              'on-primary-container': 'rgb(var(--color-on-primary-container) / <alpha-value>)',
+              'secondary': 'rgb(var(--color-secondary) / <alpha-value>)',
+              'on-secondary': 'rgb(var(--color-on-secondary) / <alpha-value>)',
+              'secondary-container': 'rgb(var(--color-secondary-container) / <alpha-value>)',
+              'on-secondary-container': 'rgb(var(--color-on-secondary-container) / <alpha-value>)',
+              'tertiary': 'rgb(var(--color-tertiary) / <alpha-value>)',
+              'on-tertiary': 'rgb(var(--color-on-tertiary) / <alpha-value>)',
+              'tertiary-container': 'rgb(var(--color-tertiary-container) / <alpha-value>)',
+              'on-tertiary-container': 'rgb(var(--color-on-tertiary-container) / <alpha-value>)',
+              'error': 'rgb(var(--color-error) / <alpha-value>)',
+              'on-error': 'rgb(var(--color-on-error) / <alpha-value>)',
+              'error-container': 'rgb(var(--color-error-container) / <alpha-value>)',
+              'on-error-container': 'rgb(var(--color-on-error-container) / <alpha-value>)',
+              'background': 'rgb(var(--color-background) / <alpha-value>)',
+              'on-background': 'rgb(var(--color-on-background) / <alpha-value>)',
+              'surface': 'rgb(var(--color-surface) / <alpha-value>)',
+              'on-surface': 'rgb(var(--color-on-surface) / <alpha-value>)',
+              'surface-variant': 'rgb(var(--color-surface-variant) / <alpha-value>)',
+              'on-surface-variant': 'rgb(var(--color-on-surface-variant) / <alpha-value>)',
+              'outline': 'rgb(var(--color-outline) / <alpha-value>)',
+              'outline-variant': 'rgb(var(--color-outline-variant) / <alpha-value>)',
+              'inverse-surface': 'rgb(var(--color-inverse-surface) / <alpha-value>)',
+              'inverse-on-surface': 'rgb(var(--color-inverse-on-surface) / <alpha-value>)',
+            },
+            fontFamily: {
+              sans: ['Roboto', 'sans-serif'],
+            },
+            fontSize: {
+              'display-l': ['2.25rem', { lineHeight: '2.75rem', letterSpacing: '-0.015625em' }], // 36sp
+              'headline-m': ['1.75rem', { lineHeight: '2.25rem', letterSpacing: '0em' }],      // 28sp
+              'title-l': ['1.5rem', { lineHeight: '2rem', letterSpacing: '0em' }], // 24sp
+              'title-m': ['1.125rem', { lineHeight: '1.75rem', letterSpacing: '0.009375em' }], // 18sp
+              'body-m': ['0.875rem', { lineHeight: '1.25rem', letterSpacing: '0.01785714em' }], // 14sp
+              'label-s': ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.04166667em' }],    // 12sp
+            },
+            animation: {
+                slideUp: 'slideUp 0.22s cubic-bezier(0.2, 0, 0, 1) forwards',
+            },
+            keyframes: {
+                slideUp: {
+                    '0%': { transform: 'translateY(100%)' },
+                    '100%': { transform: 'translateY(0)' },
+                },
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      /* Remove number input spinners */
+      input[type=number]::-webkit-outer-spin-button,
+      input[type=number]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      input[type=number] {
+        -moz-appearance: textfield;
+      }
+      /* Hide scrollbars globally */
+      *::-webkit-scrollbar { display: none; }
+      * { -ms-overflow-style: none; scrollbar-width: none; }
+
+      :root {
+        --color-primary: 0 107 88;
+        --color-on-primary: 255 255 255;
+        --color-primary-container: 101 247 214;
+        --color-on-primary-container: 0 32 26;
+        --color-secondary: 255 112 67;
+        --color-on-secondary: 255 255 255;
+        --color-secondary-container: 255 219 207;
+        --color-on-secondary-container: 50 16 3;
+        --color-tertiary: 68 99 125;
+        --color-on-tertiary: 255 255 255;
+        --color-tertiary-container: 200 232 255;
+        --color-on-tertiary-container: 0 30 49;
+        --color-error: 186 26 26;
+        --color-on-error: 255 255 255;
+        --color-error-container: 255 218 214;
+        --color-on-error-container: 65 0 2;
+        --color-background: 253 251 255;
+        --color-on-background: 27 27 31;
+        --color-surface: 253 251 255;
+        --color-on-surface: 27 27 31;
+        --color-surface-variant: 222 227 225;
+        --color-on-surface-variant: 66 72 70;
+        --color-outline: 114 120 118;
+        --color-outline-variant: 194 199 197;
+        --color-inverse-surface: 46 48 51;
+        --color-inverse-on-surface: 241 240 244;
+      }
+      .dark {
+        --color-primary: 31 200 167;
+        --color-on-primary: 0 56 46;
+        --color-primary-container: 0 81 67;
+        --color-on-primary-container: 101 247 214;
+        --color-secondary: 255 180 158;
+        --color-on-secondary: 78 39 23;
+        --color-secondary-container: 104 59 42;
+        --color-on-secondary-container: 255 219 207;
+        --color-tertiary: 167 199 228;
+        --color-on-tertiary: 39 70 95;
+        --color-tertiary-container: 53 84 110;
+        --color-on-tertiary-container: 200 232 255;
+        --color-error: 255 180 171;
+        --color-on-error: 96 0 5;
+        --color-error-container: 140 0 10;
+        --color-on-error-container: 255 218 214;
+        --color-background: 18 18 18;
+        --color-on-background: 228 226 230;
+        --color-surface: 18 18 18;
+        --color-on-surface: 228 226 230;
+        --color-surface-variant: 66 72 70;
+        --color-on-surface-variant: 194 199 197;
+        --color-outline: 140 146 144;
+        --color-outline-variant: 66 72 70;
+        --color-inverse-surface: 228 226 230;
+        --color-inverse-on-surface: 46 48 51;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.3.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-background text-on-background antialiased">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
