@@ -1,18 +1,17 @@
-import type { Transaction, Goal, MintorAiMessage, MintorAction } from '../types';
+import type { Transaction, Goal, MintorAiMessage, MintorAction, Budget } from '../types';
 import { dbService } from './db';
 
-// The 'assert' syntax is not supported. We will fetch the JSON file instead.
 let kbData: any = null;
 const getKbData = async () => {
     if (kbData) return kbData;
     try {
-        const response = await fetch('../assets/kb/mintu_kb.json');
+        // Use a root-relative path for robustness
+        const response = await fetch('/assets/kb/mintu_kb.json');
         if (!response.ok) throw new Error('Failed to fetch knowledge base');
         kbData = await response.json();
         return kbData;
     } catch (e) {
         console.error("Could not load Mintor AI knowledge base.", e);
-        // Provide a fallback object to prevent crashes.
         return {
           financeGeneral: {},
           howToApp: {},
@@ -23,8 +22,85 @@ const getKbData = async () => {
     }
 };
 
+const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
 
-const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
+const getWeekNumber = (d: Date): [number, number] => {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    return [d.getUTCFullYear(), weekNo];
+};
+
+const generateWeeklyDigest = (): { summary: string | null; weekKey: string } => {
+    const transactions = dbService.getTransactions();
+    const budgets = dbService.getBudgets();
+    const now = new Date();
+    const [year, week] = getWeekNumber(now);
+    const weekKey = `sentimint_digest_${year}_${week}`;
+
+    if (transactions.length < 3) {
+        return { summary: null, weekKey };
+    }
+
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)); // Monday as start of week
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+    const startOfLastWeek = new Date(startOfWeek);
+    startOfLastWeek.setDate(startOfWeek.getDate() - 7);
+    
+    const endOfLastWeek = new Date(startOfWeek);
+    
+    const thisWeekTxs = transactions.filter(tx => tx.ts >= startOfWeek.getTime() && tx.ts < endOfWeek.getTime());
+    const lastWeekTxs = transactions.filter(tx => tx.ts >= startOfLastWeek.getTime() && tx.ts < endOfLastWeek.getTime());
+
+    if (thisWeekTxs.length === 0) {
+        return { summary: "You haven't logged any transactions this week. Let's get tracking!", weekKey };
+    }
+
+    const thisWeekTotal = thisWeekTxs.reduce((sum, tx) => sum + tx.amount, 0);
+    const lastWeekTotal = lastWeekTxs.reduce((sum, tx) => sum + tx.amount, 0);
+
+    let summary = `This week you've spent **${formatCurrency(thisWeekTotal)}**.`;
+
+    if (lastWeekTotal > 0) {
+        const diff = ((thisWeekTotal - lastWeekTotal) / lastWeekTotal) * 100;
+        if (Math.abs(diff) >= 1) {
+            summary += ` That's **${Math.abs(diff).toFixed(0)}% ${diff > 0 ? 'more' : 'less'}** than last week.`;
+        }
+    }
+
+    const happiestTx = [...thisWeekTxs].sort((a, b) => b.mood - a.mood)[0];
+    if (happiestTx && happiestTx.mood >= 4) {
+        summary += `\n\nYour happiest purchase seems to be at **${happiestTx.merchant || happiestTx.category}**.`;
+    }
+    
+    if (budgets.length > 0) {
+        const categoryTotalsThisWeek = thisWeekTxs.reduce((acc, tx) => {
+            acc[tx.category] = (acc[tx.category] || 0) + tx.amount;
+            return acc;
+        }, {} as Record<string, number>);
+        const topCategoryThisWeek = Object.entries(categoryTotalsThisWeek).sort((a,b)=>b[1]-a[1])[0]?.[0];
+        const relevantBudget = budgets.find(b => b.category === topCategoryThisWeek);
+
+        if (relevantBudget) {
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const monthlyTxs = transactions.filter(tx => tx.ts >= startOfMonth.getTime() && tx.category === relevantBudget.category);
+            const spent = monthlyTxs.reduce((sum, tx) => sum + tx.amount, 0);
+            const progress = (spent / relevantBudget.amount) * 100;
+            
+            if (progress > 75) {
+                summary += `\n\n**Heads up!** You've used **${progress.toFixed(0)}%** of your monthly **${relevantBudget.category}** budget.`;
+            }
+        }
+    }
+    
+    return { summary: summary.trim(), weekKey };
+};
 
 interface MintorData {
     transactions: Transaction[];
@@ -126,7 +202,7 @@ const getKBAnswer = (topic: string, kb: any, keyOverride?: string): string => {
     }
     
     if (lowerTopic.includes('what can you do') || lowerTopic.includes('help')) {
-        return "I can do a few things, all offline:\n- **Analyse your spending** for a day, week, month or year.\n- Show you your **biggest category**.\n- Give you **saving tips** based on your habits.\n- Explain financial topics like **SIP, PPF, or credit scores**.\n- Calculate **loan EMIs** or **SIP returns**.\n- Help you find features like **how to edit a transaction**.";
+        return "I can do a few things, all offline:\n- Give you a **Weekly Digest** of your spending.\n- **Analyse your spending** for a day, week, month or year.\n- Show you your **biggest category**.\n- Give you **saving tips** based on your habits.\n- Explain financial topics like **SIP, PPF, or credit scores**.\n- Calculate **loan EMIs** or **SIP returns**.\n- Help you find features like **how to edit a transaction**.";
     }
 
     return "I'm not sure about that. Try asking 'help' to see what I can do.";
@@ -152,6 +228,7 @@ const getSmallTalkResponse = (query: string, kb: any): {text: string, actions: M
 }
 
 export const mintorAiService = {
+    generateWeeklyDigest,
     getResponse: async (query: string): Promise<Omit<MintorAiMessage, 'id'>> => {
 
         const kb = await getKbData();

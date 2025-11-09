@@ -4,6 +4,8 @@ import { useAppContext } from '../../App';
 import { MOOD_MAP } from '../../constants';
 import TransactionList from '../TransactionList';
 import ProgressBar from '../ProgressBar';
+import WeeklyDigest from '../WeeklyDigest';
+import { mintorAiService } from '../../services/mintorAi';
 
 interface HomeScreenProps {
     onEditTransaction: (tx: Transaction) => void;
@@ -63,6 +65,12 @@ const PeriodSelector: React.FC<{ selected: Period, onSelect: (value: Period) => 
 export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenProps) {
     const { transactions, formatCurrency, setIsBulkMode, budgets } = useAppContext();
     const [period, setPeriod] = useState<Period>('M');
+    const [digest, setDigest] = useState<{ summary: string | null; weekKey: string } | null>(null);
+
+    useEffect(() => {
+        const digestData = mintorAiService.generateWeeklyDigest();
+        setDigest(digestData);
+    }, [transactions]);
 
     const filteredTransactions = useMemo(() => {
         const now = new Date();
@@ -120,7 +128,7 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
 
 
     return (
-        <div className="relative h-full">
+        <div className="relative h-full pb-6">
             <div className="px-4 pt-4">
                  <div className="bg-surface-variant text-on-surface-variant p-4 rounded-3xl space-y-4 animate-screenFadeIn" style={{ animationDelay: '50ms' }}>
                     <div className="bg-surface p-1 rounded-full">
@@ -140,8 +148,14 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                 </div>
             </div>
             
-            {budgetStatus.length > 0 && (
+            {digest && (
                 <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '100ms' }}>
+                    <WeeklyDigest digest={digest} />
+                </div>
+            )}
+
+            {budgetStatus.length > 0 && (
+                <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '150ms' }}>
                     <div className="flex justify-between items-center mb-2">
                         <h3 className="text-title-m font-medium text-on-surface">Monthly Budgets</h3>
                         <button onClick={() => setScreen('Goals')} className="text-primary font-medium text-sm">Manage</button>
@@ -160,7 +174,7 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                 </div>
             )}
 
-            <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '150ms' }}>
+            <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '200ms' }}>
                 <div className="flex justify-between items-center mb-2">
                     <h3 className="text-title-m font-medium text-on-surface">Recent Expenses</h3>
                     <button onClick={() => setScreen('Transactions')} className="text-primary font-medium text-sm">View All</button>
