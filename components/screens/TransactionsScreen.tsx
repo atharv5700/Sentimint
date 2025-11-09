@@ -99,7 +99,7 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
             <div key={activeTab} className="animate-screenFadeIn">
                 {activeTab === 'transactions' ? (
                     <>
-                        <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-10 py-2 space-y-2">
+                        <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-20 py-2 space-y-2">
                             <div className="relative">
                                 <input
                                     type="text"
@@ -168,10 +168,6 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
                                 icon="box"
                                 title="No Recurring Transactions"
                                 message="Set up recurring payments like rent or subscriptions to track them automatically."
-                                action={{
-                                    label: "Add Recurring Transaction",
-                                    onClick: () => { hapticClick(); openRecurringTransactionModal(null); }
-                                }}
                             />
                         )}
                     </>

@@ -385,7 +385,6 @@ export default function GoalsScreen() {
                                     icon="goal"
                                     title={completedGoals.length > 0 ? "All Goals Achieved!" : "Set Your First Goal"}
                                     message={completedGoals.length > 0 ? "You've smashed all your previous goals. Ready for the next challenge?" : "Saving for something special? Create a goal to track your progress."}
-                                    action={{ label: "Create a New Goal", onClick: handleAddNewGoal }}
                                 />
                             )}
                             {completedGoals.length > 0 && (
@@ -406,7 +405,6 @@ export default function GoalsScreen() {
                                     icon="goal"
                                     title="Create a Budget"
                                     message="Budgets help you stay on top of your spending in different categories."
-                                    action={{ label: "Create Budget", onClick: handleAddNewBudget }}
                                 />
                             )}
                         </div>
