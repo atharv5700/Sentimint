@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { Transaction, Mood } from '../types';
 import { useAppContext } from '../App';
-import { DEFAULT_CATEGORIES, DEFAULT_TAGS, MOOD_MAP, ChevronDownIcon, PlusIcon, CloseIcon, CameraIcon, SparkleIcon } from '../constants';
+import { DEFAULT_CATEGORIES, DEFAULT_TAGS, MOOD_MAP, ChevronDownIcon, PlusIcon, CloseIcon, SparkleIcon } from '../constants';
 import { hapticClick, hapticError } from '../services/haptics';
 import CustomSelect from './CustomSelect';
-import { mintorAiService } from '../services/mintorAi';
 
 interface AddTransactionModalProps {
     isOpen: boolean;
@@ -26,21 +25,6 @@ const ImpulseNudgeModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
     </div>
 );
 
-const fileToBase64 = (file: File): Promise<{ data: string; mimeType: string }> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-            const result = reader.result as string;
-            // result is "data:image/jpeg;base64,LzlqLzRBQ...""
-            const mimeType = result.split(';')[0].split(':')[1];
-            const base64Data = result.split(',')[1];
-            resolve({ data: base64Data, mimeType });
-        };
-        reader.onerror = error => reject(error);
-    });
-};
-
 export default function AddTransactionModal({ isOpen, onClose, transaction }: AddTransactionModalProps) {
     const { addTransaction, updateTransaction, goals, customCategories } = useAppContext();
     
@@ -54,10 +38,8 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
     const [showNudge, setShowNudge] = useState(false);
     const [customTagInput, setCustomTagInput] = useState('');
     const [isAddingTag, setIsAddingTag] = useState(false);
-    const [isScanning, setIsScanning] = useState(false);
     
     const customTagInputRef = useRef<HTMLInputElement>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const allCategories = useMemo(() => [...DEFAULT_CATEGORIES, ...customCategories], [customCategories]);
     const goalOptions = [{value: '', label: 'None'}, ...goals.filter(g => !g.completed_bool).map(g => ({value: g.id, label: g.title}))]
@@ -107,35 +89,6 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
             }
             setCustomTagInput('');
             setIsAddingTag(false);
-        }
-    };
-    
-    const handleScanClick = () => {
-        hapticClick();
-        fileInputRef.current?.click();
-    };
-
-    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        setIsScanning(true);
-        try {
-            const { data, mimeType } = await fileToBase64(file);
-            const result = await mintorAiService.scanReceipt(data, mimeType);
-            
-            if (result.amount) setAmount(String(result.amount));
-            if (result.merchant) setMerchant(result.merchant);
-            if (result.note) setNote(prev => prev ? `${prev}\n${result.note}` : result.note);
-
-        } catch (error) {
-            console.error("Receipt scan failed:", error);
-            alert(error instanceof Error ? error.message : "An unknown error occurred during scanning.");
-            hapticError();
-        } finally {
-            setIsScanning(false);
-            // Reset file input value to allow selecting the same file again
-            if(fileInputRef.current) fileInputRef.current.value = "";
         }
     };
 
@@ -195,26 +148,10 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
                     </div>
 
                     <div className="relative overflow-y-auto pb-4 px-2 sm:px-0 space-y-4">
-                        {isScanning && (
-                            <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm flex flex-col items-center justify-center z-10 rounded-2xl">
-                                <SparkleIcon className="w-8 h-8 text-primary animate-ping" />
-                                <p className="text-on-surface font-medium mt-2">Scanning Receipt...</p>
-                            </div>
-                        )}
                         {/* Amount */}
                         <div>
                             <label className="text-label-s text-on-surface-variant">Amount</label>
-                            <div className="flex items-center gap-2">
-                                <input type="text" inputMode="decimal" placeholder="₹0" value={amount ? `₹${formattedAmount}` : ''} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} className="w-full text-4xl sm:text-display-l bg-transparent focus:outline-none p-0 border-0"/>
-                                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
-                                <button 
-                                    onClick={handleScanClick}
-                                    className="p-3 bg-tertiary-container text-on-tertiary-container rounded-full"
-                                    aria-label="Scan Receipt"
-                                >
-                                    <CameraIcon />
-                                </button>
-                            </div>
+                            <input type="text" inputMode="decimal" placeholder="₹0" value={amount ? `₹${formattedAmount}` : ''} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} className="w-full text-4xl sm:text-display-l bg-transparent focus:outline-none p-0 border-0"/>
                         </div>
                         {/* Merchant */}
                         <div>
