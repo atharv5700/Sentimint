@@ -51,7 +51,7 @@ const generateCSS = (theme: Theme) => {
         .summary-card { background-color: rgb(var(--color-surface-variant)); padding: 1rem; border-radius: 1rem; text-align: center; }
         .summary-card-title { font-size: 0.875rem; color: rgb(var(--color-on-surface-variant)); margin: 0 0 0.5rem; }
         .summary-card-value { font-size: 1.75rem; font-weight: 700; color: rgb(var(--color-on-surface-variant)); margin: 0; }
-        .chart-container { background-color: rgb(var(--color-surface-variant)); padding: 1.5rem; border-radius: 1rem; margin-bottom: 2rem; page-break-inside: avoid; }
+        .chart-container { background-color: rgb(var(--color-surface-variant)); padding: 1.5rem; border-radius: 1rem; margin-bottom: 2rem; }
         .chart-container h2 { margin: 0 0 1rem; text-align: center; color: rgb(var(--color-on-surface-variant)); }
         .table-container { page-break-before: always; }
         h2 { font-size: 1.5rem; margin: 2rem 0 1rem; color: rgb(var(--color-on-background)); }
@@ -91,7 +91,6 @@ const generateReport = (transactions: Transaction[], period: Period, theme: Them
 
     const moodChartSVG = getChartSVG('mood-chart-widget');
     const categoryChartSVG = getChartSVG('category-chart-widget');
-    const comparisonChartSVG = getChartSVG('spending-comparison-chart-widget');
 
     const transactionsHtml = filteredTxs.map(tx => `
         <tr>
@@ -147,11 +146,6 @@ const generateReport = (transactions: Transaction[], period: Period, theme: Them
                      <div class="chart-container">
                         <h2>Top 5 Categories</h2>
                         ${categoryChartSVG}
-                    </div>
-                    
-                    <div class="chart-container">
-                        <h2>Spending Comparison</h2>
-                        ${comparisonChartSVG}
                     </div>
 
                     <div class="table-container">
