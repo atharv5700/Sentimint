@@ -22,8 +22,7 @@ export default function ManageCategoriesScreen({ setScreen }: ManageCategoriesSc
     const handleAddCategory = () => {
         const trimmed = newCategory.trim();
         if (trimmed && ![...DEFAULT_CATEGORIES, ...customCategories].some(c => c.toLowerCase() === trimmed.toLowerCase())) {
-            hapticSuccess();
-            addCustomCategory(trimmed);
+            addCustomCategory(trimmed); // This already provides success haptic
             setNewCategory('');
         } else {
             hapticError();
@@ -32,8 +31,7 @@ export default function ManageCategoriesScreen({ setScreen }: ManageCategoriesSc
     
     const handleDeleteCategory = (category: string) => {
         if (!categoryUsage[category]) {
-            hapticSuccess();
-            deleteCustomCategory(category);
+            deleteCustomCategory(category); // This already provides success haptic
         } else {
             hapticError();
             alert("Cannot delete a category that is currently in use.");
@@ -61,7 +59,7 @@ export default function ManageCategoriesScreen({ setScreen }: ManageCategoriesSc
                         className="flex-grow bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                     <button 
-                        onClick={handleAddCategory}
+                        onClick={() => { hapticClick(); handleAddCategory(); }}
                         className="bg-primary-container text-on-primary-container p-3 rounded-xl"
                     >
                         <PlusIcon />

@@ -1,0 +1,66 @@
+{
+  "greetingsAndChitChat": {
+    "greeting": {
+      "keywords": ["hi", "hello", "hey", "greetings"],
+      "answers": ["Hello! How can I help you with your finances today?", "Hi there! What can I do for you?", "Hey! I'm Mintor, ready to assist you."]
+    },
+    "how_are_you": {
+      "keywords": ["how are you", "how's it going", "how you doing"],
+      "answers": ["I'm doing great, thanks for asking! Ready to crunch some numbers.", "I'm just a bunch of code, but I'm functioning perfectly! How can I help?", "I'm here and ready to help you with your finances!"]
+    },
+    "thanks": {
+      "keywords": ["thanks", "thank you", "thx", "appreciated"],
+      "answers": ["You're welcome!", "Happy to help!", "Anytime!"]
+    },
+    "bye": {
+      "keywords": ["bye", "goodbye", "see ya", "cya"],
+      "answers": ["Goodbye! Feel free to come back anytime.", "Take care!", "Bye for now!"]
+    },
+    "who_are_you": {
+      "keywords": ["who are you", "what is your name", "what are you"],
+      "answers": ["I'm Mintor, your personal finance assistant. I run completely on your device to ensure your data stays private.", "My name is Mintor. I'm here to help you understand your spending habits."]
+    }
+  },
+  "financeGeneral": {
+    "sip": { "keywords": ["sip", "systematic investment plan"], "answer": "A Systematic Investment Plan (SIP) is a way to invest a fixed amount of money in mutual funds at regular intervals. It helps in rupee cost averaging and disciplined investing." },
+    "ppf": { "keywords": ["ppf", "public provident fund"], "answer": "Public Provident Fund (PPF) is a long-term savings scheme backed by the Indian government. It offers a fixed, tax-free return and is a safe investment option." },
+    "fd": { "keywords": ["fd", "fixed deposit"], "answer": "A Fixed Deposit (FD) is a financial instrument provided by banks which provides investors with a higher rate of interest than a regular savings account, until the given maturity date." },
+    "emergency_fund": { "keywords": ["emergency fund", "contingency fund", "rainy day fund"], "answer": "An emergency fund is money set aside to cover unexpected financial surprises, like a job loss or medical emergency. It's recommended to have 3-6 months of living expenses saved." },
+    "credit_score": { "keywords": ["credit score", "cibil"], "answer": "A credit score (like CIBIL) is a 3-digit number that represents your creditworthiness. A higher score makes it easier to get loans and credit cards at better interest rates." },
+    "debt_snowball": { "keywords": ["debt snowball", "snowball method"], "answer": "The debt snowball method is a debt-reduction strategy where you pay off debts from smallest to largest, regardless of interest rate. The psychological win of clearing a debt provides momentum." },
+    "debt_avalanche": { "keywords": ["debt avalanche", "avalanche method"], "answer": "The debt avalanche method is a debt-reduction strategy where you pay off debts with the highest interest rates first. This method saves you the most money in interest over time." },
+    "mutual_fund": { "keywords": ["mutual fund", "mutual funds"], "answer": "A mutual fund is a pool of money collected from many investors to invest in stocks, bonds, or other assets. They are managed by professional fund managers." },
+    "nps": { "keywords": ["nps", "national pension system"], "answer": "The National Pension System (NPS) is a voluntary retirement savings scheme that allows subscribers to make defined contributions towards planned retirement." },
+    "elss": { "keywords": ["elss", "equity linked savings scheme"], "answer": "Equity Linked Savings Scheme (ELSS) is a type of mutual fund that helps you save taxes under Section 80C and also provides an opportunity for long-term capital appreciation." },
+    "etf": { "keywords": ["etf", "exchange-traded fund"], "answer": "An Exchange-Traded Fund (ETF) is a type of investment fund and exchange-traded product. They are traded on stock exchanges, much like stocks." },
+    "index_fund": { "keywords": ["index fund", "index funds"], "answer": "An index fund is a type of mutual fund or ETF with a portfolio constructed to match or track the components of a financial market index, such as the NIFTY 50. It offers broad market exposure and typically has low fees." },
+    "tax": { "keywords": ["tax", "income tax", "80c"], "answer": "In India, income tax is levied on individuals based on their income slabs. You can save tax through various deductions under sections like 80C (PPF, ELSS, etc.), 80D (health insurance), and HRA (House Rent Allowance)." }
+  },
+  "howToApp": {
+    "edit_transaction": { "keywords": ["edit transaction", "change transaction", "update expense"], "answer": "To edit a transaction, go to the 'Home' or 'Transactions' screen and simply tap on the transaction you wish to change. The edit screen will pop up." },
+    "delete_transaction": { "keywords": ["delete transaction", "remove transaction", "delete expense"], "answer": "To delete a transaction, go to the 'Home' or 'Transactions' screen. Long-press on a transaction to enter bulk-edit mode, select the ones you want to delete, and tap the trash icon." },
+    "link_transaction": { "keywords": ["link transaction", "link to goal", "connect to goal"], "answer": "When you add or edit a transaction, you'll see a 'Link to Goal' dropdown. You can select any of your active goals from there to link the expense." },
+    "set_goal": { "keywords": ["set a goal", "create goal", "add a goal"], "answer": "Go to the 'Goals' screen, select the 'Goals' tab, and tap the floating plus button to add a new goal. You'll be able to set a title, target amount, and an optional deadline." },
+    "export_csv": { "keywords": ["export", "csv", "download data"], "answer": "You can export all your transaction data to a CSV file from the 'Settings' page under the Data Management section. You can also export from the 'Transactions' screen." },
+    "import_csv": { "keywords": ["import", "upload data"], "answer": "You can import transactions from a CSV file. Go to 'Settings', then 'Data Management', and tap 'Import Data from CSV'. Follow the on-screen instructions for the correct file format." },
+    "generate_report": { "keywords": ["generate report", "print report", "download report"], "answer": "To get a printable report, go to the 'Insights' screen, select your desired time period, and tap the 'Generate Report' button at the top." },
+    "search": { "keywords": ["search", "find transaction"], "answer": "Tap the search icon in the top-right corner of the app to search for transactions, goals, and budgets all at once." },
+    "delete_data": { "keywords": ["delete all data", "reset app", "erase data"], "answer": "Be careful! You can delete all your app data from the 'Settings' page in the 'Danger Zone'. This action cannot be undone." },
+    "change_theme": { "keywords": ["change theme", "dark mode", "light mode", "appearance"], "answer": "You can switch between light and dark themes in the 'Settings' page under the 'Appearance' section." },
+    "help": { "keywords": ["help", "what can you do", "capabilities"], "answer": "I can do a few things:\n- Analyze your spending for a day, week, or month.\n- Compare your spending between periods.\n- Find your biggest spending category.\n- Offer saving tips.\n- Explain financial topics like SIPs or credit scores.\n- Calculate loan EMIs or SIP returns.\n- Answer questions about how to use the app." }
+  },
+  "appAbout": {
+    "sentimint": { "keywords": ["sentimint", "about this app", "privacy"], "answer": "Sentimint is your personal finance tracker. It helps you understand the emotions behind your spending to build healthier financial habits. All your financial data always stays private on your device." }
+  },
+  "savingTips": {
+    "general": [
+      "Track your spending for a month to see where your money goes.",
+      "Create a budget and stick to it. The 50/30/20 rule is a great start (50% Needs, 30% Wants, 20% Savings).",
+      "Automate your savings. Set up a recurring transfer to your savings account right after you get paid.",
+      "Review your subscriptions. Cancel any you don't use regularly.",
+      "Try the '30-day rule' for non-essential purchases. If you still want it after 30 days, consider buying it.",
+      "Plan your meals for the week to avoid impulsive food orders and reduce grocery waste.",
+      "Unsubscribe from marketing emails to reduce the temptation of sales and promotions."
+    ]
+  }
+}

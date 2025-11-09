@@ -77,6 +77,7 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
     
     const handleExport = () => {
         try {
+            hapticClick();
             const csv = dbService.exportToCsv();
             setCsvData(csv);
             setShowExportModal(true);
@@ -89,7 +90,7 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
     return (
         <div className="relative">
             <div className="p-4">
-                <div className="flex justify-center p-1 bg-surface-variant/50 rounded-full mx-auto max-w-sm mb-4">
+                <div className="flex justify-center p-1 bg-surface-variant/50 rounded-full mx-auto max-w-sm">
                     {(['transactions', 'recurring'] as const).map(tab => (
                         <button key={tab} onClick={() => { hapticClick(); setActiveTab(tab); }} className={`w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${activeTab === tab ? 'bg-primary-container text-on-primary-container shadow' : 'text-on-surface-variant'}`}>
                             {tab}
@@ -100,7 +101,7 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
                 <div key={activeTab} className="animate-screenFadeIn">
                     {activeTab === 'transactions' ? (
                         <>
-                            <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-20 py-2 space-y-2">
+                            <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-20 pt-4 pb-2 space-y-2">
                                 <div className="relative">
                                     <input
                                         type="text"
@@ -153,7 +154,7 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
                         </>
                     ) : (
                         <>
-                            <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-10 py-2 text-center text-body-m text-on-surface-variant">
+                            <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-10 py-4 text-center text-body-m text-on-surface-variant">
                                 Manage automated bills and subscriptions.
                             </div>
                             {recurringTransactions.length > 0 ? (

@@ -102,7 +102,7 @@ export default function RecurringTransactionModal({ isOpen, onClose, rTxToEdit }
                         <label className="text-label-s text-on-surface-variant mb-1 block">Frequency</label>
                         <div className="flex justify-center p-1 bg-surface-variant/50 rounded-full">
                             {(['daily', 'weekly', 'monthly'] as const).map(freq => (
-                                <button key={freq} onClick={() => setFrequency(freq)} className={`w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${frequency === freq ? 'bg-primary-container text-on-primary-container shadow' : 'text-on-surface-variant'}`}>
+                                <button key={freq} onClick={() => { hapticClick(); setFrequency(freq); }} className={`w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${frequency === freq ? 'bg-primary-container text-on-primary-container shadow' : 'text-on-surface-variant'}`}>
                                     {freq}
                                 </button>
                             ))}
@@ -122,7 +122,7 @@ export default function RecurringTransactionModal({ isOpen, onClose, rTxToEdit }
                         <label className="text-label-s text-on-surface-variant mb-1 block">Category</label>
                         <div className="flex flex-wrap gap-2">
                             {DEFAULT_CATEGORIES.map(cat => (
-                                <button key={cat} onClick={() => setCategory(cat)} className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${category === cat ? 'bg-primary-container text-on-primary-container' : 'bg-surface-variant text-on-surface-variant'}`}>{cat}</button>
+                                <button key={cat} onClick={() => { hapticClick(); setCategory(cat); }} className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${category === cat ? 'bg-primary-container text-on-primary-container' : 'bg-surface-variant text-on-surface-variant'}`}>{cat}</button>
                             ))}
                         </div>
                     </div>
@@ -130,7 +130,7 @@ export default function RecurringTransactionModal({ isOpen, onClose, rTxToEdit }
                         <label className="text-label-s text-on-surface-variant mb-2 block">Default Mood</label>
                         <div className="grid grid-cols-5 gap-1 sm:gap-2">
                             {Object.entries(MOOD_MAP).map(([level, { label, icon: Icon }]) => (
-                                <button key={level} onClick={() => setMood(parseInt(level) as Mood)} className={`flex flex-col items-center gap-1 p-1 sm:p-2 rounded-lg transition-colors duration-200 ${mood === parseInt(level) ? 'bg-secondary-container' : 'hover:bg-surface-variant'}`}>
+                                <button key={level} onClick={() => { hapticClick(); setMood(parseInt(level) as Mood); }} className={`flex flex-col items-center gap-1 p-1 sm:p-2 rounded-lg transition-colors duration-200 ${mood === parseInt(level) ? 'bg-secondary-container' : 'hover:bg-surface-variant'}`}>
                                     <Icon className={`w-7 h-7 sm:w-8 sm:h-8 ${mood === parseInt(level) ? 'text-on-secondary-container' : 'text-on-surface-variant'}`} />
                                     <span className={`text-[10px] sm:text-label-s text-center ${mood === parseInt(level) ? 'text-on-secondary-container font-medium' : 'text-on-surface-variant'}`}>{label}</span>
                                 </button>
