@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Transaction, Period, Screen } from '../../types';
 import { useAppContext } from '../../App';
-import { MOOD_MAP, PlusIcon } from '../../constants';
+import { MOOD_MAP } from '../../constants';
 import TransactionList from '../TransactionList';
+import ProgressBar from '../ProgressBar';
 
 interface HomeScreenProps {
-    onAddTransaction: () => void;
     onEditTransaction: (tx: Transaction) => void;
     setScreen: (screen: Screen) => void;
 }
@@ -60,8 +60,8 @@ const PeriodSelector: React.FC<{ selected: Period, onSelect: (value: Period) => 
 };
 
 
-export default function HomeScreen({ onAddTransaction, onEditTransaction, setScreen }: HomeScreenProps) {
-    const { transactions, formatCurrency } = useAppContext();
+export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenProps) {
+    const { transactions, formatCurrency, setIsBulkMode, budgets } = useAppContext();
     const [period, setPeriod] = useState<Period>('M');
 
     const filteredTransactions = useMemo(() => {
@@ -97,10 +97,32 @@ export default function HomeScreen({ onAddTransaction, onEditTransaction, setScr
         return { totalSpent: total, avgMood: MOOD_MAP[avg as keyof typeof MOOD_MAP] || MOOD_MAP[3] };
     }, [filteredTransactions]);
 
+    const budgetStatus = useMemo(() => {
+        if (!budgets || budgets.length === 0) return [];
+
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        const monthlyTxs = transactions.filter(tx => tx.ts >= startOfMonth.getTime());
+
+        return budgets.map(budget => {
+            const spent = monthlyTxs
+                .filter(tx => tx.category === budget.category)
+                .reduce((sum, tx) => sum + tx.amount, 0);
+            return {
+                ...budget,
+                spent,
+                progress: (spent / budget.amount) * 100,
+            };
+        }).sort((a, b) => b.progress - a.progress); // Sort by most spent
+    }, [budgets, transactions]);
+
+
     return (
         <div className="relative h-full">
             <div className="px-4 pt-4">
-                 <div className="bg-surface-variant text-on-surface-variant p-4 rounded-3xl space-y-4">
+                 <div className="bg-surface-variant text-on-surface-variant p-4 rounded-3xl space-y-4 animate-screenFadeIn" style={{ animationDelay: '50ms' }}>
                     <div className="bg-surface p-1 rounded-full">
                         <PeriodSelector selected={period} onSelect={setPeriod} />
                     </div>
@@ -118,7 +140,27 @@ export default function HomeScreen({ onAddTransaction, onEditTransaction, setScr
                 </div>
             </div>
             
-            <div className="px-4 mt-6">
+            {budgetStatus.length > 0 && (
+                <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '100ms' }}>
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-title-m font-medium text-on-surface">Monthly Budgets</h3>
+                        <button onClick={() => setScreen('Goals')} className="text-primary font-medium text-sm">Manage</button>
+                    </div>
+                    <div className="bg-surface-variant p-4 rounded-3xl space-y-4">
+                        {budgetStatus.slice(0, 3).map(budget => (
+                            <div key={budget.id}>
+                                <div className="flex justify-between items-center mb-1 text-sm">
+                                    <span className="font-medium text-on-surface-variant">{budget.category}</span>
+                                    <span className="text-on-surface-variant/80">{formatCurrency(budget.spent)} / {formatCurrency(budget.amount)}</span>
+                                </div>
+                                <ProgressBar progress={budget.progress} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '150ms' }}>
                 <div className="flex justify-between items-center mb-2">
                     <h3 className="text-title-m font-medium text-on-surface">Recent Expenses</h3>
                     <button onClick={() => setScreen('Transactions')} className="text-primary font-medium text-sm">View All</button>
@@ -128,16 +170,9 @@ export default function HomeScreen({ onAddTransaction, onEditTransaction, setScr
                     onEditTransaction={onEditTransaction} 
                     showDate={true}
                     isBulkSelectEnabled={true}
+                    onBulkModeChange={setIsBulkMode}
                 />
             </div>
-
-            <button
-                onClick={onAddTransaction}
-                className="fixed bottom-24 right-6 bg-primary-container text-on-primary-container rounded-2xl shadow-lg w-14 h-14 flex items-center justify-center hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                aria-label="Add Transaction"
-            >
-                <PlusIcon className="w-7 h-7" />
-            </button>
         </div>
     );
 }

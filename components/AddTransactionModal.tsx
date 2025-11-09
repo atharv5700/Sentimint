@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { Transaction, Mood } from '../types';
 import { useAppContext } from '../App';
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS, MOOD_MAP, ChevronDownIcon, PlusIcon, CloseIcon } from '../constants';
+import { hapticClick, hapticError } from '../services/haptics';
+import CustomSelect from './CustomSelect';
 
 interface AddTransactionModalProps {
     isOpen: boolean;
@@ -10,13 +12,13 @@ interface AddTransactionModalProps {
 }
 
 const ImpulseNudgeModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-        <div className="bg-surface rounded-3xl p-6 w-full max-w-sm text-center">
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-backdropFadeIn">
+        <div className="bg-surface rounded-3xl p-6 w-full max-w-sm text-center animate-modalSlideUp">
             <h2 className="text-headline-m mb-2">Mindful Moment</h2>
             <p className="text-body-m text-on-surface-variant mb-4">
                 You've marked this as an impulse purchase. Take a moment. A quick pause can make a big difference.
             </p>
-            <button onClick={onClose} className="w-full py-3 rounded-full bg-primary text-on-primary font-bold">
+            <button onClick={() => { hapticClick(); onClose(); }} className="w-full py-3 rounded-full bg-primary text-on-primary font-bold">
                 Got It
             </button>
         </div>
@@ -37,6 +39,8 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
     const [customTagInput, setCustomTagInput] = useState('');
     const [isAddingTag, setIsAddingTag] = useState(false);
     const customTagInputRef = useRef<HTMLInputElement>(null);
+
+    const goalOptions = [{value: '', label: 'None'}, ...goals.filter(g => !g.completed_bool).map(g => ({value: g.id, label: `${g.emoji} ${g.title}`}))]
 
     // Available tags are now default + any custom tags for THIS transaction
     const availableTags = [...new Set([...DEFAULT_TAGS, ...tags])];
@@ -89,17 +93,20 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
     const isFormValid = parseFloat(amount.replace(/,/g, '')) > 0 && mood !== null;
     
     const handleSave = async () => {
-        if (!isFormValid) return;
+        if (!isFormValid) {
+            hapticError();
+            return;
+        }
         
         const txData = {
             amount: parseFloat(amount.replace(/,/g, '')),
             currency: 'INR' as const,
-            merchant,
+            merchant: merchant.trim(),
             category,
             mood: mood!,
             tags_json: JSON.stringify(tags),
             goal_id: goalId,
-            note,
+            note: note.trim(),
         };
 
         if (transaction) {
@@ -108,7 +115,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
             await addTransaction(txData);
         }
 
-        if (tags.includes('impulse')) {
+        if (tags.includes('impulse') && !transaction) { // Only show nudge for new impulse buys
             setShowNudge(true);
         } else {
             onClose();
@@ -116,17 +123,24 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
     };
 
     if (!isOpen) return null;
+
+    const formattedAmount = useMemo(() => {
+        if (!amount) return '';
+        const numericAmount = parseFloat(amount.replace(/,/g, ''));
+        if (isNaN(numericAmount)) return '';
+        return new Intl.NumberFormat('en-IN').format(numericAmount);
+    }, [amount]);
     
     return (
         <>
-            <div className="fixed inset-0 bg-black/50 z-40 flex items-end justify-center transition-opacity duration-300">
-                <div className="bg-surface rounded-t-[28px] p-4 w-full max-w-2xl transform transition-transform duration-300 translate-y-0 animate-slideUp">
+            <div className="fixed inset-0 bg-black/50 z-40 flex items-end justify-center transition-opacity duration-300 animate-backdropFadeIn">
+                <div className="bg-surface rounded-t-[28px] p-4 w-full max-w-2xl transform transition-transform duration-300 translate-y-0 animate-modalSlideUp">
                     <div className="flex justify-center mb-2">
                         <div className="w-8 h-1 bg-outline rounded-full"></div>
                     </div>
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-headline-m">{transaction ? 'Edit' : 'Add'} Transaction</h2>
-                        <button onClick={onClose} className="text-on-surface-variant p-2" aria-label="Close add transaction modal">
+                        <button onClick={() => { hapticClick(); onClose(); }} className="text-on-surface-variant p-2" aria-label="Close add transaction modal">
                             <CloseIcon />
                         </button>
                     </div>
@@ -135,19 +149,19 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
                         {/* Amount */}
                         <div>
                             <label className="text-label-s text-on-surface-variant">Amount</label>
-                            <input type="text" inputMode="decimal" placeholder="₹0" value={amount ? `₹${new Intl.NumberFormat('en-IN').format(parseFloat(amount.replace(/,/g, '')))}` : ''} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} className="w-full text-display-l bg-transparent focus:outline-none p-0 border-0"/>
+                            <input type="text" inputMode="decimal" placeholder="₹0" value={amount ? `₹${formattedAmount}` : ''} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} className="w-full text-display-l bg-transparent focus:outline-none p-0 border-0"/>
                         </div>
                         {/* Merchant */}
                         <div>
                             <label className="text-label-s text-on-surface-variant">Merchant</label>
-                            <input type="text" value={merchant} onChange={e => setMerchant(e.target.value)} placeholder="e.g. Starbucks" className="w-full bg-surface-variant p-3 rounded-lg mt-1" />
+                            <input type="text" value={merchant} onChange={e => setMerchant(e.target.value)} placeholder="e.g. Starbucks" className="w-full bg-surface-variant p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary" />
                         </div>
                         {/* Category */}
                         <div>
                             <label className="text-label-s text-on-surface-variant mb-1 block">Category</label>
                             <div className="flex flex-wrap gap-2">
                                 {DEFAULT_CATEGORIES.map(cat => (
-                                    <button key={cat} onClick={() => setCategory(cat)} className={`px-3 py-1.5 rounded-lg text-sm ${category === cat ? 'bg-primary-container text-on-primary-container' : 'bg-surface-variant text-on-surface-variant'}`}>{cat}</button>
+                                    <button key={cat} onClick={() => setCategory(cat)} className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${category === cat ? 'bg-primary-container text-on-primary-container' : 'bg-surface-variant text-on-surface-variant'}`}>{cat}</button>
                                 ))}
                             </div>
                         </div>
@@ -168,7 +182,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
                             <label className="text-label-s text-on-surface-variant mb-1 block">Tags</label>
                             <div className="flex flex-wrap gap-2 items-center">
                                 {availableTags.map(tag => (
-                                    <button key={tag} onClick={() => handleTagToggle(tag)} className={`px-3 py-1.5 rounded-lg text-sm ${tags.includes(tag) ? 'bg-tertiary-container text-on-tertiary-container' : 'bg-surface-variant text-on-surface-variant'}`}>{tag}</button>
+                                    <button key={tag} onClick={() => handleTagToggle(tag)} className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${tags.includes(tag) ? 'bg-tertiary-container text-on-tertiary-container' : 'bg-surface-variant text-on-surface-variant'}`}>{tag}</button>
                                 ))}
                                 {isAddingTag ? (
                                     <input
@@ -188,20 +202,18 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
                             </div>
                         </div>
                         {/* Link to Goal */}
-                        <div className="relative">
-                            <label htmlFor="goal-select" className="text-label-s text-on-surface-variant">Link to Goal</label>
-                            <select id="goal-select" value={goalId || ''} onChange={(e) => setGoalId(e.target.value || null)} className="w-full bg-surface-variant p-3 rounded-lg appearance-none mt-1">
-                                <option value="">None</option>
-                                {goals.filter(g => !g.completed_bool).map(goal => <option key={goal.id} value={goal.id}>{goal.emoji} {goal.title}</option>)}
-                            </select>
-                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none top-6">
-                                <ChevronDownIcon className="text-on-surface-variant w-5 h-5" />
-                            </div>
+                        <div>
+                            <label className="text-label-s text-on-surface-variant mb-1 block">Link to Goal</label>
+                            <CustomSelect 
+                                value={goalId || ''}
+                                onChange={value => setGoalId(value as string || null)}
+                                options={goalOptions}
+                            />
                         </div>
                         {/* Note */}
                         <div>
                             <label className="text-label-s text-on-surface-variant">Note</label>
-                            <textarea value={note} onChange={e => setNote(e.target.value)} rows={2} placeholder="Optional note..." className="w-full bg-surface-variant p-3 rounded-lg mt-1" />
+                            <textarea value={note} onChange={e => setNote(e.target.value)} rows={2} placeholder="Optional note..." className="w-full bg-surface-variant p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary" />
                         </div>
                     </div>
 

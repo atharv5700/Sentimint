@@ -1,4 +1,4 @@
-import type { Transaction, Goal, Theme, Mood } from '../types';
+import type { Transaction, Goal, Theme, Mood, Budget } from '../types';
 
 const DB_KEY = 'sentimint_db';
 const THEME_KEY = 'sentimint_theme';
@@ -39,13 +39,14 @@ const decrypt = <T,>(data: string | null): T | null => {
 interface Database {
     transactions: Transaction[];
     goals: Goal[];
-    // Removed user prefs as it was only used for custom tags
+    budgets: Budget[];
 }
 
 class DbService {
     private db: Database = {
         transactions: [],
         goals: [],
+        budgets: [],
     };
 
     constructor() {
@@ -56,7 +57,11 @@ class DbService {
         const encryptedData = localStorage.getItem(DB_KEY);
         const data = decrypt<Database>(encryptedData);
         if (data) {
-            this.db = data;
+            this.db = {
+                transactions: data.transactions || [],
+                goals: data.goals || [],
+                budgets: data.budgets || [],
+            };
         }
     }
 
@@ -187,6 +192,35 @@ class DbService {
         this.save();
     }
 
+    // Budgets
+    public getBudgets(): Budget[] {
+        return [...this.db.budgets];
+    }
+    
+    public async addBudget(budget: Omit<Budget, 'id' | 'created_at'>): Promise<Budget> {
+        const newBudget: Budget = {
+            ...budget,
+            id: `budget-${Date.now()}`,
+            created_at: Date.now(),
+        };
+        this.db.budgets.push(newBudget);
+        this.save();
+        return newBudget;
+    }
+    
+    public async updateBudget(budget: Budget): Promise<void> {
+        const index = this.db.budgets.findIndex(b => b.id === budget.id);
+        if (index > -1) {
+            this.db.budgets[index] = budget;
+            this.save();
+        }
+    }
+    
+    public async deleteBudget(id: string): Promise<void> {
+        this.db.budgets = this.db.budgets.filter(b => b.id !== id);
+        this.save();
+    }
+
     // Theme
     public getTheme(): Theme {
         const theme = localStorage.getItem(THEME_KEY) as Theme | null;
@@ -213,6 +247,7 @@ class DbService {
         this.db = {
             transactions: [],
             goals: [],
+            budgets: [],
         };
         localStorage.removeItem(DB_KEY);
     }

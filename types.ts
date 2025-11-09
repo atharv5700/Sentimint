@@ -36,8 +36,15 @@ export type Goal = {
     completed_bool: boolean;
 };
 
-export type MintorAiMessage = {
+export type Budget = {
     id: string;
+    category: string;
+    amount: number;
+    created_at: number;
+};
+
+export type MintorAiMessage = {
+    id:string;
     text: string;
     sender: 'user' | 'bot';
     actions?: MintorAction[];

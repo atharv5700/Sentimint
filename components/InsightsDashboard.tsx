@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { Period, Transaction } from '../types';
 import { useAppContext } from '../App';
 import { MOOD_MAP } from '../constants';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid } from 'recharts';
+import { ExportDataModal } from './screens/SettingsScreen';
 
 
 const Widget: React.FC<{ title: string, subtitle?: string, children: React.ReactNode, onExport: () => void, 'aria-label': string }> = ({ title, subtitle, children, onExport, 'aria-label': ariaLabel }) => (
@@ -44,25 +45,16 @@ const CustomTooltip = ({ active, payload, label, formatter }: any) => {
     return null;
 };
 
-const exportToCsv = (data: any[], filename: string) => {
-    if (data.length === 0) return;
+const dataToCsv = (data: any[]): string => {
+    if (data.length === 0) return '';
     const headers = Object.keys(data[0]);
     const rows = data.map(obj => headers.map(header => JSON.stringify(obj[header])).join(','));
-    const csv = [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    return [headers.join(','), ...rows].join('\n');
 }
-
 
 export default function InsightsDashboard({ period }: { period: Period }) {
     const { transactions, formatCurrency, theme } = useAppContext();
+    const [exportModal, setExportModal] = useState<{isOpen: boolean, data: string}>({ isOpen: false, data: ''});
 
     const filteredTransactions = useMemo(() => {
         const now = new Date();
@@ -76,23 +68,37 @@ export default function InsightsDashboard({ period }: { period: Period }) {
         return transactions.filter(tx => tx.ts >= startOfPeriod.getTime());
     }, [transactions, period]);
 
+    const handleExport = (data: any[]) => {
+        const csv = dataToCsv(data);
+        if (csv) {
+            setExportModal({ isOpen: true, data: csv });
+        }
+    }
+
     const moodDistribution = useMemo(() => {
-        const counts = filteredTransactions.reduce((acc, tx) => {
+        const counts: Record<string, number> = filteredTransactions.reduce((acc: Record<string, number>, tx: Transaction) => {
             const moodLabel = MOOD_MAP[tx.mood].label;
             acc[moodLabel] = (acc[moodLabel] || 0) + tx.amount;
             return acc;
-        }, {} as Record<string, number>);
-        const total = Object.values(counts).reduce((sum, val) => sum + val, 0);
+        }, {});
+        
+        const total = Object.values(counts).reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
         if (total === 0) return [];
-        return Object.entries(counts).map(([name, value]) => ({ name: `${name} ${((value/total)*100).toFixed(0)}%`, value }));
+
+        return Object.entries(counts)
+            .filter(([, value]) => typeof value === 'number' && value > 0)
+            .map(([name, value]) => ({ name: `${name} ${((value/total)*100).toFixed(0)}%`, value }));
+
     }, [filteredTransactions]);
 
     const spendingByCategory = useMemo(() => {
-        const totals = filteredTransactions.reduce((acc, tx) => {
+        const totals: Record<string, number> = filteredTransactions.reduce((acc: Record<string, number>, tx: Transaction) => {
             acc[tx.category] = (acc[tx.category] || 0) + tx.amount;
             return acc;
-        }, {} as Record<string, number>);
+        }, {});
+        
         return Object.entries(totals)
+            .filter(([, value]) => typeof value === 'number')
             .map(([name, value]) => ({ name, value }))
             .sort((a,b) => b.value - a.value)
             .slice(0, 5);
@@ -116,22 +122,39 @@ export default function InsightsDashboard({ period }: { period: Period }) {
             if (tx.mood <= 2) dataMap[key].Negative += tx.amount;
         });
         
-        const sortedData = Object.entries(dataMap).map(([name, values]) => ({ name, ...values }));
-        // Ensure chronological order for daily view
-        if (period === 'D') sortedData.sort((a, b) => a.name.localeCompare(b.name));
-        return sortedData;
+        const entries = Object.entries(dataMap);
+        let sortedEntries: [string, { Total: number; Positive: number; Negative: number; }][];
+
+        if (period === 'D') {
+            sortedEntries = entries.sort((a, b) => a[0].localeCompare(b[0]));
+        } else if (period === 'W') {
+            const dayOrder = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            sortedEntries = entries.sort((a, b) => dayOrder.indexOf(a[0]) - dayOrder.indexOf(b[0]));
+        } else if (period === 'M') {
+            sortedEntries = entries.sort((a, b) => a[0].localeCompare(b[0]));
+        } else if (period === 'Y') {
+            const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            sortedEntries = entries.sort((a, b) => monthOrder.indexOf(a[0]) - monthOrder.indexOf(b[0]));
+        } else {
+            sortedEntries = entries;
+        }
+
+        return sortedEntries.map(([name, values]) => ({ name, ...values }));
+
     }, [filteredTransactions, period]);
 
     const topMerchants = useMemo(() => {
-        const merchants = filteredTransactions.reduce((acc, tx) => {
+        const merchants: Record<string, {total: number, moods: number[]}> = filteredTransactions.reduce((acc, tx) => {
             if (!tx.merchant) return acc;
             if (!acc[tx.merchant]) acc[tx.merchant] = { total: 0, moods: [] };
             acc[tx.merchant].total += tx.amount;
             acc[tx.merchant].moods.push(tx.mood);
             return acc;
-        }, {} as Record<string, {total: number, moods: number[]}>);
+        }, {});
 
-        return Object.entries(merchants)
+        const merchantsArray = Object.entries(merchants);
+
+        return merchantsArray
             .sort((a, b) => b[1].total - a[1].total)
             .slice(0, 5)
             .map(([name, data]) => ({ name, total: data.total, moods: data.moods.slice(-7) }));
@@ -146,80 +169,85 @@ export default function InsightsDashboard({ period }: { period: Period }) {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             <Widget title="Spending by Mood" onExport={() => exportToCsv(moodDistribution, 'mood-distribution.csv')} aria-label="Pie chart showing spending distribution by mood.">
-                <ResponsiveContainer>
-                    <PieChart>
-                        <Pie data={moodDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={false} labelLine={false}>
-                            {moodDistribution.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={MOOD_COLORS[entry.name.split(" ")[0] as keyof typeof MOOD_COLORS]} />
-                            ))}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip formatter={(value: number) => formatCurrency(value)} />}/>
-                        <Legend iconType="circle" verticalAlign="bottom" wrapperStyle={{paddingTop: '16px'}}/>
-                    </PieChart>
-                </ResponsiveContainer>
-            </Widget>
-
-            <Widget title="Top 5 Categories" onExport={() => exportToCsv(spendingByCategory, 'top-categories.csv')} aria-label="Vertical bar chart showing the top 5 spending categories.">
-                <ResponsiveContainer>
-                    <BarChart data={spendingByCategory} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                        <XAxis type="number" hide />
-                        <YAxis type="category" dataKey="name" width={80} tick={{ fill: tickColor, fontSize: 12 }} axisLine={false} tickLine={false} />
-                        <Tooltip content={<CustomTooltip formatter={(value: number) => formatCurrency(value)} />} cursor={{fill: 'rgba(128,128,128,0.1)'}}/>
-                        <Bar dataKey="value" fill={primaryColor} radius={[0, 8, 8, 0]} barSize={20} />
-                    </BarChart>
-                </ResponsiveContainer>
-            </Widget>
-            
-            <div className="md:col-span-2">
-                <Widget title="Spending Over Time" onExport={() => exportToCsv(spendingOverTime, 'spending-over-time.csv')} aria-label="Line chart showing total, positive mood, and negative mood spending over the selected period.">
-                    <ResponsiveContainer>
-                        <LineChart data={spendingOverTime}>
-                            <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                            <XAxis dataKey="name" tick={{ fill: tickColor, fontSize: 12 }} />
-                            <YAxis tick={{ fill: tickColor, fontSize: 12 }} tickFormatter={(val) => compactCurrency(val)}/>
-                            <Tooltip content={<CustomTooltip formatter={(value: number) => formatCurrency(value)} />} />
-                            <Legend verticalAlign="bottom" wrapperStyle={{paddingTop: '16px'}}/>
-                            <Line type="monotone" dataKey="Total" name="Total Spend" stroke="rgb(var(--color-tertiary))" strokeWidth={2} dot={false} />
-                            <Line type="monotone" dataKey="Positive" name="Positive Mood" stroke={MOOD_COLORS['Happy']} dot={false} />
-                            <Line type="monotone" dataKey="Negative" name="Negative Mood" stroke={MOOD_COLORS['Regret']} dot={false} />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </Widget>
-            </div>
-
-            <Widget title="Top 5 Merchants" onExport={() => exportToCsv(topMerchants.map(m=>({name: m.name, total: m.total})), 'top-merchants.csv')} aria-label="Table showing the top 5 merchants by total spending, with a sparkline of recent mood scores.">
-                 <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b border-outline">
-                                <th className="p-2 text-label-s">Merchant</th>
-                                <th className="p-2 text-label-s">Mood (last 7)</th>
-                                <th className="p-2 text-label-s text-right">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {topMerchants.map(({name, total, moods}) => (
-                                <tr key={name} className="border-b border-outline-variant/50">
-                                    <td className="p-2 text-body-m">{name}</td>
-                                    <td className="p-2">
-                                        <div className="flex gap-0.5">
-                                            {moods.map((mood, i) => <div key={i} className="w-2 h-4 rounded-sm" style={{backgroundColor: MOOD_COLORS[MOOD_MAP[mood].label]}}></div>)}
-                                        </div>
-                                    </td>
-                                    <td className="p-2 text-body-m font-medium text-right">{formatCurrency(total)}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+        <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 stagger-children">
+                <div style={{'--stagger-delay': 1} as React.CSSProperties}>
+                    <Widget title="Spending by Mood" onExport={() => handleExport(moodDistribution)} aria-label="Pie chart showing spending distribution by mood.">
+                        <ResponsiveContainer>
+                            <PieChart>
+                                <Pie data={moodDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={false} labelLine={false}>
+                                    {moodDistribution.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={MOOD_COLORS[entry.name.split(" ")[0] as keyof typeof MOOD_COLORS]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip content={<CustomTooltip formatter={(value: number) => formatCurrency(value)} />}/>
+                                <Legend iconType="circle" verticalAlign="bottom" wrapperStyle={{paddingTop: '16px'}}/>
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </Widget>
                 </div>
-            </Widget>
+                <div style={{'--stagger-delay': 2} as React.CSSProperties}>
+                    <Widget title="Top 5 Categories" onExport={() => handleExport(spendingByCategory)} aria-label="Vertical bar chart showing the top 5 spending categories.">
+                        <ResponsiveContainer>
+                            <BarChart data={spendingByCategory} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                <XAxis type="number" hide />
+                                <YAxis type="category" dataKey="name" width={80} tick={{ fill: tickColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+                                <Tooltip content={<CustomTooltip formatter={(value: number) => formatCurrency(value)} />} cursor={{fill: 'rgba(128,128,128,0.1)'}}/>
+                                <Bar dataKey="value" fill={primaryColor} radius={[0, 8, 8, 0]} barSize={20} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </Widget>
+                </div>
+                <div className="md:col-span-2" style={{'--stagger-delay': 3} as React.CSSProperties}>
+                    <Widget title="Spending Over Time" onExport={() => handleExport(spendingOverTime)} aria-label="Line chart showing total, positive mood, and negative mood spending over the selected period.">
+                        <ResponsiveContainer>
+                            <LineChart data={spendingOverTime}>
+                                <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+                                <XAxis dataKey="name" tick={{ fill: tickColor, fontSize: 12 }} />
+                                <YAxis tick={{ fill: tickColor, fontSize: 12 }} tickFormatter={(val) => compactCurrency(val)}/>
+                                <Tooltip content={<CustomTooltip formatter={(value: number) => formatCurrency(value)} />} />
+                                <Legend verticalAlign="bottom" wrapperStyle={{paddingTop: '16px'}}/>
+                                <Line type="monotone" dataKey="Total" name="Total Spend" stroke="rgb(var(--color-tertiary))" strokeWidth={2} dot={false} />
+                                <Line type="monotone" dataKey="Positive" name="Positive Mood" stroke={MOOD_COLORS['Happy']} dot={false} />
+                                <Line type="monotone" dataKey="Negative" name="Negative Mood" stroke={MOOD_COLORS['Regret']} dot={false} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </Widget>
+                </div>
+                <div style={{'--stagger-delay': 4} as React.CSSProperties}>
+                    <Widget title="Top 5 Merchants" onExport={() => handleExport(topMerchants.map(m=>({name: m.name, total: m.total})))} aria-label="Table showing the top 5 merchants by total spending, with a sparkline of recent mood scores.">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="border-b border-outline">
+                                        <th className="p-2 text-label-s">Merchant</th>
+                                        <th className="p-2 text-label-s">Mood (last 7)</th>
+                                        <th className="p-2 text-label-s text-right">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {topMerchants.map(({name, total, moods}) => (
+                                        <tr key={name} className="border-b border-outline-variant/50">
+                                            <td className="p-2 text-body-m">{name}</td>
+                                            <td className="p-2">
+                                                <div className="flex gap-0.5">
+                                                    {moods.map((mood, i) => <div key={i} className="w-2 h-4 rounded-sm" style={{backgroundColor: MOOD_COLORS[MOOD_MAP[mood as keyof typeof MOOD_MAP].label]}}></div>)}
+                                                </div>
+                                            </td>
+                                            <td className="p-2 text-body-m font-medium text-right">{formatCurrency(total)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Widget>
+                </div>
 
-            <div className="text-center text-on-surface-variant p-8 md:col-span-2">
-                Deeper insights and predictive analysis are coming soon.
+                <div className="text-center text-on-surface-variant p-8 md:col-span-2">
+                    Deeper insights and predictive analysis are coming soon.
+                </div>
             </div>
-
-        </div>
+            {exportModal.isOpen && <ExportDataModal csvData={exportModal.data} onClose={() => setExportModal({isOpen: false, data: ''})} />}
+        </>
     );
 }

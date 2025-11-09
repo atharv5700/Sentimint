@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { MintorAiMessage, MintorAction, Screen } from '../types';
 import { mintorAiService } from '../services/mintorAi';
 import { MINTOR_AI_ASSISTANT, SendIcon, CloseIcon } from '../constants';
+import { hapticClick } from '../services/haptics';
 
 interface MintorAiModalProps {
     isOpen: boolean;
@@ -12,7 +13,7 @@ interface MintorAiModalProps {
 const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: MintorAction) => void }> = ({ message, onAction }) => {
     const isUser = message.sender === 'user';
     return (
-        <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+        <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-screenFadeIn`}>
             <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${isUser ? 'bg-primary-container text-on-primary-container rounded-br-none' : 'bg-surface-variant text-on-surface-variant rounded-bl-none'}`}>
                 <p className="text-body-m whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: message.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}></p>
                  {message.actions && message.actions.length > 0 && (
@@ -20,7 +21,10 @@ const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: Mintor
                         {message.actions.map((action, index) => (
                             <button 
                                 key={index} 
-                                onClick={() => onAction(action)}
+                                onClick={() => {
+                                    hapticClick();
+                                    onAction(action);
+                                }}
                                 className="text-sm bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded-full"
                             >
                                 {action.label}
@@ -53,11 +57,13 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo }: MintorAiM
     
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+    }, [messages, isThinking]);
 
     const handleSend = async (queryOverride?: string) => {
         const query = queryOverride || input.trim();
         if (!query || isThinking) return;
+
+        hapticClick();
 
         const userMessage: MintorAiMessage = {
             id: `user-${Date.now()}`,
@@ -79,7 +85,7 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo }: MintorAiM
         setTimeout(() => {
             setMessages(prev => [...prev, botMessage]);
             setIsThinking(false);
-        }, 300);
+        }, 500);
     };
 
     const handleActionClick = (action: MintorAction) => {
@@ -95,11 +101,11 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo }: MintorAiM
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-0 md:p-4">
-            <div className="bg-surface rounded-3xl w-full h-full md:max-w-2xl md:h-[80vh] flex flex-col shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-0 md:p-4 animate-backdropFadeIn">
+            <div className="bg-surface rounded-3xl w-full h-full md:max-w-2xl md:h-[80vh] flex flex-col shadow-2xl animate-modalSlideUp">
                 <header className="flex items-center justify-between p-4 border-b border-outline-variant">
                     <h2 className="text-title-m font-medium">{MINTOR_AI_ASSISTANT.name}</h2>
-                    <button onClick={onClose} className="text-on-surface-variant p-1" aria-label="Close Mintor AI modal">
+                    <button onClick={() => { hapticClick(); onClose(); }} className="text-on-surface-variant p-1" aria-label="Close Mintor AI modal">
                         <CloseIcon />
                     </button>
                 </header>
@@ -129,7 +135,7 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo }: MintorAiM
                             className="flex-1 bg-surface-variant text-on-surface-variant rounded-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary"
                             disabled={isThinking}
                         />
-                         <button onClick={() => handleSend()} disabled={isThinking} className="bg-primary text-on-primary p-3 rounded-full shadow hover:bg-primary/90 disabled:bg-outline">
+                         <button onClick={() => handleSend()} disabled={!input.trim() || isThinking} className="bg-primary text-on-primary p-3 rounded-full shadow hover:bg-primary/90 disabled:bg-outline disabled:opacity-50 transition-all">
                             <SendIcon />
                         </button>
                     </div>

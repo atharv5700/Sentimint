@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-g" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Sentimint</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -60,12 +60,22 @@
               'label-s': ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.04166667em' }],    // 12sp
             },
             animation: {
-                slideUp: 'slideUp 0.22s cubic-bezier(0.2, 0, 0, 1) forwards',
+                modalSlideUp: 'modalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                backdropFadeIn: 'backdropFadeIn 0.35s ease-in-out forwards',
+                screenFadeIn: 'screenFadeIn 0.3s ease-out forwards',
             },
             keyframes: {
-                slideUp: {
-                    '0%': { transform: 'translateY(100%)' },
-                    '100%': { transform: 'translateY(0)' },
+                modalSlideUp: {
+                    '0%': { opacity: 0, transform: 'translateY(50px) scale(0.95)' },
+                    '100%': { opacity: 1, transform: 'translateY(0) scale(1)' },
+                },
+                backdropFadeIn: {
+                    '0%': { opacity: 0 },
+                    '100%': { opacity: 1 },
+                },
+                screenFadeIn: {
+                    '0%': { opacity: 0, transform: 'translateY(10px)' },
+                    '100%': { opacity: 1, transform: 'translateY(0)' },
                 },
             },
           },
@@ -113,6 +123,7 @@
         --color-outline-variant: 194 199 197;
         --color-inverse-surface: 46 48 51;
         --color-inverse-on-surface: 241 240 244;
+        --is-dark: 0;
       }
       .dark {
         --color-primary: 31 200 167;
@@ -141,6 +152,55 @@
         --color-outline-variant: 66 72 70;
         --color-inverse-surface: 228 226 230;
         --color-inverse-on-surface: 46 48 51;
+        --is-dark: 1;
+      }
+      
+      /* Staggered animation for list items */
+      .stagger-children > * {
+          --stagger-delay: 1;
+          opacity: 0;
+          animation: screenFadeIn 0.4s cubic-bezier(0.2, 0, 0, 1) forwards;
+          animation-delay: calc(var(--stagger-delay) * 50ms);
+          will-change: transform, opacity;
+      }
+
+      /* Tactile feedback on buttons */
+      button, [role="button"] {
+          transition: transform 0.1s ease-out;
+          -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+          will-change: transform;
+      }
+      button:active, [role="button"]:active {
+          transform: scale(0.96);
+      }
+
+      /* Custom styles for date input */
+      input[type="date"] {
+          position: relative;
+          color: rgb(var(--color-on-surface));
+      }
+      input[type="date"]::-webkit-calendar-picker-indicator {
+          filter: invert(var(--is-dark));
+          opacity: 0.6;
+          cursor: pointer;
+          position: absolute;
+          right: 0.75rem;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 1.5rem;
+          height: 1.5rem;
+      }
+      input[type="date"]:not(:valid) {
+          color: transparent;
+      }
+      input[type="date"]:not(:valid)::before {
+          content: 'Deadline (Optional)';
+          position: absolute;
+          left: 0.75rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: rgb(var(--color-on-surface-variant));
+          pointer-events: none;
       }
     </style>
   <script type="importmap">

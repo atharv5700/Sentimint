@@ -4,33 +4,22 @@ import { useAppContext } from '../../App';
 import TransactionList from '../TransactionList';
 import { SearchIcon, ChevronDownIcon, DEFAULT_CATEGORIES, MOOD_MAP } from '../../constants';
 import { dbService } from '../../services/db';
+import { ExportDataModal } from './SettingsScreen';
+import CustomSelect from '../CustomSelect';
 
 interface TransactionsScreenProps {
     onEditTransaction: (tx: Transaction) => void;
 }
 
-const FilterSelect: React.FC<{ value: string | number, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, children: React.ReactNode }> = ({ value, onChange, children }) => {
-    return (
-        <div className="relative w-full">
-            <select
-                value={value}
-                onChange={onChange}
-                className="w-full bg-surface-variant text-on-surface-variant rounded-full py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
-            >
-                {children}
-            </select>
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <ChevronDownIcon className="text-on-surface-variant w-5 h-5" />
-            </div>
-        </div>
-    );
-};
-
 export default function TransactionsScreen({ onEditTransaction }: TransactionsScreenProps) {
-    const { transactions } = useAppContext();
+    const { transactions, setIsBulkMode } = useAppContext();
     const [searchTerm, setSearchTerm] = useState('');
-    const [filters, setFilters] = useState<{ category: string; mood: number }>({ category: '', mood: 0 });
-    const [isBulkMode, setIsBulkMode] = useState(false);
+    const [filters, setFilters] = useState<{ category: string; mood: string }>({ category: '', mood: '' });
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [csvData, setCsvData] = useState('');
+    
+    const categoryOptions = [{value: '', label: 'All Categories'}, ...DEFAULT_CATEGORIES.map(c => ({value: c, label: c}))];
+    const moodOptions = [{value: '', label: 'All Moods'}, ...Object.entries(MOOD_MAP).map(([level, {label}]) => ({value: level, label}))];
 
     const filteredTransactions = useMemo(() => {
         return transactions.filter(tx => {
@@ -40,7 +29,7 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
                 tx.note.toLowerCase().includes(searchTerm.toLowerCase())
             );
             const categoryMatch = filters.category ? tx.category === filters.category : true;
-            const moodMatch = filters.mood ? tx.mood === (filters.mood as Mood) : true;
+            const moodMatch = filters.mood ? tx.mood === (parseInt(filters.mood) as Mood) : true;
             
             return searchMatch && categoryMatch && moodMatch;
         });
@@ -49,26 +38,17 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
     const handleExport = () => {
         try {
             const csv = dbService.exportToCsv();
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            if (link.download !== undefined) {
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', 'sentimint_export.csv');
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
+            setCsvData(csv);
+            setShowExportModal(true);
         } catch(e) {
-            console.error("Failed to export data", e);
-            alert("Error exporting data. Please try again.");
+            console.error("Failed to prepare export data", e);
+            alert("Error preparing data for export. Please try again.");
         }
     };
 
     return (
         <div className="p-4">
-            <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-10 py-2 space-y-2">
+            <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-10 py-2 space-y-2 animate-screenFadeIn" style={{animationDelay: '50ms'}}>
                 <div className="relative">
                     <input
                         type="text"
@@ -82,35 +62,32 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <FilterSelect
+                    <CustomSelect
                         value={filters.category}
-                        onChange={e => setFilters(f => ({...f, category: e.target.value}))}
-                    >
-                        <option value="">All Categories</option>
-                        {DEFAULT_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                    </FilterSelect>
-                    <FilterSelect
+                        onChange={value => setFilters(f => ({...f, category: value as string}))}
+                        options={categoryOptions}
+                    />
+                    <CustomSelect
                         value={filters.mood}
-                        onChange={e => setFilters(f => ({...f, mood: parseInt(e.target.value)}))}
-                    >
-                        <option value="0">All Moods</option>
-                        {Object.entries(MOOD_MAP).map(([level, { label }]) => (
-                            <option key={level} value={level}>{label}</option>
-                        ))}
-                    </FilterSelect>
+                        onChange={value => setFilters(f => ({...f, mood: value as string}))}
+                        options={moodOptions}
+                    />
                 </div>
                  <div className="flex justify-end">
                     <button onClick={handleExport} className="text-primary font-medium text-sm px-3 py-1">Export CSV</button>
                 </div>
             </div>
 
-            <TransactionList 
-                transactions={filteredTransactions}
-                onEditTransaction={onEditTransaction}
-                showDate={true}
-                isBulkSelectEnabled={true}
-                onBulkModeChange={setIsBulkMode}
-            />
+            <div className="animate-screenFadeIn" style={{animationDelay: '150ms'}}>
+                <TransactionList 
+                    transactions={filteredTransactions}
+                    onEditTransaction={onEditTransaction}
+                    showDate={true}
+                    isBulkSelectEnabled={true}
+                    onBulkModeChange={setIsBulkMode}
+                />
+            </div>
+             {showExportModal && <ExportDataModal csvData={csvData} onClose={() => setShowExportModal(false)} />}
         </div>
     );
 }

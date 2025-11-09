@@ -23,18 +23,22 @@ export default function InsightsScreen() {
 
     return (
         <div className="p-4 space-y-6">
-            <SegmentedButton
-                 options={[
-                    {label: 'Day', value: 'D'}, 
-                    {label: 'Week', value: 'W'},
-                    {label: 'Month', value: 'M'},
-                    {label: 'Year', value: 'Y'}
-                ]}
-                selected={period}
-                onSelect={setPeriod}
-            />
+            <div className="animate-screenFadeIn" style={{ animationDelay: '50ms' }}>
+                <SegmentedButton
+                    options={[
+                        {label: 'Day', value: 'D'}, 
+                        {label: 'Week', value: 'W'},
+                        {label: 'Month', value: 'M'},
+                        {label: 'Year', value: 'Y'}
+                    ]}
+                    selected={period}
+                    onSelect={setPeriod}
+                />
+            </div>
             
-            <InsightsDashboard period={period} />
+            <div className="animate-screenFadeIn" style={{ animationDelay: '150ms' }}>
+                <InsightsDashboard period={period} />
+            </div>
         </div>
     );
 }

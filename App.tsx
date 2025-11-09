@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
-import type { Screen, Theme, Transaction, Goal } from './types';
+import type { Screen, Theme, Transaction, Goal, Budget } from './types';
 import { dbService } from './services/db';
+import { hapticClick, hapticSuccess } from './services/haptics';
 import HomeScreen from './components/screens/HomeScreen';
 import TransactionsScreen from './components/screens/TransactionsScreen';
 import InsightsScreen from './components/screens/InsightsScreen';
@@ -10,10 +11,12 @@ import BottomNav from './components/layout/BottomNav';
 import TopAppBar from './components/layout/TopAppBar';
 import AddTransactionModal from './components/AddTransactionModal';
 import MintorAiModal from './components/MintorAiModal';
+import { PlusIcon } from './constants';
 
 interface AppContextType {
   transactions: Transaction[];
   goals: Goal[];
+  budgets: Budget[];
   theme: Theme;
   setTheme: (theme: Theme) => void;
   addTransaction: (tx: Omit<Transaction, 'id' | 'ts'>) => Promise<void>;
@@ -23,8 +26,13 @@ interface AppContextType {
   addGoal: (goal: Omit<Goal, 'id' | 'created_at' | 'current_amount' | 'completed_bool'>) => Promise<void>;
   updateGoal: (goal: Goal) => Promise<void>;
   deleteGoal: (id: string) => Promise<void>;
+  addBudget: (budget: Omit<Budget, 'id' | 'created_at'>) => Promise<void>;
+  updateBudget: (budget: Budget) => Promise<void>;
+  deleteBudget: (id: string) => Promise<void>;
   linkTransactionToGoal: (txId: string, goalId: string | null) => Promise<void>;
   formatCurrency: (amount: number) => string;
+  isBulkMode: boolean;
+  setIsBulkMode: (isBulk: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -48,34 +56,48 @@ export default function App() {
     const [screen, setScreen] = useState<Screen>('Home');
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [goals, setGoals] = useState<Goal[]>([]);
+    const [budgets, setBudgets] = useState<Budget[]>([]);
     const [theme, setThemeState] = useState<Theme>(dbService.getTheme());
     const [isDataReady, setIsDataReady] = useState(false);
     
     const [isAddTxModalOpen, setAddTxModalOpen] = useState(false);
     const [editingTx, setEditingTx] = useState<Transaction | null>(null);
     const [isMintorModalOpen, setMintorModalOpen] = useState(false);
+    const [isBulkMode, setIsBulkMode] = useState(false);
 
-    const recalculateGoals = useCallback(() => {
+
+    const recalculateGoals = useCallback(async () => {
         const allGoals = dbService.getGoals();
         const allTransactions = dbService.getTransactions();
-        const updatedGoals = allGoals.map(g => {
-            const linkedTxs = allTransactions.filter(t => t.goal_id === g.id);
-            const current_amount = linkedTxs.reduce((sum, currentTx) => sum + currentTx.amount, 0);
-            const completed_bool = current_amount >= g.target_amount;
-            if (g.current_amount !== current_amount || g.completed_bool !== completed_bool) {
-                const updatedGoal = { ...g, current_amount, completed_bool };
-                dbService.updateGoal(updatedGoal);
-                return updatedGoal;
+        let goalsWereUpdated = false;
+
+        if (!Array.isArray(allGoals)) return;
+
+        for (const goal of allGoals) {
+            const linkedTxs = allTransactions.filter(t => t.goal_id === goal.id);
+            const newCurrentAmount = linkedTxs.reduce((sum, currentTx) => sum + currentTx.amount, 0);
+            const newCompletedStatus = newCurrentAmount >= goal.target_amount;
+
+            if (goal.current_amount !== newCurrentAmount || goal.completed_bool !== newCompletedStatus) {
+                const updatedGoal = { ...goal, current_amount: newCurrentAmount, completed_bool: newCompletedStatus };
+                await dbService.updateGoal(updatedGoal);
+                goalsWereUpdated = true;
             }
-            return g;
-        });
-        setGoals(updatedGoals.sort((a, b) => a.completed_bool ? 1 : -1));
+        }
+        
+        if (goalsWereUpdated) {
+            const updatedGoalsFromDb = dbService.getGoals();
+            setGoals(updatedGoalsFromDb.sort((a, b) => a.completed_bool ? 1 : -1));
+        } else {
+             setGoals(allGoals.sort((a, b) => a.completed_bool ? 1 : -1));
+        }
     }, []);
 
     const loadData = useCallback(async () => {
         await dbService.init();
         setTransactions(dbService.getTransactions());
-        recalculateGoals();
+        setBudgets(dbService.getBudgets());
+        await recalculateGoals();
         setIsDataReady(true);
     }, [recalculateGoals]);
 
@@ -106,40 +128,68 @@ export default function App() {
     const addTransaction = async (tx: Omit<Transaction, 'id' | 'ts'>) => {
         const newTx = await dbService.addTransaction(tx);
         setTransactions(prev => [newTx, ...prev].sort((a, b) => b.ts - a.ts));
-        recalculateGoals();
+        await recalculateGoals();
+        hapticSuccess();
     };
 
     const updateTransaction = async (tx: Transaction) => {
         await dbService.updateTransaction(tx);
         setTransactions(prev => prev.map(t => t.id === tx.id ? tx : t));
-        recalculateGoals();
+        await recalculateGoals();
+        hapticSuccess();
     };
 
     const deleteTransaction = async (id: string) => {
         await dbService.deleteTransaction(id);
         setTransactions(prev => prev.filter(t => t.id !== id));
-        recalculateGoals();
+        await recalculateGoals();
+        hapticSuccess();
     };
 
     const deleteTransactions = async (ids: string[]) => {
         await dbService.deleteTransactions(ids);
         setTransactions(prev => prev.filter(t => !ids.includes(t.id)));
-        recalculateGoals();
+        await recalculateGoals();
+        hapticSuccess();
     };
     
     const addGoal = async (goal: Omit<Goal, 'id' | 'created_at' | 'current_amount' | 'completed_bool'>) => {
         const newGoal = await dbService.addGoal(goal);
         setGoals(prev => [newGoal, ...prev]);
+        hapticSuccess();
     };
 
     const updateGoal = async (goal: Goal) => {
         await dbService.updateGoal(goal);
-        recalculateGoals();
+        setGoals(prev => {
+            const updated = prev.map(g => g.id === goal.id ? goal : g);
+            return updated.sort((a, b) => a.completed_bool ? 1 : -1);
+        });
+        hapticSuccess();
     };
     
     const deleteGoal = async (id: string) => {
         await dbService.deleteGoal(id);
         setGoals(prev => prev.filter(g => g.id !== id));
+        hapticSuccess();
+    };
+
+    const addBudget = async (budget: Omit<Budget, 'id' | 'created_at'>) => {
+        const newBudget = await dbService.addBudget(budget);
+        setBudgets(prev => [...prev, newBudget].sort((a,b) => a.category.localeCompare(b.category)));
+        hapticSuccess();
+    };
+
+    const updateBudget = async (budget: Budget) => {
+        await dbService.updateBudget(budget);
+        setBudgets(prev => prev.map(b => b.id === budget.id ? budget : b));
+        hapticSuccess();
+    };
+    
+    const deleteBudget = async (id: string) => {
+        await dbService.deleteBudget(id);
+        setBudgets(prev => prev.filter(b => b.id !== id));
+        hapticSuccess();
     };
 
     const linkTransactionToGoal = async (txId: string, goalId: string | null) => {
@@ -158,11 +208,16 @@ export default function App() {
         setEditingTx(null);
         setAddTxModalOpen(false);
     };
+    
+    const handleSetScreen = (newScreen: Screen) => {
+        setIsBulkMode(false); // Reset bulk mode on screen change.
+        setScreen(newScreen);
+    };
 
     const renderScreen = () => {
         switch (screen) {
             case 'Home':
-                return <HomeScreen onAddTransaction={() => setAddTxModalOpen(true)} onEditTransaction={handleEditTransaction} setScreen={setScreen} />;
+                return <HomeScreen onEditTransaction={handleEditTransaction} setScreen={handleSetScreen} />;
             case 'Transactions':
                 return <TransactionsScreen onEditTransaction={handleEditTransaction} />;
             case 'Insights':
@@ -172,7 +227,7 @@ export default function App() {
             case 'Settings':
                 return <SettingsScreen />;
             default:
-                return <HomeScreen onAddTransaction={() => setAddTxModalOpen(true)} onEditTransaction={handleEditTransaction} setScreen={setScreen} />;
+                return <HomeScreen onEditTransaction={handleEditTransaction} setScreen={handleSetScreen} />;
         }
     };
 
@@ -187,6 +242,7 @@ export default function App() {
     const appContextValue: AppContextType = {
         transactions,
         goals,
+        budgets,
         theme,
         setTheme,
         addTransaction,
@@ -196,8 +252,13 @@ export default function App() {
         addGoal,
         updateGoal,
         deleteGoal,
+        addBudget,
+        updateBudget,
+        deleteBudget,
         linkTransactionToGoal,
-        formatCurrency
+        formatCurrency,
+        isBulkMode,
+        setIsBulkMode,
     };
 
     return (
@@ -208,12 +269,27 @@ export default function App() {
                     aria-hidden={isModalOpen}
                 >
                     <TopAppBar onMintorClick={() => setMintorModalOpen(true)} />
-                    <main className="flex-grow overflow-y-auto pb-20">
-                        {renderScreen()}
+                    <main className="flex-grow overflow-y-auto pb-24">
+                        <div key={screen} className="animate-screenFadeIn">
+                            {renderScreen()}
+                        </div>
                     </main>
-                    <BottomNav activeScreen={screen} setScreen={setScreen} />
+                    <BottomNav activeScreen={screen} setScreen={handleSetScreen} />
                 </div>
                 
+                {(screen === 'Home' || screen === 'Transactions') && !isModalOpen && !isBulkMode && (
+                     <button
+                        onClick={() => {
+                            hapticClick();
+                            setAddTxModalOpen(true);
+                        }}
+                        className="fixed bottom-24 right-6 bg-primary-container text-on-primary-container rounded-2xl shadow-lg w-14 h-14 flex items-center justify-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-modalSlideUp z-10"
+                        aria-label="Add Transaction"
+                    >
+                        <PlusIcon className="w-7 h-7" />
+                    </button>
+                )}
+
                 {isAddTxModalOpen && (
                     <AddTransactionModal 
                         isOpen={isAddTxModalOpen} 
@@ -225,7 +301,7 @@ export default function App() {
                     <MintorAiModal 
                         isOpen={isMintorModalOpen} 
                         onClose={() => setMintorModalOpen(false)}
-                        navigateTo={setScreen}
+                        navigateTo={handleSetScreen}
                     />
                 )}
             </div>
