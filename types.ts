@@ -71,12 +71,34 @@ export interface FabConfig {
     'aria-label': string;
 }
 
-export type SmartInsight = {
+export type CoachingTip = {
     id: string;
     icon: React.FC<React.SVGProps<SVGSVGElement>>;
     title: string;
     text: string;
     action?: MintorAction;
+};
+
+export type ChallengeType = 'noSpendOnCategory' | 'spendLimitOnCategory' | 'saveAmount';
+export type ChallengeStatus = 'active' | 'completed' | 'failed';
+
+export type Challenge = {
+    id: string;
+    title: string;
+    description: string;
+    type: ChallengeType;
+    durationDays: number;
+    targetValue: number;
+    category?: string;
+    badgeIcon: string;
+};
+
+export type UserChallenge = {
+    challengeId: string;
+    startDate: number;
+    status: ChallengeStatus;
+    progress: number;
+    endDate?: number;
 };
 
 

@@ -87,94 +87,96 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
     };
 
     return (
-        <div className="p-4">
-            <div className="flex justify-center p-1 bg-surface-variant/50 rounded-full mx-auto max-w-sm mb-4">
-                {(['transactions', 'recurring'] as const).map(tab => (
-                    <button key={tab} onClick={() => { hapticClick(); setActiveTab(tab); }} className={`w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${activeTab === tab ? 'bg-primary-container text-on-primary-container shadow' : 'text-on-surface-variant'}`}>
-                        {tab}
-                    </button>
-                ))}
-            </div>
+        <div className="relative">
+            <div className="p-4">
+                <div className="flex justify-center p-1 bg-surface-variant/50 rounded-full mx-auto max-w-sm mb-4">
+                    {(['transactions', 'recurring'] as const).map(tab => (
+                        <button key={tab} onClick={() => { hapticClick(); setActiveTab(tab); }} className={`w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${activeTab === tab ? 'bg-primary-container text-on-primary-container shadow' : 'text-on-surface-variant'}`}>
+                            {tab}
+                        </button>
+                    ))}
+                </div>
 
-            <div key={activeTab} className="animate-screenFadeIn">
-                {activeTab === 'transactions' ? (
-                    <>
-                        <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-20 py-2 space-y-2">
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Search transactions..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full bg-surface-variant text-on-surface-variant rounded-full py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary"
-                                />
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <SearchIcon className="text-on-surface-variant" />
+                <div key={activeTab} className="animate-screenFadeIn">
+                    {activeTab === 'transactions' ? (
+                        <>
+                            <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-20 py-2 space-y-2">
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Search transactions..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full bg-surface-variant text-on-surface-variant rounded-full py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary"
+                                    />
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <SearchIcon className="text-on-surface-variant" />
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <CustomSelect
+                                        value={filters.category}
+                                        onChange={value => setFilters(f => ({...f, category: value as string}))}
+                                        options={categoryOptions}
+                                    />
+                                    <CustomSelect
+                                        value={filters.mood}
+                                        onChange={value => setFilters(f => ({...f, mood: value as string}))}
+                                        options={moodOptions}
+                                    />
+                                </div>
+                                <div className="flex justify-end">
+                                    <button onClick={handleExport} className="text-primary font-medium text-sm px-3 py-1">Export CSV</button>
                                 </div>
                             </div>
-                            <div className="flex gap-2">
-                                <CustomSelect
-                                    value={filters.category}
-                                    onChange={value => setFilters(f => ({...f, category: value as string}))}
-                                    options={categoryOptions}
+                            {filteredTransactions.length > 0 ? (
+                                <TransactionList 
+                                    transactions={filteredTransactions}
+                                    onEditTransaction={onEditTransaction}
+                                    showDate={true}
+                                    isBulkSelectEnabled={true}
+                                    onBulkModeChange={setIsBulkMode}
                                 />
-                                <CustomSelect
-                                    value={filters.mood}
-                                    onChange={value => setFilters(f => ({...f, mood: value as string}))}
-                                    options={moodOptions}
+                            ) : (
+                                <div className="pt-8">
+                                    <EmptyState
+                                        icon={hasFilters ? "search" : "box"}
+                                        title={hasFilters ? "No Results Found" : "No Transactions Yet"}
+                                        message={hasFilters ? "Try adjusting your search or filters to find what you're looking for." : "Tap the plus button below to add your first transaction."}
+                                        action={(transactions.length === 0 && !hasFilters) ? {
+                                            label: "Add First Transaction",
+                                            onClick: () => { hapticClick(); openTransactionModal(null); }
+                                        } : undefined}
+                                    />
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-10 py-2 text-center text-body-m text-on-surface-variant">
+                                Manage automated bills and subscriptions.
+                            </div>
+                            {recurringTransactions.length > 0 ? (
+                                <div className="stagger-children">
+                                    {recurringTransactions.map((rTx, i) => (
+                                        <div key={rTx.id} style={{ '--stagger-delay': i } as React.CSSProperties}>
+                                            <RecurringTransactionItem rTx={rTx} />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                 <EmptyState
+                                    icon="box"
+                                    title="No Recurring Transactions"
+                                    message="Set up recurring payments like rent or subscriptions to track them automatically."
                                 />
-                            </div>
-                            <div className="flex justify-end">
-                                <button onClick={handleExport} className="text-primary font-medium text-sm px-3 py-1">Export CSV</button>
-                            </div>
-                        </div>
-                        {filteredTransactions.length > 0 ? (
-                            <TransactionList 
-                                transactions={filteredTransactions}
-                                onEditTransaction={onEditTransaction}
-                                showDate={true}
-                                isBulkSelectEnabled={true}
-                                onBulkModeChange={setIsBulkMode}
-                            />
-                        ) : (
-                            <div className="pt-8">
-                                <EmptyState
-                                    icon={hasFilters ? "search" : "box"}
-                                    title={hasFilters ? "No Results Found" : "No Transactions Yet"}
-                                    message={hasFilters ? "Try adjusting your search or filters to find what you're looking for." : "Tap the plus button below to add your first transaction."}
-                                    action={(transactions.length === 0 && !hasFilters) ? {
-                                        label: "Add First Transaction",
-                                        onClick: () => { hapticClick(); openTransactionModal(null); }
-                                    } : undefined}
-                                />
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    <>
-                        <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-10 py-2 text-center text-body-m text-on-surface-variant">
-                            Manage automated bills and subscriptions.
-                        </div>
-                        {recurringTransactions.length > 0 ? (
-                            <div className="stagger-children">
-                                {recurringTransactions.map((rTx, i) => (
-                                    <div key={rTx.id} style={{ '--stagger-delay': i } as React.CSSProperties}>
-                                        <RecurringTransactionItem rTx={rTx} />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                             <EmptyState
-                                icon="box"
-                                title="No Recurring Transactions"
-                                message="Set up recurring payments like rent or subscriptions to track them automatically."
-                            />
-                        )}
-                    </>
-                )}
-            </div>
+                            )}
+                        </>
+                    )}
+                </div>
 
-             {showExportModal && <ExportDataModal csvData={csvData} onClose={() => setShowExportModal(false)} />}
+                 {showExportModal && <ExportDataModal csvData={csvData} onClose={() => setShowExportModal(false)} />}
+            </div>
         </div>
     );
 }

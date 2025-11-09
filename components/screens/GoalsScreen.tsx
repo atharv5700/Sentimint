@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import type { Goal, Budget } from '../../types';
+import type { Goal, Budget, Challenge, UserChallenge } from '../../types';
 import { useAppContext } from '../../App';
-import { PlusIcon, TrashIcon, CheckIcon, PencilIcon, DEFAULT_CATEGORIES, CloseIcon } from '../../constants';
+import { ALL_CHALLENGES } from '../../data/challenges';
+import { PlusIcon, TrashIcon, CheckIcon, PencilIcon, DEFAULT_CATEGORIES, CloseIcon, CHALLENGE_BADGE_MAP } from '../../constants';
 import { hapticClick, hapticError, hapticSuccess } from '../../services/haptics';
 import ProgressBar from '../ProgressBar';
 import { EmptyState } from '../EmptyState';
@@ -302,8 +303,8 @@ function usePrevious<T>(value: T): T | undefined {
 
 
 export default function GoalsScreen() {
-    const { goals, budgets, transactions, setFabConfig, openGoalModal, openBudgetModal } = useAppContext();
-    const [activeTab, setActiveTab] = useState<'goals' | 'budgets'>('goals');
+    const { goals, budgets, transactions, setFabConfig, openGoalModal, openBudgetModal, userChallenges, startChallenge, formatCurrency } = useAppContext();
+    const [activeTab, setActiveTab] = useState<'goals' | 'budgets' | 'challenges'>('goals');
     const [celebratingGoalId, setCelebratingGoalId] = useState<string | null>(null);
     const prevGoals = usePrevious(goals);
 
@@ -342,31 +343,102 @@ export default function GoalsScreen() {
     const handleAddNewBudget = useCallback(() => { hapticClick(); openBudgetModal(null); }, [openBudgetModal]);
 
     useEffect(() => {
-        const fabAction = () => {
-            if (activeTab === 'goals') {
-                handleAddNewGoal();
-            } else {
-                handleAddNewBudget();
-            }
-        };
+        let fabAction = () => {};
+        let ariaLabel = '';
 
-        setFabConfig({
-            onClick: fabAction,
-            'aria-label': activeTab === 'goals' ? 'Add new goal' : 'Add new budget',
-        });
+        if (activeTab === 'goals') {
+            fabAction = handleAddNewGoal;
+            ariaLabel = 'Add new goal';
+        } else if (activeTab === 'budgets') {
+            fabAction = handleAddNewBudget;
+            ariaLabel = 'Add new budget';
+        }
+
+        if (fabAction && ariaLabel) {
+            setFabConfig({ onClick: fabAction, 'aria-label': ariaLabel });
+        } else {
+            setFabConfig(null);
+        }
         
         return () => {
             setFabConfig(null);
         };
     }, [activeTab, setFabConfig, handleAddNewGoal, handleAddNewBudget]);
+    
+    const { activeChallenges, completedChallenges, availableChallenges } = useMemo(() => {
+        const active = userChallenges.filter(uc => uc.status === 'active').map(uc => ({...uc, ...ALL_CHALLENGES.find(c => c.id === uc.challengeId)!}));
+        const completed = userChallenges.filter(uc => uc.status === 'completed').map(uc => ({...uc, ...ALL_CHALLENGES.find(c => c.id === uc.challengeId)!}));
+        
+        const activeChallengeIds = userChallenges.filter(uc => uc.status === 'active').map(uc => uc.challengeId);
+        // A challenge is available if it's not currently active. Allows re-trying completed/failed challenges.
+        const available = ALL_CHALLENGES.filter(c => !activeChallengeIds.includes(c.id));
+        
+        return { activeChallenges: active, completedChallenges: completed, availableChallenges: available };
+    }, [userChallenges]);
+
+    const ActiveChallengeCard: React.FC<{ challenge: UserChallenge & Challenge }> = ({ challenge }) => {
+        const BadgeIcon = CHALLENGE_BADGE_MAP[challenge.badgeIcon] || CHALLENGE_BADGE_MAP['default'];
+        let progress = 0;
+        let progressText = "Keep going!";
+
+        if (challenge.type === 'saveAmount' || challenge.type === 'spendLimitOnCategory') {
+            progress = (challenge.progress / challenge.targetValue) * 100;
+            const verb = challenge.type === 'saveAmount' ? 'Saved' : 'Spent';
+            progressText = `${verb} ${formatCurrency(challenge.progress)} / ${formatCurrency(challenge.targetValue)}`;
+        } else if (challenge.type === 'noSpendOnCategory') {
+            const daysPassed = Math.max(0, (Date.now() - challenge.startDate) / (1000 * 60 * 60 * 24));
+            progress = (daysPassed / challenge.durationDays) * 100;
+            const daysRemaining = Math.max(0, Math.ceil(challenge.durationDays - daysPassed));
+            progressText = `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} to go!`;
+        }
+
+        return (
+            <div className="bg-surface-variant p-4 rounded-3xl">
+                <div className="flex items-start gap-4">
+                    <div className="bg-surface/50 rounded-full p-3 mt-1">
+                        <BadgeIcon className="w-6 h-6 text-on-surface-variant" />
+                    </div>
+                    <div className="flex-1">
+                        <h4 className="text-title-m font-medium text-on-surface-variant">{challenge.title}</h4>
+                        <p className="text-body-m text-on-surface-variant/80 mt-1">{challenge.description}</p>
+                        <div className="mt-4">
+                            <ProgressBar progress={progress} />
+                            <p className="text-sm font-medium text-on-surface-variant mt-1.5">{progressText}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const AvailableChallengeCard: React.FC<{ challenge: Challenge }> = ({ challenge }) => (
+        <div className="bg-surface p-4 rounded-3xl border border-outline-variant">
+            <h4 className="text-title-m font-medium text-on-surface">{challenge.title}</h4>
+            <p className="text-body-m text-on-surface-variant mt-1">{challenge.description}</p>
+            <button onClick={() => startChallenge(challenge.id)} className="w-full mt-4 py-2 bg-primary text-on-primary rounded-full font-medium">Start Challenge</button>
+        </div>
+    );
+    
+    const AchievementBadge: React.FC<{ challenge: UserChallenge & Challenge }> = ({ challenge }) => {
+        const BadgeIcon = CHALLENGE_BADGE_MAP[challenge.badgeIcon] || CHALLENGE_BADGE_MAP['default'];
+        return (
+            <div className="flex flex-col items-center text-center">
+                <div className="w-20 h-20 bg-tertiary-container rounded-full flex items-center justify-center">
+                    <BadgeIcon className="w-10 h-10 text-on-tertiary-container" />
+                </div>
+                <h5 className="text-sm font-medium mt-2">{challenge.title}</h5>
+                <p className="text-xs text-on-surface-variant">Completed</p>
+            </div>
+        );
+    };
 
 
     return (
         <div className="relative min-h-full">
             {celebratingGoalId && <Confetti />}
             <div className="p-4">
-                <div className="flex justify-center p-1 bg-surface-variant/50 rounded-full mx-auto max-w-sm mb-6">
-                    {(['goals', 'budgets'] as const).map(tab => (
+                <div className="flex justify-center p-1 bg-surface-variant/50 rounded-full mx-auto max-w-md mb-6">
+                    {(['goals', 'budgets', 'challenges'] as const).map(tab => (
                         <button key={tab} onClick={() => { hapticClick(); setActiveTab(tab); }} className={`w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${activeTab === tab ? 'bg-primary-container text-on-primary-container shadow' : 'text-on-surface-variant'}`}>
                             {tab}
                         </button>
@@ -374,7 +446,7 @@ export default function GoalsScreen() {
                 </div>
 
                 <div key={activeTab} className="animate-screenFadeIn">
-                    {activeTab === 'goals' ? (
+                    {activeTab === 'goals' && (
                         <div className="space-y-4">
                             {activeGoals.length > 0 ? (
                                 <div className="space-y-4 stagger-children">
@@ -396,7 +468,8 @@ export default function GoalsScreen() {
                                 </div>
                             )}
                         </div>
-                    ) : (
+                    )}
+                    {activeTab === 'budgets' && (
                          <div className="space-y-4 stagger-children">
                             {budgets.length > 0 ? (
                                 budgets.map((budget, i) => <div key={budget.id} style={{ '--stagger-delay': i } as React.CSSProperties}><BudgetListItem budget={budget} spent={monthlySpending[budget.id] || 0} onEdit={handleEditBudget} /></div>)
@@ -408,6 +481,33 @@ export default function GoalsScreen() {
                                 />
                             )}
                         </div>
+                    )}
+                     {activeTab === 'challenges' && (
+                         <div className="space-y-6">
+                            {activeChallenges.length > 0 && (
+                                <div>
+                                    <h2 className="text-title-m font-medium mb-2">Active Challenge</h2>
+                                    <div className="space-y-4">
+                                        {activeChallenges.map(c => <ActiveChallengeCard key={c.challengeId} challenge={c} />)}
+                                    </div>
+                                </div>
+                            )}
+                             <div>
+                                <h2 className="text-title-m font-medium mb-2">Available Challenges</h2>
+                                <div className="space-y-4">
+                                    {availableChallenges.length > 0 ? availableChallenges.map(c => <AvailableChallengeCard key={c.id} challenge={c} />)
+                                    : <p className="text-body-m text-on-surface-variant text-center py-4">You've attempted all available challenges. Check back later for more!</p>}
+                                </div>
+                            </div>
+                             {completedChallenges.length > 0 && (
+                                <div>
+                                    <h2 className="text-title-m font-medium mb-2">Achievements</h2>
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 p-4 bg-surface-variant rounded-3xl">
+                                        {completedChallenges.map(c => <AchievementBadge key={c.challengeId} challenge={c} />)}
+                                    </div>
+                                </div>
+                             )}
+                         </div>
                     )}
                 </div>
             </div>

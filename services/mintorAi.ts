@@ -1,5 +1,5 @@
 import { GoogleGenAI, FunctionDeclaration, Type } from '@google/genai';
-import type { Transaction, Goal, MintorAiMessage, MintorAction, SmartInsight, AppContextType, Screen } from '../types';
+import type { Transaction, Goal, MintorAiMessage, MintorAction, CoachingTip, AppContextType, Screen } from '../types';
 import { dbService } from './db';
 import { ChartBarIcon, LightbulbIcon, TrendingUpIcon, TrophyIcon } from '../constants';
 
@@ -24,14 +24,14 @@ const getKbData = async () => {
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
 
-// --- Smart Insight Generators ---
+// --- Coaching Tip Generators ---
 
 type AppData = Pick<AppContextType, 'transactions' | 'goals'>;
 
-const analyzeTopCategory = (data: AppData): SmartInsight | null => {
+const analyzeTopCategory = (data: AppData): CoachingTip | null => {
     const now = new Date();
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay() + 1);
+    startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1) ); // Monday as start of week
     startOfWeek.setHours(0,0,0,0);
     const thisWeekTxs = data.transactions.filter(tx => tx.ts >= startOfWeek.getTime());
     if (thisWeekTxs.length < 3) return null;
@@ -53,14 +53,14 @@ const analyzeTopCategory = (data: AppData): SmartInsight | null => {
     };
 };
 
-const analyzeGoalProgress = (data: AppData): SmartInsight | null => {
+const analyzeGoalProgress = (data: AppData): CoachingTip | null => {
     const activeGoals = data.goals.filter(g => !g.completed_bool);
     if (activeGoals.length === 0) return null;
 
     const goal = activeGoals.sort((a, b) => (b.current_amount / b.target_amount) - (a.current_amount / a.target_amount))[0];
     const progress = (goal.current_amount / goal.target_amount) * 100;
 
-    if (progress < 25) return null; // Only show for goals with some progress
+    if (progress < 10) return null; // Only show for goals with some progress
 
     return {
         id: 'goal-progress',
@@ -71,74 +71,75 @@ const analyzeGoalProgress = (data: AppData): SmartInsight | null => {
     };
 };
 
-const analyzeSpendingSpike = (data: AppData): SmartInsight | null => {
-    const last14DaysTxs = data.transactions.filter(tx => tx.ts >= Date.now() - 14 * 24 * 60 * 60 * 1000);
-    if (last14DaysTxs.length < 10) return null;
+const analyzeFrequentSpending = (data: AppData): CoachingTip | null => {
+    const last7DaysTxs = data.transactions.filter(tx => tx.ts >= Date.now() - 7 * 24 * 60 * 60 * 1000);
+    if (last7DaysTxs.length < 5) return null;
 
-    const avgDailySpend = last14DaysTxs.reduce((sum, tx) => sum + tx.amount, 0) / 14;
+    const merchantCounts = last7DaysTxs.reduce((acc, tx) => {
+        if (tx.merchant) {
+            acc[tx.merchant] = (acc[tx.merchant] || 0) + 1;
+        }
+        return acc;
+    }, {} as Record<string, number>);
+
+    const frequentMerchant = Object.entries(merchantCounts).find(([, count]) => count >= 4);
+    if (!frequentMerchant) return null;
     
-    const dailySpend: Record<string, number> = {};
-    for (const tx of last14DaysTxs) {
-        const day = new Date(tx.ts).toISOString().split('T')[0];
-        dailySpend[day] = (dailySpend[day] || 0) + tx.amount;
-    }
-
-    const spikeDay = Object.entries(dailySpend).find(([, total]) => total > avgDailySpend * 2.5);
-    if (!spikeDay) return null;
-
-    const [dateStr, amount] = spikeDay;
-    const friendlyDate = new Date(dateStr).toLocaleDateString('en-IN', { weekday: 'long' });
+    const [merchant, count] = frequentMerchant;
+    const total = last7DaysTxs.filter(tx => tx.merchant === merchant).reduce((sum, tx) => sum + tx.amount, 0);
 
     return {
-        id: 'spending-spike',
+        id: 'frequent-spending',
         icon: TrendingUpIcon,
-        title: 'Spending Spike',
-        text: `Your spending on **${friendlyDate}** was **${formatCurrency(amount)}**, which is higher than your recent average.`,
+        title: 'Frequent Purchases',
+        text: `You've made **${count}** purchases at **${merchant}** this week, totaling **${formatCurrency(total)}**. Small expenses can add up quickly!`,
     };
 };
 
-const analyzeMoodSpending = (data: AppData): SmartInsight | null => {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const thisMonthTxs = data.transactions.filter(tx => tx.ts >= startOfMonth.getTime());
-    if (thisMonthTxs.length < 5) return null;
+const analyzeWeekdaySpending = (data: AppData): CoachingTip | null => {
+    const last30DaysTxs = data.transactions.filter(tx => tx.ts >= Date.now() - 30 * 24 * 60 * 60 * 1000);
+    if (last30DaysTxs.length < 10) return null;
 
-    const impulseTotal = thisMonthTxs.filter(tx => JSON.parse(tx.tags_json).includes('impulse')).reduce((sum, tx) => sum + tx.amount, 0);
-    if (impulseTotal === 0) return null;
-    
-    const total = thisMonthTxs.reduce((sum, tx) => sum + tx.amount, 0);
-    const impulsePercentage = (impulseTotal / total) * 100;
-    
-    if (impulsePercentage < 15) return null;
+    const transportTxs = last30DaysTxs.filter(tx => tx.category === 'Transport');
+    if (transportTxs.length < 5) return null;
+
+    const weekdaySpending = transportTxs.filter(tx => {
+        const day = new Date(tx.ts).getDay();
+        return day > 0 && day < 6; // Monday to Friday
+    }).reduce((sum, tx) => sum + tx.amount, 0);
+
+    const totalTransport = transportTxs.reduce((sum, tx) => sum + tx.amount, 0);
+
+    if (weekdaySpending / totalTransport < 0.7) return null; // Only if >70% is on weekdays
 
     return {
-        id: 'mood-spending',
+        id: 'weekday-spending',
         icon: LightbulbIcon,
-        title: 'Mindful Spending',
-        text: `This month, **${Math.round(impulsePercentage)}%** of your spending was on impulse buys, totaling **${formatCurrency(impulseTotal)}**.`,
+        title: 'Commuting Costs',
+        text: `You spend a lot on **Transport** during weekdays. Have you considered a monthly pass to potentially save money?`
     };
 };
 
-const getSmartInsight = (): SmartInsight | null => {
+const getCoachingTip = (): CoachingTip | null => {
     const data: AppData = {
         transactions: dbService.getTransactions(),
         goals: dbService.getGoals(),
     };
     
-    const insightFunctions = [
+    const tipFunctions = [
         analyzeTopCategory,
         analyzeGoalProgress,
-        analyzeSpendingSpike,
-        analyzeMoodSpending,
+        analyzeFrequentSpending,
+        analyzeWeekdaySpending,
     ];
     
-    // Shuffle and find the first valid insight
-    for (const fn of insightFunctions.sort(() => Math.random() - 0.5)) {
+    // Shuffle and find the first valid tip
+    for (const fn of tipFunctions.sort(() => Math.random() - 0.5)) {
         const result = fn(data);
         if (result) return result;
     }
     
-    // Fallback insight
+    // Fallback tip
     return {
         id: 'default-tip',
         icon: LightbulbIcon,
@@ -477,7 +478,7 @@ const functionDeclarations: FunctionDeclaration[] = [
 ];
 
 export const mintorAiService = {
-    getSmartInsight,
+    getCoachingTip,
     getContextualStartingPrompts,
     generateWeeklyDigest,
     getResponse: async (query: string): Promise<Omit<MintorAiMessage, 'id'>> => {
@@ -490,7 +491,7 @@ export const mintorAiService = {
             
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-            const systemInstruction = `You are Mintor, a friendly and helpful financial assistant for the Sentimint app.
+            const systemInstruction = `**CRITICAL RULE: YOUR NAME IS MINTOR.** You are an AI assistant. Under no circumstances should you ever say your name is 'Sentimint'. Sentimint is the name of the app you are in. Your name is, and always will be, MINTOR. When you introduce yourself, you must say 'I'm Mintor'. When a user says 'hi', you should respond as Mintor. You are the friendly and helpful AI assistant within the Sentimint app.
 - Your goal is to provide concise, helpful, and encouraging financial advice.
 - When asked about your identity, explain that you use Google's advanced AI to provide answers but the user's financial data remains private on their device.
 - Use the provided tools to answer questions about the user's spending data or financial topics.

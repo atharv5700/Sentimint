@@ -97,7 +97,7 @@ export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
             alert("Error preparing data for export. Please try again.");
         }
     };
-
+    
     return (
         <div className="p-4 space-y-6 stagger-children">
             <div className="bg-surface-variant p-4 rounded-3xl" style={{'--stagger-delay': 1} as React.CSSProperties}>
@@ -136,7 +136,7 @@ export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
                  <div className="space-y-2 text-body-m">
                     <div className="flex justify-between">
                         <span className="text-on-surface-variant/80">Version</span>
-                        <span className="font-medium text-on-surface-variant">2.3.0</span>
+                        <span className="font-medium text-on-surface-variant">2.4.0</span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-on-surface-variant/80">Developer</span>

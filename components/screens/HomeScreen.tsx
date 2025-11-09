@@ -1,15 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import type { Transaction, Period, Screen, SmartInsight } from '../../types';
+import type { Transaction, Period, Screen, CoachingTip } from '../../types';
 import { useAppContext } from '../../App';
 import { MOOD_MAP } from '../../constants';
 import TransactionList from '../TransactionList';
 import ProgressBar from '../ProgressBar';
 import { mintorAiService } from '../../services/mintorAi';
-import SmartInsightCard from '../SmartInsightCard';
+import CoachingTipCard from '../CoachingTipCard';
 import WeeklyDigest from '../WeeklyDigest';
 import { useAnimatedCounter } from '../../hooks/useAnimatedCounter';
 import { EmptyState } from '../EmptyState';
 import { hapticClick } from '../../services/haptics';
+import StreakCounter from '../StreakCounter';
 
 interface HomeScreenProps {
     onEditTransaction: (tx: Transaction) => void;
@@ -75,14 +76,14 @@ const PeriodSelector: React.FC<{ selected: Period, onSelect: (value: Period) => 
 
 
 export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenProps) {
-    const { transactions, formatCurrency, setIsBulkMode, budgets, openTransactionModal } = useAppContext();
+    const { transactions, formatCurrency, setIsBulkMode, budgets, openTransactionModal, streak } = useAppContext();
     const [period, setPeriod] = useState<Period>('M');
-    const [insight, setInsight] = useState<SmartInsight | null>(null);
+    const [tip, setTip] = useState<CoachingTip | null>(null);
     const [digest, setDigest] = useState<{ summary: string | null; weekKey: string } | null>(null);
-
+    
     useEffect(() => {
-        const insightData = mintorAiService.getSmartInsight();
-        setInsight(insightData);
+        const tipData = mintorAiService.getCoachingTip();
+        setTip(tipData);
     }, [transactions]);
     
     useEffect(() => {
@@ -158,84 +159,90 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
 
 
     return (
-        <div className="relative h-full pb-6">
-            <div className="px-4 pt-4">
-                 <div className="bg-surface-variant text-on-surface-variant p-4 rounded-3xl space-y-4 animate-screenFadeIn" style={{ animationDelay: '50ms' }}>
-                    <div className="bg-surface p-1 rounded-full">
-                        <PeriodSelector selected={period} onSelect={setPeriod} />
-                    </div>
-                    <div className="text-center">
-                        <p className="text-body-m text-on-surface-variant">Total Spent</p>
-                        <p className="text-headline-m font-bold text-on-surface-variant">{formatCurrency(animatedTotalSpent)}</p>
-                        {avgMood && (
-                            <div className="inline-flex items-center gap-1 bg-surface text-on-surface px-3 py-1.5 rounded-full mt-2 text-sm">
-                                <span className="leading-none text-on-surface-variant">Avg. Mood:</span>
-                                <span className="leading-none font-medium">{avgMood.label}</span>
+        <div className="relative h-full">
+            <div className="pb-6">
+                <div className="px-4 pt-4">
+                     <div className="bg-surface-variant text-on-surface-variant p-4 rounded-3xl space-y-4 animate-screenFadeIn" style={{ animationDelay: '50ms' }}>
+                        <div className="bg-surface p-1 rounded-full">
+                            <PeriodSelector selected={period} onSelect={setPeriod} />
+                        </div>
+                        <div className="text-center">
+                            <p className="text-body-m text-on-surface-variant">Total Spent</p>
+                            <p className="text-headline-m font-bold text-on-surface-variant">{formatCurrency(animatedTotalSpent)}</p>
+                            <div className="flex justify-center items-center gap-2 mt-2">
+                                {avgMood && (
+                                    <div className="flex items-center justify-center bg-surface text-on-surface px-3 py-1.5 rounded-full text-sm">
+                                        <span className="text-on-surface-variant mr-1">Avg. Mood:</span>
+                                        <span className="font-medium">{avgMood.label}</span>
+                                    </div>
+                                )}
+                                <StreakCounter streak={streak} />
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {digest && (
-                 <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '100ms' }}>
-                    <WeeklyDigest digest={digest} />
-                 </div>
-            )}
-            
-            {insight && (
-                <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '150ms' }}>
-                    <SmartInsightCard insight={insight} setScreen={setScreen} />
-                </div>
-            )}
-
-            {budgetStatus.length > 0 && (
-                <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '200ms' }}>
-                    <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-title-m font-medium text-on-surface">Monthly Budgets</h3>
-                        <button onClick={() => { hapticClick(); setScreen('Goals'); }} className="text-primary font-medium text-sm">Manage</button>
-                    </div>
-                    <div className="bg-surface-variant p-4 rounded-3xl space-y-4">
-                        {budgetStatus.slice(0, 3).map(budget => (
-                            <div key={budget.id}>
-                                <div className="flex justify-between items-center mb-1 text-sm">
-                                    <span className="font-medium text-on-surface-variant">{budget.category}</span>
-                                    <span className="text-on-surface-variant/80">{formatCurrency(budget.spent)} / {formatCurrency(budget.amount)}</span>
-                                </div>
-                                <ProgressBar progress={budget.progress} />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '250ms' }}>
-                <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-title-m font-medium text-on-surface">Recent Expenses</h3>
-                    <button onClick={() => { hapticClick(); setScreen('Transactions'); }} className="text-primary font-medium text-sm">View All</button>
-                </div>
-                {filteredTransactions.length > 0 ? (
-                    <TransactionList 
-                        transactions={filteredTransactions.slice(0, 10)} 
-                        onEditTransaction={onEditTransaction} 
-                        showDate={true}
-                        isBulkSelectEnabled={true}
-                        onBulkModeChange={setIsBulkMode}
-                    />
-                ) : (
-                    <EmptyState
-                        icon="box"
-                        title="No Expenses Yet"
-                        message={`Your recent transactions for this ${period === 'D' ? 'day' : period === 'W' ? 'week' : period === 'M' ? 'month' : 'year'} will appear here.`}
-                        action={transactions.length === 0 ? {
-                            label: "Add First Transaction",
-                            onClick: () => {
-                                hapticClick();
-                                openTransactionModal(null);
-                            }
-                        } : undefined}
-                    />
+                {digest && (
+                     <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '100ms' }}>
+                        <WeeklyDigest digest={digest} />
+                     </div>
                 )}
+                
+                {tip && (
+                    <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '150ms' }}>
+                        <h3 className="text-title-m font-medium text-on-surface mb-2">Mintor Coach</h3>
+                        <CoachingTipCard tip={tip} setScreen={setScreen} />
+                    </div>
+                )}
+
+                {budgetStatus.length > 0 && (
+                    <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '200ms' }}>
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-title-m font-medium text-on-surface">Monthly Budgets</h3>
+                            <button onClick={() => { hapticClick(); setScreen('Goals'); }} className="text-primary font-medium text-sm">Manage</button>
+                        </div>
+                        <div className="bg-surface-variant p-4 rounded-3xl space-y-4">
+                            {budgetStatus.slice(0, 3).map(budget => (
+                                <div key={budget.id}>
+                                    <div className="flex justify-between items-center mb-1 text-sm">
+                                        <span className="font-medium text-on-surface-variant">{budget.category}</span>
+                                        <span className="text-on-surface-variant/80">{formatCurrency(budget.spent)} / {formatCurrency(budget.amount)}</span>
+                                    </div>
+                                    <ProgressBar progress={budget.progress} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '250ms' }}>
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-title-m font-medium text-on-surface">Recent Expenses</h3>
+                        <button onClick={() => { hapticClick(); setScreen('Transactions'); }} className="text-primary font-medium text-sm">View All</button>
+                    </div>
+                    {filteredTransactions.length > 0 ? (
+                        <TransactionList 
+                            transactions={filteredTransactions.slice(0, 10)} 
+                            onEditTransaction={onEditTransaction} 
+                            showDate={true}
+                            isBulkSelectEnabled={true}
+                            onBulkModeChange={setIsBulkMode}
+                        />
+                    ) : (
+                        <EmptyState
+                            icon="box"
+                            title="No Expenses Yet"
+                            message={`Your recent transactions for this ${period === 'D' ? 'day' : period === 'W' ? 'week' : period === 'M' ? 'month' : 'year'} will appear here.`}
+                            action={transactions.length === 0 ? {
+                                label: "Add First Transaction",
+                                onClick: () => {
+                                    hapticClick();
+                                    openTransactionModal(null);
+                                }
+                            } : undefined}
+                        />
+                    )}
+                </div>
             </div>
         </div>
     );

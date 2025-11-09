@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, createContext, useContext, useMemo } from 'react';
-import type { Screen, Theme, Transaction, Goal, Budget, RecurringTransaction } from './types';
+import type { Screen, Theme, Transaction, Goal, Budget, RecurringTransaction, UserChallenge, Challenge } from './types';
 import { dbService } from './services/db';
+import { ALL_CHALLENGES } from './data/challenges';
 import { hapticClick, hapticSuccess } from './services/haptics';
 import HomeScreen from './components/screens/HomeScreen';
 import TransactionsScreen from './components/screens/TransactionsScreen';
@@ -28,6 +29,8 @@ export interface AppContextType {
   budgets: Budget[];
   recurringTransactions: RecurringTransaction[];
   customCategories: string[];
+  userChallenges: UserChallenge[];
+  streak: number;
   theme: Theme;
   setScreen: (screen: Screen) => void;
   setTheme: (theme: Theme) => void;
@@ -47,6 +50,7 @@ export interface AppContextType {
   addCustomCategory: (category: string) => Promise<void>;
   deleteCustomCategory: (category: string) => Promise<void>;
   linkTransactionToGoal: (txId: string, goalId: string | null) => Promise<void>;
+  startChallenge: (challengeId: string) => Promise<void>;
   formatCurrency: (amount: number) => string;
   isBulkMode: boolean;
   setIsBulkMode: (isBulk: boolean) => void;
@@ -83,6 +87,8 @@ export default function App() {
     const [budgets, setBudgets] = useState<Budget[]>([]);
     const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
     const [customCategories, setCustomCategories] = useState<string[]>([]);
+    const [userChallenges, setUserChallenges] = useState<UserChallenge[]>([]);
+    const [streak, setStreak] = useState(0);
     const [theme, setThemeState] = useState<Theme>(dbService.getTheme());
     const [isDataReady, setIsDataReady] = useState(false);
     
@@ -129,14 +135,81 @@ export default function App() {
         }
     }, []);
 
+    const processChallenges = useCallback(async (txs: Transaction[]) => {
+        const challenges = dbService.getUserChallenges();
+        const activeChallenges = challenges.filter(c => c.status === 'active');
+        if (activeChallenges.length === 0) return;
+
+        let challengesUpdated = false;
+        for (const userChallenge of activeChallenges) {
+            const challengeDef = ALL_CHALLENGES.find(c => c.id === userChallenge.challengeId);
+            if (!challengeDef) continue;
+
+            const challengeEndDate = userChallenge.startDate + challengeDef.durationDays * 24 * 60 * 60 * 1000;
+            if (Date.now() > challengeEndDate) {
+                if (userChallenge.progress >= challengeDef.targetValue) {
+                    userChallenge.status = 'completed';
+                } else {
+                    userChallenge.status = 'failed';
+                }
+                userChallenge.endDate = Date.now();
+                challengesUpdated = true;
+                continue;
+            }
+            
+            const relevantTxs = txs.filter(tx => tx.ts >= userChallenge.startDate && tx.ts <= challengeEndDate);
+
+            if (challengeDef.type === 'saveAmount') {
+                const newProgress = relevantTxs
+                    .filter(tx => tx.goal_id !== null)
+                    .reduce((sum, tx) => sum + tx.amount, 0);
+                if (newProgress !== userChallenge.progress) {
+                    userChallenge.progress = newProgress;
+                    challengesUpdated = true;
+                }
+            } else if (challengeDef.type === 'spendLimitOnCategory') {
+                const categories = challengeDef.category?.split(';') || [];
+                const newProgress = relevantTxs
+                    .filter(tx => categories.includes(tx.category))
+                    .reduce((sum, tx) => sum + tx.amount, 0);
+                if (newProgress !== userChallenge.progress) {
+                    userChallenge.progress = newProgress;
+                    if (newProgress > challengeDef.targetValue) {
+                        userChallenge.status = 'failed';
+                        userChallenge.endDate = Date.now();
+                    }
+                    challengesUpdated = true;
+                }
+            } else if (challengeDef.type === 'noSpendOnCategory') {
+                const categories = challengeDef.category?.split(';') || [];
+                const hasSpent = relevantTxs.some(tx => categories.includes(tx.category));
+                 if (hasSpent) {
+                    userChallenge.status = 'failed';
+                    userChallenge.endDate = Date.now();
+                    challengesUpdated = true;
+                 }
+            }
+        }
+
+        if (challengesUpdated) {
+            await dbService.saveUserChallenges(challenges);
+            setUserChallenges(challenges);
+        }
+    }, []);
+
     const refreshData = useCallback(async () => {
         const freshTxs = dbService.getTransactions();
         setTransactions(freshTxs);
         setBudgets(dbService.getBudgets());
         setRecurringTransactions(dbService.getRecurringTransactions());
         setCustomCategories(dbService.getCustomCategories());
+        const streakData = dbService.getStreakData();
+        setStreak(streakData.currentStreak);
+        const challenges = dbService.getUserChallenges();
+        setUserChallenges(challenges);
         await recalculateGoals(freshTxs);
-    }, [recalculateGoals]);
+        await processChallenges(freshTxs);
+    }, [recalculateGoals, processChallenges]);
 
     const loadData = useCallback(async () => {
         await dbService.init();
@@ -292,6 +365,20 @@ export default function App() {
         await updateTransaction(updatedTx);
     };
 
+    const startChallenge = async (challengeId: string) => {
+        const challenges = dbService.getUserChallenges();
+        const newChallenge: UserChallenge = {
+            challengeId,
+            startDate: Date.now(),
+            status: 'active',
+            progress: 0,
+        };
+        challenges.push(newChallenge);
+        await dbService.saveUserChallenges(challenges);
+        await refreshData();
+        hapticSuccess();
+    };
+
     const openTransactionModal = (tx: Transaction | null = null) => {
         setEditingTx(tx);
         setAddTxModalOpen(true);
@@ -404,6 +491,8 @@ export default function App() {
         budgets,
         recurringTransactions,
         customCategories,
+        userChallenges,
+        streak,
         theme,
         setScreen: handleSetScreen,
         setTheme,
@@ -423,6 +512,7 @@ export default function App() {
         addCustomCategory,
         deleteCustomCategory,
         linkTransactionToGoal,
+        startChallenge,
         formatCurrency,
         isBulkMode,
         setIsBulkMode,

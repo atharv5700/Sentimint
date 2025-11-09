@@ -26,7 +26,7 @@ const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: Mintor
                                     hapticClick();
                                     onAction(action);
                                 }}
-                                className="text-sm bg-tertiary-container text-on-tertiary-container px-3 py-1.5 rounded-full text-left w-full"
+                                className="text-sm bg-primary-container text-on-primary-container px-3 py-1.5 rounded-full text-left w-full"
                             >
                                 {action.label}
                             </button>

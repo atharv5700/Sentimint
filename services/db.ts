@@ -1,4 +1,4 @@
-import type { Transaction, Goal, Theme, Mood, Budget, RecurringTransaction } from '../types';
+import type { Transaction, Goal, Theme, Mood, Budget, RecurringTransaction, UserChallenge } from '../types';
 
 const DB_KEY = 'sentimint_db';
 const THEME_KEY = 'sentimint_theme';
@@ -42,6 +42,8 @@ interface Database {
     budgets: Budget[];
     recurring_transactions: RecurringTransaction[];
     customCategories: string[];
+    userChallenges: UserChallenge[];
+    streakData: { currentStreak: number, lastLogDate: string };
 }
 
 class DbService {
@@ -51,6 +53,8 @@ class DbService {
         budgets: [],
         recurring_transactions: [],
         customCategories: [],
+        userChallenges: [],
+        streakData: { currentStreak: 0, lastLogDate: '' },
     };
 
     constructor() {
@@ -67,6 +71,8 @@ class DbService {
                 budgets: data.budgets || [],
                 recurring_transactions: data.recurring_transactions || [],
                 customCategories: data.customCategories || [],
+                userChallenges: data.userChallenges || [],
+                streakData: data.streakData || { currentStreak: 0, lastLogDate: '' },
             };
         }
     }
@@ -199,6 +205,7 @@ class DbService {
             ts: Date.now(),
         };
         this.db.transactions.push(newTx);
+        this.updateStreakData(new Date(newTx.ts));
         this.save();
         return newTx;
     }
@@ -326,6 +333,40 @@ class DbService {
         this.db.customCategories = this.db.customCategories.filter(c => c !== category);
         this.save();
     }
+    
+    // Challenges
+    public getUserChallenges(): UserChallenge[] {
+        return [...this.db.userChallenges];
+    }
+
+    public async saveUserChallenges(challenges: UserChallenge[]): Promise<void> {
+        this.db.userChallenges = challenges;
+        this.save();
+    }
+    
+    // Streak
+    public getStreakData(): { currentStreak: number, lastLogDate: string } {
+        return { ...this.db.streakData };
+    }
+
+    private updateStreakData(logDate: Date) {
+        const todayStr = logDate.toISOString().split('T')[0];
+        
+        if (this.db.streakData.lastLogDate === todayStr) {
+            return; // Already logged today
+        }
+
+        const yesterday = new Date(logDate);
+        yesterday.setDate(logDate.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        if (this.db.streakData.lastLogDate === yesterdayStr) {
+            this.db.streakData.currentStreak += 1; // Continue streak
+        } else {
+            this.db.streakData.currentStreak = 1; // Reset or start streak
+        }
+        this.db.streakData.lastLogDate = todayStr;
+    }
 
     // Theme
     public getTheme(): Theme {
@@ -356,6 +397,8 @@ class DbService {
             budgets: [],
             recurring_transactions: [],
             customCategories: [],
+            userChallenges: [],
+            streakData: { currentStreak: 0, lastLogDate: '' },
         };
         localStorage.removeItem(DB_KEY);
         localStorage.removeItem(THEME_KEY);
