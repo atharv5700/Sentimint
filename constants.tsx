@@ -182,7 +182,7 @@ export const SparkleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 
 export const MintorAiIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg {...iconProps} {...props} viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="12" />
+        <circle cx="12" cy="12" r="11.5" stroke="rgb(var(--color-primary-container))" strokeWidth="1" />
         <text 
             x="12" 
             y="12" 
