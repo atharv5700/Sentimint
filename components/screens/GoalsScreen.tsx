@@ -4,6 +4,7 @@ import { useAppContext } from '../../App';
 import { PlusIcon, TrashIcon, CheckIcon, PencilIcon, DEFAULT_CATEGORIES, CloseIcon } from '../../constants';
 import { hapticClick, hapticError, hapticSuccess } from '../../services/haptics';
 import ProgressBar from '../ProgressBar';
+import { EmptyState } from '../EmptyState';
 
 
 const ProgressRing: React.FC<{ progress: number }> = ({ progress }) => {
@@ -336,13 +337,12 @@ export default function GoalsScreen() {
     }, [transactions, budgets]);
 
     const handleEditGoal = (goal: Goal) => openGoalModal(goal);
-    const handleAddNewGoal = useCallback(() => openGoalModal(null), [openGoalModal]);
+    const handleAddNewGoal = useCallback(() => { hapticClick(); openGoalModal(null); }, [openGoalModal]);
     const handleEditBudget = (budget: Budget) => openBudgetModal(budget);
-    const handleAddNewBudget = useCallback(() => openBudgetModal(null), [openBudgetModal]);
+    const handleAddNewBudget = useCallback(() => { hapticClick(); openBudgetModal(null); }, [openBudgetModal]);
 
     useEffect(() => {
         const fabAction = () => {
-            hapticClick();
             if (activeTab === 'goals') {
                 handleAddNewGoal();
             } else {
@@ -373,28 +373,45 @@ export default function GoalsScreen() {
                     ))}
                 </div>
 
-                {activeTab === 'goals' ? (
-                    <div className="space-y-4 stagger-children">
-                        {activeGoals.length > 0 && activeGoals.map((goal, i) => <div key={goal.id} style={{ '--stagger-delay': i } as React.CSSProperties}><GoalCard goal={goal} onEdit={handleEditGoal} /></div>)}
-                        {activeGoals.length === 0 && <p className="text-center text-on-surface-variant p-8">No active goals. Create one to get started!</p>}
-                        {completedGoals.length > 0 && (
-                            <div className="pt-8">
-                                <h2 className="text-title-m font-medium mb-2">Completed</h2>
+                <div key={activeTab} className="animate-screenFadeIn">
+                    {activeTab === 'goals' ? (
+                        <div className="space-y-4">
+                            {activeGoals.length > 0 ? (
                                 <div className="space-y-4 stagger-children">
-                                    {completedGoals.map((goal, i) => <div key={goal.id} style={{ '--stagger-delay': i + activeGoals.length } as React.CSSProperties}><GoalCard goal={goal} onEdit={handleEditGoal} /></div>)}
+                                    {activeGoals.map((goal, i) => <div key={goal.id} style={{ '--stagger-delay': i } as React.CSSProperties}><GoalCard goal={goal} onEdit={handleEditGoal} /></div>)}
                                 </div>
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                     <div className="space-y-4 stagger-children">
-                        {budgets.length > 0 ? (
-                            budgets.map((budget, i) => <div key={budget.id} style={{ '--stagger-delay': i } as React.CSSProperties}><BudgetListItem budget={budget} spent={monthlySpending[budget.id] || 0} onEdit={handleEditBudget} /></div>)
-                        ) : (
-                            <p className="text-center text-on-surface-variant p-8">No budgets set. Create one to get started!</p>
-                        )}
-                    </div>
-                )}
+                            ) : (
+                                <EmptyState
+                                    icon="goal"
+                                    title={completedGoals.length > 0 ? "All Goals Achieved!" : "Set Your First Goal"}
+                                    message={completedGoals.length > 0 ? "You've smashed all your previous goals. Ready for the next challenge?" : "Saving for something special? Create a goal to track your progress."}
+                                    action={{ label: "Create a New Goal", onClick: handleAddNewGoal }}
+                                />
+                            )}
+                            {completedGoals.length > 0 && (
+                                <div className="pt-8">
+                                    <h2 className="text-title-m font-medium mb-2">Completed</h2>
+                                    <div className="space-y-4 stagger-children">
+                                        {completedGoals.map((goal, i) => <div key={goal.id} style={{ '--stagger-delay': i + activeGoals.length } as React.CSSProperties}><GoalCard goal={goal} onEdit={handleEditGoal} /></div>)}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                         <div className="space-y-4 stagger-children">
+                            {budgets.length > 0 ? (
+                                budgets.map((budget, i) => <div key={budget.id} style={{ '--stagger-delay': i } as React.CSSProperties}><BudgetListItem budget={budget} spent={monthlySpending[budget.id] || 0} onEdit={handleEditBudget} /></div>)
+                            ) : (
+                                <EmptyState
+                                    icon="goal"
+                                    title="Create a Budget"
+                                    message="Budgets help you stay on top of your spending in different categories."
+                                    action={{ label: "Create Budget", onClick: handleAddNewBudget }}
+                                />
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

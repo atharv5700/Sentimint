@@ -7,6 +7,9 @@ import ProgressBar from '../ProgressBar';
 import { mintorAiService } from '../../services/mintorAi';
 import SmartInsightCard from '../SmartInsightCard';
 import WeeklyDigest from '../WeeklyDigest';
+import { useAnimatedCounter } from '../../hooks/useAnimatedCounter';
+import { EmptyState } from '../EmptyState';
+import { hapticClick } from '../../services/haptics';
 
 interface HomeScreenProps {
     onEditTransaction: (tx: Transaction) => void;
@@ -72,7 +75,7 @@ const PeriodSelector: React.FC<{ selected: Period, onSelect: (value: Period) => 
 
 
 export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenProps) {
-    const { transactions, formatCurrency, setIsBulkMode, budgets } = useAppContext();
+    const { transactions, formatCurrency, setIsBulkMode, budgets, openTransactionModal } = useAppContext();
     const [period, setPeriod] = useState<Period>('M');
     const [insight, setInsight] = useState<SmartInsight | null>(null);
     const [digest, setDigest] = useState<{ summary: string | null; weekKey: string } | null>(null);
@@ -130,6 +133,8 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
         return { totalSpent: total, avgMood: MOOD_MAP[avg as keyof typeof MOOD_MAP] || MOOD_MAP[3] };
     }, [filteredTransactions]);
 
+    const animatedTotalSpent = useAnimatedCounter(totalSpent);
+
     const budgetStatus = useMemo(() => {
         if (!budgets || budgets.length === 0) return [];
 
@@ -161,7 +166,7 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                     </div>
                     <div className="text-center">
                         <p className="text-body-m text-on-surface-variant">Total Spent</p>
-                        <p className="text-headline-m font-bold text-on-surface-variant">{formatCurrency(totalSpent)}</p>
+                        <p className="text-headline-m font-bold text-on-surface-variant">{formatCurrency(animatedTotalSpent)}</p>
                         {avgMood && (
                             <div className="inline-flex items-center gap-1 bg-surface text-on-surface px-3 py-1.5 rounded-full mt-2 text-sm">
                                 <span className="leading-none text-on-surface-variant">Avg. Mood:</span>
@@ -209,13 +214,28 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                     <h3 className="text-title-m font-medium text-on-surface">Recent Expenses</h3>
                     <button onClick={() => setScreen('Transactions')} className="text-primary font-medium text-sm">View All</button>
                 </div>
-                <TransactionList 
-                    transactions={filteredTransactions.slice(0, 10)} 
-                    onEditTransaction={onEditTransaction} 
-                    showDate={true}
-                    isBulkSelectEnabled={true}
-                    onBulkModeChange={setIsBulkMode}
-                />
+                {filteredTransactions.length > 0 ? (
+                    <TransactionList 
+                        transactions={filteredTransactions.slice(0, 10)} 
+                        onEditTransaction={onEditTransaction} 
+                        showDate={true}
+                        isBulkSelectEnabled={true}
+                        onBulkModeChange={setIsBulkMode}
+                    />
+                ) : (
+                    <EmptyState
+                        icon="box"
+                        title="No Expenses Yet"
+                        message={`Your recent transactions for this ${period === 'D' ? 'day' : period === 'W' ? 'week' : period === 'M' ? 'month' : 'year'} will appear here.`}
+                        action={transactions.length === 0 ? {
+                            label: "Add First Transaction",
+                            onClick: () => {
+                                hapticClick();
+                                openTransactionModal(null);
+                            }
+                        } : undefined}
+                    />
+                )}
             </div>
         </div>
     );

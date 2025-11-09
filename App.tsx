@@ -457,7 +457,7 @@ export default function App() {
                 {fabDetails.show && !isAModalOpen && !isBulkMode && (
                      <button
                         onClick={fabDetails.onClick}
-                        className="fixed bottom-24 right-6 bg-primary-container text-on-primary-container rounded-2xl shadow-lg w-14 h-14 flex items-center justify-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-modalSlideUp z-10"
+                        className="fixed bottom-24 right-6 bg-primary-container text-on-primary-container rounded-2xl shadow-lg w-14 h-14 flex items-center justify-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-fabPopIn z-10"
                         aria-label={fabDetails['aria-label']}
                     >
                         <PlusIcon className="w-7 h-7" />
