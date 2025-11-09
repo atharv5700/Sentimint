@@ -3,8 +3,6 @@ import type { Transaction, Mood, RecurringTransaction } from '../../types';
 import { useAppContext } from '../../App';
 import TransactionList from '../TransactionList';
 import { SearchIcon, ChevronDownIcon, DEFAULT_CATEGORIES, MOOD_MAP, PencilIcon, TrashIcon } from '../../constants';
-import { dbService } from '../../services/db';
-import { ExportDataModal } from './SettingsScreen';
 import CustomSelect from '../CustomSelect';
 import { hapticClick } from '../../services/haptics';
 import { EmptyState } from '../EmptyState';
@@ -31,12 +29,10 @@ interface TransactionsScreenProps {
 }
 
 export default function TransactionsScreen({ onEditTransaction }: TransactionsScreenProps) {
-    const { transactions, recurringTransactions, setIsBulkMode, setFabConfig, openRecurringTransactionModal, openTransactionModal } = useAppContext();
+    const { transactions, recurringTransactions, setIsBulkMode, setFabConfig, openRecurringTransactionModal, openTransactionModal, openExportModal } = useAppContext();
     const [activeTab, setActiveTab] = useState<'transactions' | 'recurring'>('transactions');
     const [searchTerm, setSearchTerm] = useState('');
     const [filters, setFilters] = useState<{ category: string; mood: string }>({ category: '', mood: '' });
-    const [showExportModal, setShowExportModal] = useState(false);
-    const [csvData, setCsvData] = useState('');
     
     const categoryOptions = [{value: '', label: 'All Categories'}, ...DEFAULT_CATEGORIES.map(c => ({value: c, label: c}))];
     const moodOptions = [{value: '', label: 'All Moods'}, ...Object.entries(MOOD_MAP).map(([level, {label}]) => ({value: level, label}))];
@@ -75,18 +71,6 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
         });
     }, [transactions, searchTerm, filters]);
     
-    const handleExport = () => {
-        try {
-            hapticClick();
-            const csv = dbService.exportToCsv();
-            setCsvData(csv);
-            setShowExportModal(true);
-        } catch(e) {
-            console.error("Failed to prepare export data", e);
-            alert("Error preparing data for export. Please try again.");
-        }
-    };
-
     return (
         <div className="relative">
             <div className="p-4">
@@ -127,7 +111,7 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
                                     />
                                 </div>
                                 <div className="flex justify-end">
-                                    <button onClick={handleExport} className="text-primary font-medium text-sm px-3 py-1">Export CSV</button>
+                                    <button onClick={openExportModal} className="text-primary font-medium text-sm px-3 py-1">Export CSV</button>
                                 </div>
                             </div>
                             {filteredTransactions.length > 0 ? (
@@ -175,8 +159,6 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
                         </>
                     )}
                 </div>
-
-                 {showExportModal && <ExportDataModal csvData={csvData} onClose={() => setShowExportModal(false)} />}
             </div>
         </div>
     );

@@ -151,13 +151,16 @@ const BulkActionToolbar: React.FC<{ selectedIds: string[], onClear: () => void, 
 
     return (
         <>
-            <div className="fixed bottom-20 left-0 right-0 bg-secondary-container text-on-secondary-container p-2 flex justify-between items-center shadow-lg animate-modalSlideUp z-20" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-                <span className="font-medium ml-2">{selectedIds.length} selected</span>
+            <div
+                className="fixed bottom-0 left-0 right-0 bg-secondary-container text-on-secondary-container flex justify-between items-center shadow-lg animate-modalSlideUp z-30 px-4"
+                style={{ paddingTop: '0.75rem', paddingBottom: `calc(0.75rem + env(safe-area-inset-bottom))` }}
+            >
+                <span className="font-medium ml-2 text-lg">{selectedIds.length} selected</span>
                 <div className="flex gap-1 items-center">
-                    <button onClick={() => { hapticClick(); setShowTagModal(true); }} className="p-2 rounded-full hover:bg-black/10" aria-label="Tag selected"><TagIcon/></button>
-                    <button onClick={() => { hapticClick(); setShowLinkModal(true); }} className="p-2 rounded-full hover:bg-black/10" aria-label="Link selected"><LinkIcon/></button>
-                    <button onClick={handleDelete} className="p-2 rounded-full hover:bg-black/10" aria-label="Delete selected"><TrashIcon/></button>
-                    <button onClick={() => { hapticClick(); onClear(); }} className="p-2 rounded-full" aria-label="Done"><CloseIcon /></button>
+                    <button onClick={() => { hapticClick(); setShowTagModal(true); }} className="p-3 rounded-full hover:bg-black/10" aria-label="Tag selected"><TagIcon className="w-6 h-6" /></button>
+                    <button onClick={() => { hapticClick(); setShowLinkModal(true); }} className="p-3 rounded-full hover:bg-black/10" aria-label="Link selected"><LinkIcon className="w-6 h-6" /></button>
+                    <button onClick={handleDelete} className="p-3 rounded-full hover:bg-black/10" aria-label="Delete selected"><TrashIcon className="w-6 h-6" /></button>
+                    <button onClick={() => { hapticClick(); onClear(); }} className="p-3 rounded-full" aria-label="Close bulk actions"><CloseIcon className="w-6 h-6" /></button>
                 </div>
             </div>
             {showTagModal && <TagModal onApply={applyTags} onClose={() => setShowTagModal(false)} />}

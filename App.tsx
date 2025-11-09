@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback, createContext, useContext, use
 import type { Screen, Theme, Transaction, Goal, Budget, RecurringTransaction, UserChallenge, Challenge } from './types';
 import { dbService } from './services/db';
 import { ALL_CHALLENGES } from './data/challenges';
-import { hapticClick, hapticSuccess } from './services/haptics';
+import { hapticClick, hapticSuccess, hapticError } from './services/haptics';
 import HomeScreen from './components/screens/HomeScreen';
 import TransactionsScreen from './components/screens/TransactionsScreen';
 import InsightsScreen from './components/screens/InsightsScreen';
 import GoalsScreen, { GoalModal, BudgetModal } from './components/screens/GoalsScreen';
-import SettingsScreen from './components/screens/SettingsScreen';
+import SettingsScreen, { ExportDataModal } from './components/screens/SettingsScreen';
 import ImportDataModal from './components/screens/ImportScreen';
 import ManageCategoriesScreen from './components/screens/ManageCategoriesScreen';
 import BottomNav from './components/layout/BottomNav';
@@ -60,6 +60,7 @@ export interface AppContextType {
   openBudgetModal: (budget?: Budget | null) => void;
   openRecurringTransactionModal: (rTx?: RecurringTransaction | null) => void;
   openImportModal: () => void;
+  openExportModal: () => void;
   refreshData: () => Promise<void>;
 }
 
@@ -103,11 +104,13 @@ export default function App() {
     const [isRecurringTxModalOpen, setRecurringTxModalOpen] = useState(false);
     const [editingRecurringTx, setEditingRecurringTx] = useState<RecurringTransaction | null>(null);
     const [isImportModalOpen, setImportModalOpen] = useState(false);
+    const [isExportModalOpen, setExportModalOpen] = useState(false);
+    const [csvData, setCsvData] = useState('');
 
     const [isBulkMode, setIsBulkMode] = useState(false);
     const [fabConfig, setFabConfig] = useState<FabConfig | null>(null);
 
-    const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen || isGoalModalOpen || isBudgetModalOpen || isRecurringTxModalOpen || isSearchModalOpen || isImportModalOpen, [isAddTxModalOpen, isMintorModalOpen, isGoalModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isSearchModalOpen, isImportModalOpen]);
+    const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen || isGoalModalOpen || isBudgetModalOpen || isRecurringTxModalOpen || isSearchModalOpen || isImportModalOpen || isExportModalOpen, [isAddTxModalOpen, isMintorModalOpen, isGoalModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isSearchModalOpen, isImportModalOpen, isExportModalOpen]);
 
     const recalculateGoals = useCallback(async (txs: Transaction[]) => {
         const allGoals = dbService.getGoals();
@@ -248,6 +251,7 @@ export default function App() {
             if (isBudgetModalOpen) setBudgetModalOpen(false);
             if (isRecurringTxModalOpen) setRecurringTxModalOpen(false);
             if (isImportModalOpen) setImportModalOpen(false);
+            if (isExportModalOpen) setExportModalOpen(false);
         };
     
         if (isAModalOpen) {
@@ -260,7 +264,7 @@ export default function App() {
         return () => {
             window.removeEventListener('popstate', handlePopState);
         };
-    }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen, isSearchModalOpen, isGoalModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isImportModalOpen]);
+    }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen, isSearchModalOpen, isGoalModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isImportModalOpen, isExportModalOpen]);
 
 
     const setTheme = (newTheme: Theme) => {
@@ -416,6 +420,7 @@ export default function App() {
     };
     
     const handleCloseImportModal = createModalCloser(setImportModalOpen);
+    const handleCloseExportModal = createModalCloser(setExportModalOpen);
     
     const openGoalModal = (goal: Goal | null = null) => {
         setEditingGoal(goal);
@@ -434,6 +439,19 @@ export default function App() {
 
     const openImportModal = () => {
         setImportModalOpen(true);
+    };
+
+    const openExportModal = () => {
+        try {
+            const csv = dbService.exportToCsv();
+            setCsvData(csv);
+            setExportModalOpen(true);
+            hapticClick();
+        } catch(e) {
+            console.error("Failed to prepare export data", e);
+            alert("Error preparing data for export. Please try again.");
+            hapticError();
+        }
     };
 
     const handleSetScreen = (newScreen: Screen) => {
@@ -522,6 +540,7 @@ export default function App() {
         openBudgetModal,
         openRecurringTransactionModal,
         openImportModal,
+        openExportModal,
         refreshData,
     };
 
@@ -541,7 +560,7 @@ export default function App() {
                             {renderScreen()}
                         </div>
                     </main>
-                    {screen !== 'ManageCategories' && <BottomNav activeScreen={screen} setScreen={handleSetScreen} />}
+                    {screen !== 'ManageCategories' && !isBulkMode && <BottomNav activeScreen={screen} setScreen={handleSetScreen} />}
                 </div>
                 
                 {fabDetails.show && !isAModalOpen && !isBulkMode && (
@@ -598,6 +617,12 @@ export default function App() {
                     <ImportDataModal
                         isOpen={isImportModalOpen}
                         onClose={handleCloseImportModal}
+                    />
+                )}
+                 {isExportModalOpen && (
+                    <ExportDataModal
+                        csvData={csvData}
+                        onClose={handleCloseExportModal}
                     />
                 )}
             </div>

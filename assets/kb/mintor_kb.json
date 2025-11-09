@@ -19,6 +19,30 @@
     "who_are_you": {
       "keywords": ["who are you", "what is your name", "what are you"],
       "answers": ["I'm Mintor, your personal finance assistant. I run completely on your device to ensure your data stays private.", "My name is Mintor. I'm here to help you understand your spending habits."]
+    },
+    "purpose": {
+      "keywords": ["purpose", "your purpose"],
+      "answer": "My purpose is to help you make sense of your spending, provide financial insights, and guide you towards your goals, all while keeping your data completely private on your device."
+    },
+    "weather": {
+      "keywords": ["weather", "forecast", "rain"],
+      "answer": "I'm a finance assistant, not a meteorologist! I can tell you about your financial forecast, though."
+    },
+    "money_joke": {
+      "keywords": ["joke", "tell me a joke", "funny"],
+      "answers": [
+        "Why did the scarecrow win a Nobel prize? Because he was outstanding in his field... of finance!",
+        "What's a banker's favorite type of music? Cash-a-blanca!",
+        "Money talks. Mine usually just says 'goodbye'."
+      ]
+    },
+    "finance_quote": {
+      "keywords": ["quote", "inspiration", "motivation"],
+      "answers": [
+        "\"A budget is telling your money where to go instead of wondering where it went.\" - Dave Ramsey",
+        "\"The secret to getting ahead is getting started.\" - Mark Twain",
+        "\"Do not save what is left after spending, but spend what is left after saving.\" - Warren Buffett"
+      ]
     }
   },
   "financeGeneral": {
@@ -34,7 +58,14 @@
     "elss": { "keywords": ["elss", "equity linked savings scheme"], "answer": "Equity Linked Savings Scheme (ELSS) is a type of mutual fund that helps you save taxes under Section 80C and also provides an opportunity for long-term capital appreciation." },
     "etf": { "keywords": ["etf", "exchange-traded fund"], "answer": "An Exchange-Traded Fund (ETF) is a type of investment fund and exchange-traded product. They are traded on stock exchanges, much like stocks." },
     "index_fund": { "keywords": ["index fund", "index funds"], "answer": "An index fund is a type of mutual fund or ETF with a portfolio constructed to match or track the components of a financial market index, such as the NIFTY 50. It offers broad market exposure and typically has low fees." },
-    "tax": { "keywords": ["tax", "income tax", "80c"], "answer": "In India, income tax is levied on individuals based on their income slabs. You can save tax through various deductions under sections like 80C (PPF, ELSS, etc.), 80D (health insurance), and HRA (House Rent Allowance)." }
+    "tax": { "keywords": ["tax", "income tax", "80c"], "answer": "In India, income tax is levied on individuals based on their income slabs. You can save tax through various deductions under sections like 80C (PPF, ELSS, etc.), 80D (health insurance), and HRA (House Rent Allowance)." },
+    "inflation": { "keywords": ["inflation", "what is inflation"], "answer": "Inflation is the rate at which the general level of prices for goods and services is rising, and subsequently, purchasing power is falling. For example, if inflation is 5%, a ₹100 item will cost ₹105 next year. It's important to invest your money to get returns that are higher than the inflation rate." },
+    "compounding": { "keywords": ["compounding", "compound interest"], "answer": "Compounding is the process where your investment's earnings, from either capital gains or interest, earn their own earnings. It's like a snowball effect for your money. The earlier you start investing, the more powerful compounding becomes." },
+    "asset_allocation": { "keywords": ["asset allocation", "portfolio"], "answer": "Asset allocation is the strategy of dividing your investment portfolio among different asset categories, such as stocks, bonds, and cash. The goal is to balance risk and reward by diversifying your investments." },
+    "diversification": { "keywords": ["diversification", "diversify"], "answer": "Diversification means 'not putting all your eggs in one basket.' It's a risk management strategy that mixes a wide variety of investments within a portfolio. A diversified portfolio contains a mix of distinct asset types and investment vehicles in an attempt at limiting exposure to any single asset or risk." },
+    "stock_market": { "keywords": ["stock market", "share market", "bse", "nse"], "answer": "The stock market is where investors buy and sell shares of publicly traded companies. In India, the two main stock exchanges are the National Stock Exchange (NSE) and the Bombay Stock Exchange (BSE)." },
+    "insurance": { "keywords": ["insurance", "life insurance", "health insurance"], "answer": "Insurance is a contract (policy) in which an individual receives financial protection or reimbursement against losses from an insurance company. Health insurance covers medical expenses, while life insurance provides a payout to beneficiaries upon the insured's death. Both are crucial for financial security." },
+    "50_30_20_rule": { "keywords": ["50/30/20", "50 30 20", "budgeting rule"], "answer": "The 50/30/20 rule is a simple budgeting guideline. It suggests you should spend 50% of your after-tax income on needs (rent, bills), 30% on wants (entertainment, dining out), and 20% on savings and debt repayment." }
   },
   "howToApp": {
     "edit_transaction": { "keywords": ["edit transaction", "change transaction", "update expense"], "answer": "To edit a transaction, go to the 'Home' or 'Transactions' screen and simply tap on the transaction you wish to change. The edit screen will pop up." },
@@ -43,10 +74,14 @@
     "set_goal": { "keywords": ["set a goal", "create goal", "add a goal"], "answer": "Go to the 'Goals' screen, select the 'Goals' tab, and tap the floating plus button to add a new goal. You'll be able to set a title, target amount, and an optional deadline." },
     "export_csv": { "keywords": ["export", "csv", "download data"], "answer": "You can export all your transaction data to a CSV file from the 'Settings' page under the Data Management section. You can also export from the 'Transactions' screen." },
     "import_csv": { "keywords": ["import", "upload data"], "answer": "You can import transactions from a CSV file. Go to 'Settings', then 'Data Management', and tap 'Import Data from CSV'. Follow the on-screen instructions for the correct file format." },
-    "generate_report": { "keywords": ["generate report", "print report", "download report"], "answer": "To get a printable report, go to the 'Insights' screen, select your desired time period, and tap the 'Generate Report' button at the top." },
     "search": { "keywords": ["search", "find transaction"], "answer": "Tap the search icon in the top-right corner of the app to search for transactions, goals, and budgets all at once." },
-    "delete_data": { "keywords": ["delete all data", "reset app", "erase data"], "answer": "Be careful! You can delete all your app data from the 'Settings' page in the 'Danger Zone'. This action cannot be undone." },
+    "delete_data": { "keywords": ["delete all data", "reset app", "erase data"], "answer": "Be careful! You can delete all your app data from the 'Settings' page. This action cannot be undone." },
     "change_theme": { "keywords": ["change theme", "dark mode", "light mode", "appearance"], "answer": "You can switch between light and dark themes in the 'Settings' page under the 'Appearance' section." },
+    "manage_categories": { "keywords": ["manage categories", "add category", "delete category"], "answer": "Go to 'Settings' > 'Personalization' > 'Manage Categories'. There you can add new custom categories or delete ones you've created (as long as they are not used by any transactions)." },
+    "recurring_transactions": { "keywords": ["recurring", "subscription", "bills"], "answer": "Recurring transactions are for automatic payments like rent, subscriptions, or bills. You can set them up in the 'Transactions' screen under the 'Recurring' tab. The app will automatically add them on their due dates." },
+    "challenges": { "keywords": ["challenges", "challenge"], "answer": "Challenges are fun tasks to help you build better spending habits. You can find and start them on the 'Goals' screen under the 'Challenges' tab. Completing them unlocks achievement badges!" },
+    "streak": { "keywords": ["streak", "fire icon", "day streak"], "answer": "The streak counter on the Home screen shows how many consecutive days you have logged at least one transaction. It's a great way to stay motivated and consistent with tracking!" },
+    "average_mood": { "keywords": ["average mood", "avg mood", "mood calculation"], "answer": "The Average Mood on the Home screen is calculated based on all the transactions within the selected time period (Day, Week, Month, or Year). It gives you a quick glance at how you've been feeling about your spending." },
     "help": { "keywords": ["help", "what can you do", "capabilities"], "answer": "I can do a few things:\n- Analyze your spending for a day, week, or month.\n- Compare your spending between periods.\n- Find your biggest spending category.\n- Offer saving tips.\n- Explain financial topics like SIPs or credit scores.\n- Calculate loan EMIs or SIP returns.\n- Answer questions about how to use the app." }
   },
   "appAbout": {

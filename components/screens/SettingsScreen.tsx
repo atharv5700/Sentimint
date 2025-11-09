@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../../App';
 import type { Theme, Screen } from '../../types';
-import { dbService } from '../../services/db';
 import { hapticClick, hapticSuccess, hapticError } from '../../services/haptics';
 import { CloseIcon } from '../../constants';
 
@@ -93,21 +92,7 @@ interface SettingsScreenProps {
 }
 
 export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
-    const { theme, setTheme, openImportModal } = useAppContext();
-    const [showExportModal, setShowExportModal] = useState(false);
-    const [csvData, setCsvData] = useState('');
-
-    const handleExport = () => {
-        hapticClick();
-        try {
-            const csv = dbService.exportToCsv();
-            setCsvData(csv);
-            setShowExportModal(true);
-        } catch(e) {
-            console.error("Failed to prepare export data", e);
-            alert("Error preparing data for export. Please try again.");
-        }
-    };
+    const { theme, setTheme, openImportModal, openExportModal } = useAppContext();
     
     return (
         <div className="p-4 space-y-6 stagger-children">
@@ -130,7 +115,7 @@ export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
             <div className="bg-surface-variant p-4 rounded-3xl" style={{'--stagger-delay': 3} as React.CSSProperties}>
                  <h2 className="text-title-m font-medium mb-4 text-on-surface-variant">Data Management</h2>
                  <div className="flex flex-col gap-2">
-                     <button onClick={handleExport} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface hover:bg-surface/80 transition-colors">Export Data to CSV</button>
+                     <button onClick={openExportModal} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface hover:bg-surface/80 transition-colors">Export Data to CSV</button>
                      <button onClick={() => { hapticClick(); openImportModal(); }} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface hover:bg-surface/80 transition-colors">Import Data from CSV</button>
                  </div>
             </div>
@@ -159,8 +144,6 @@ export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
                     </div>
                  </div>
             </div>
-
-            {showExportModal && <ExportDataModal csvData={csvData} onClose={() => setShowExportModal(false)} />}
         </div>
     );
 }
