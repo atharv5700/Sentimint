@@ -1,6 +1,7 @@
+import React from 'react';
 import type { AppContextType as AppContextTypeExtended } from './App';
 
-export type Screen = 'Home' | 'Transactions' | 'Insights' | 'Goals' | 'Settings';
+export type Screen = 'Home' | 'Transactions' | 'Insights' | 'Goals' | 'Settings' | 'Import' | 'ManageCategories';
 
 export type Theme = 'light' | 'dark';
 
@@ -25,6 +26,14 @@ export type Transaction = {
     note: string;
     tags_json: string; // JSON string of tags array
     goal_id: string | null;
+};
+
+export type RecurringTransaction = Omit<Transaction, 'id' | 'ts' | 'goal_id'> & {
+    id: string;
+    frequency: 'daily' | 'weekly' | 'monthly';
+    start_date: number; // timestamp
+    last_added_date: number | null; // timestamp
+    title: string;
 };
 
 export type Goal = {
@@ -61,6 +70,15 @@ export interface FabConfig {
     onClick: () => void;
     'aria-label': string;
 }
+
+export type SmartInsight = {
+    id: string;
+    icon: React.FC<React.SVGProps<SVGSVGElement>>;
+    title: string;
+    text: string;
+    action?: MintorAction;
+};
+
 
 // Re-export the extended type for use in other files
 export type AppContextType = AppContextTypeExtended;

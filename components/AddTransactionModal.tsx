@@ -26,7 +26,7 @@ const ImpulseNudgeModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
 );
 
 export default function AddTransactionModal({ isOpen, onClose, transaction }: AddTransactionModalProps) {
-    const { addTransaction, updateTransaction, goals } = useAppContext();
+    const { addTransaction, updateTransaction, goals, customCategories } = useAppContext();
     
     const [amount, setAmount] = useState('');
     const [merchant, setMerchant] = useState('');
@@ -40,6 +40,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
     const [isAddingTag, setIsAddingTag] = useState(false);
     const customTagInputRef = useRef<HTMLInputElement>(null);
 
+    const allCategories = useMemo(() => [...DEFAULT_CATEGORIES, ...customCategories], [customCategories]);
     const goalOptions = [{value: '', label: 'None'}, ...goals.filter(g => !g.completed_bool).map(g => ({value: g.id, label: g.title}))]
 
     // Available tags are now default + any custom tags for THIS transaction
@@ -64,7 +65,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
             // Reset form for new transaction
             setAmount('');
             setMerchant('');
-            setCategory(DEFAULT_CATEGORIES[0]);
+            setCategory(allCategories[0]);
             setMood(null);
             setTags([]);
             setGoalId(null);
@@ -72,7 +73,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
         }
         setIsAddingTag(false);
         setCustomTagInput('');
-    }, [transaction, isOpen]);
+    }, [transaction, isOpen, allCategories]);
 
     const handleTagToggle = (tag: string) => {
         setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
@@ -160,7 +161,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
                         <div>
                             <label className="text-label-s text-on-surface-variant mb-1 block">Category</label>
                             <div className="flex flex-wrap gap-2">
-                                {DEFAULT_CATEGORIES.map(cat => (
+                                {allCategories.map(cat => (
                                     <button key={cat} onClick={() => setCategory(cat)} className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${category === cat ? 'bg-primary-container text-on-primary-container' : 'bg-surface-variant text-on-surface-variant'}`}>{cat}</button>
                                 ))}
                             </div>

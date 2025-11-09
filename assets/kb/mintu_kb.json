@@ -6,10 +6,13 @@
     "emergency fund": "An emergency fund is money set aside to cover unexpected financial surprises, like a job loss or medical emergency. It's recommended to have 3-6 months of living expenses saved.",
     "credit score": "A credit score (like CIBIL) is a 3-digit number that represents your creditworthiness. A higher score makes it easier to get loans and credit cards at better interest rates.",
     "debt snowball": "The debt snowball method is a debt-reduction strategy where you pay off debts from smallest to largest, regardless of interest rate. The psychological win of clearing a debt provides momentum.",
+    "debt avalanche": "The debt avalanche method is a debt-reduction strategy where you pay off debts with the highest interest rates first. This method saves you the most money in interest over time.",
     "mutual fund": "A mutual fund is a pool of money collected from many investors to invest in stocks, bonds, or other assets. They are managed by professional fund managers.",
     "nps": "The National Pension System (NPS) is a voluntary retirement savings scheme that allows subscribers to make defined contributions towards planned retirement.",
     "elss": "Equity Linked Savings Scheme (ELSS) is a type of mutual fund that helps you save taxes under Section 80C and also provides an opportunity for long-term capital appreciation.",
-    "etf": "An Exchange-Traded Fund (ETF) is a type of investment fund and exchange-traded product. They are traded on stock exchanges, much like stocks."
+    "etf": "An Exchange-Traded Fund (ETF) is a type of investment fund and exchange-traded product. They are traded on stock exchanges, much like stocks.",
+    "index fund": "An index fund is a type of mutual fund or ETF with a portfolio constructed to match or track the components of a financial market index, such as the NIFTY 50. It offers broad market exposure and typically has low fees.",
+    "tax": "In India, income tax is levied on individuals based on their income slabs. You can save tax through various deductions under sections like 80C (PPF, ELSS, etc.), 80D (health insurance), and HRA (House Rent Allowance)."
   },
   "howToApp": {
     "edit transaction": "To edit a transaction, go to the 'Home' or 'Transactions' screen and simply tap on the transaction you wish to change. The edit screen will pop up.",
@@ -17,6 +20,9 @@
     "link transaction": "When you add or edit a transaction, you'll see a 'Link to Goal' dropdown. You can select any of your active goals from there to link the expense.",
     "set a goal": "Go to the 'Goals' screen, select the 'Goals' tab, and tap the floating plus button to add a new goal. You'll be able to set a title, target amount, and an optional deadline.",
     "export csv": "You can export all your transaction data to a CSV file from the 'Settings' page under the Data Management section. You can also export from the 'Transactions' screen.",
+    "import csv": "You can import transactions from a CSV file. Go to 'Settings', then 'Data Management', and tap 'Import Data from CSV'. Follow the on-screen instructions for the correct file format.",
+    "generate report": "To get a printable report, go to the 'Insights' screen, select your desired time period, and tap the 'Generate Report' button at the top.",
+    "search": "Tap the search icon in the top-right corner of the app to search for transactions, goals, and budgets all at once.",
     "delete data": "Be careful! You can delete all your app data from the 'Settings' page in the 'Danger Zone'. This action cannot be undone.",
     "change theme": "You can switch between light and dark themes in the 'Settings' page under the 'Appearance' section."
   },
@@ -29,13 +35,16 @@
       "Create a budget and stick to it. The 50/30/20 rule is a great start (50% Needs, 30% Wants, 20% Savings).",
       "Automate your savings. Set up a recurring transfer to your savings account right after you get paid.",
       "Review your subscriptions. Cancel any you don't use regularly.",
-      "Try the '30-day rule' for non-essential purchases. If you still want it after 30 days, consider buying it."
+      "Try the '30-day rule' for non-essential purchases. If you still want it after 30 days, consider buying it.",
+      "Plan your meals for the week to avoid impulsive food orders and reduce grocery waste.",
+      "Unsubscribe from marketing emails to reduce the temptation of sales and promotions."
     ]
   },
   "smallTalk": {
     "hi|hello|hey": ["Hello! How can I help you with your finances today?", "Hi there! What can I do for you?", "Hey! Ready to talk about money?"],
     "how are you|hows it going": ["I'm just a set of algorithms, but I'm running perfectly! How can I assist you?", "I'm doing great, thanks for asking! What's on your mind?"],
     "thank you|thanks": ["You're welcome!", "Happy to help!", "Anytime!"],
-    "bye|goodbye": ["Goodbye! Keep tracking!", "See you later!"]
+    "bye|goodbye": ["Goodbye! Keep tracking!", "See you later!"],
+    "who are you": ["I'm Mintor, your personal and private financial assistant. I run entirely on your device to help you manage your money without compromising your data privacy."]
   }
 }

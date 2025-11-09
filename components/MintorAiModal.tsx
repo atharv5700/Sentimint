@@ -8,6 +8,7 @@ interface MintorAiModalProps {
     isOpen: boolean;
     onClose: () => void;
     navigateTo: (screen: Screen) => void;
+    activeScreen: Screen;
 }
 
 const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: MintorAction) => void }> = ({ message, onAction }) => {
@@ -17,7 +18,7 @@ const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: Mintor
             <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${isUser ? 'bg-primary-container text-on-primary-container rounded-br-none' : 'bg-surface-variant text-on-surface-variant rounded-bl-none'}`}>
                 <p className="text-body-m whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: message.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}></p>
                  {message.actions && message.actions.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
+                    <div className="flex flex-col items-start gap-2 mt-3">
                         {message.actions.map((action, index) => (
                             <button 
                                 key={index} 
@@ -25,7 +26,7 @@ const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: Mintor
                                     hapticClick();
                                     onAction(action);
                                 }}
-                                className="text-sm bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded-full"
+                                className="text-sm bg-tertiary-container text-on-tertiary-container px-3 py-1.5 rounded-full text-left w-full"
                             >
                                 {action.label}
                             </button>
@@ -38,7 +39,7 @@ const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: Mintor
 };
 
 
-export default function MintorAiModal({ isOpen, onClose, navigateTo }: MintorAiModalProps) {
+export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScreen }: MintorAiModalProps) {
     const [messages, setMessages] = useState<MintorAiMessage[]>([]);
     const [input, setInput] = useState('');
     const chatEndRef = useRef<HTMLDivElement>(null);
@@ -50,15 +51,10 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo }: MintorAiM
                 id: `bot-${Date.now()}`,
                 sender: 'bot',
                 text: "Hi! I'm Mintor, your offline financial assistant. I run completely on your device to keep your data private.\n\nWhat would you like to do?",
-                actions: [
-                    { label: 'Analyze my spending', type: 'query', payload: 'Analyze my spending this month' },
-                    { label: 'Give me saving tips', type: 'query', payload: 'Give me saving tips' },
-                    { label: 'What is an emergency fund?', type: 'query', payload: 'What is an emergency fund?' },
-                    { label: 'How do I edit a transaction?', type: 'query', payload: 'How do I edit a transaction?' },
-                ]
+                actions: mintorAiService.getContextualStartingPrompts(activeScreen),
             }]);
         }
-    }, [isOpen, messages.length]);
+    }, [isOpen, messages.length, activeScreen]);
     
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });

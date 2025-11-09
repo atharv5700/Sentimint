@@ -6,8 +6,8 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import { ExportDataModal } from './screens/SettingsScreen';
 
 
-const Widget: React.FC<{ title: string, subtitle?: string, children: React.ReactNode, onExport: () => void, 'aria-label': string }> = ({ title, subtitle, children, onExport, 'aria-label': ariaLabel }) => (
-    <div className="bg-surface-variant p-4 rounded-3xl shadow-sm" aria-label={ariaLabel}>
+const Widget: React.FC<{ title: string, subtitle?: string, children: React.ReactNode, onExport: () => void, 'aria-label': string, id?: string }> = ({ title, subtitle, children, onExport, 'aria-label': ariaLabel, id }) => (
+    <div className="bg-surface-variant p-4 rounded-3xl shadow-sm" aria-label={ariaLabel} id={id}>
         <div className="flex justify-between items-start mb-4">
             <div>
                  <h3 className="text-title-m font-medium text-on-surface-variant">{title}</h3>
@@ -235,7 +235,7 @@ export default function InsightsDashboard({ period }: { period: Period }) {
         <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 stagger-children">
                 <div style={{'--stagger-delay': 1} as React.CSSProperties}>
-                    <Widget title="Spending by Mood" onExport={() => handleExport(moodDistribution)} aria-label="Pie chart showing spending distribution by mood.">
+                    <Widget title="Spending by Mood" onExport={() => handleExport(moodDistribution)} aria-label="Pie chart showing spending distribution by mood." id="mood-chart-widget">
                         <ResponsiveContainer>
                             <PieChart>
                                 <Pie data={moodDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={false} labelLine={false}>
@@ -250,7 +250,7 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                     </Widget>
                 </div>
                 <div style={{'--stagger-delay': 2} as React.CSSProperties}>
-                    <Widget title="Top 5 Categories" onExport={() => handleExport(spendingByCategory)} aria-label="Vertical bar chart showing the top 5 spending categories.">
+                    <Widget title="Top 5 Categories" onExport={() => handleExport(spendingByCategory)} aria-label="Vertical bar chart showing the top 5 spending categories." id="category-chart-widget">
                         <ResponsiveContainer>
                             <BarChart data={spendingByCategory} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                 <XAxis type="number" hide />

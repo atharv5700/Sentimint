@@ -15,6 +15,13 @@ const iconProps = {
     className: "w-6 h-6"
 };
 
+// Smart Insight Icons
+export const ChartBarIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => ( <svg {...iconProps} {...props}><path d="M22,21H2V3H4V19H6V10H10V19H12V6H16V19H18V14H22V21Z" /></svg>);
+export const TrendingUpIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => ( <svg {...iconProps} {...props}><path d="M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z" /></svg>);
+export const TrophyIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => ( <svg {...iconProps} {...props}><path d="M20.5,2H19L15,8V12C15,13.1 14.1,14 13,14H9C7.9,14 7,13.1 7,12V8L3,2H1.5L2,2C3.1,2 4,2.9 4,4V12C4,14.21 5.79,16 8,16H9V20H13V16H14C16.21,16 18,14.21 18,12V4C18,2.9 18.9,2 20,2L20.5,2M4,18H8V22H4V18M14,18H18V22H14V18Z" /></svg>);
+export const LightbulbIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => ( <svg {...iconProps} {...props}><path d="M12,2C8.69,2 6,4.69 6,8C6,10.28 7.21,12.26 9,13.24V15C9,15.55 9.45,16 10,16H14C14.55,16 15,15.55 15,15V13.24C16.79,12.26 18,10.28 18,8C18,4.69 15.31,2 12,2M10,18C10,18.94 10.63,19.75 11.5,19.95V22H12.5V19.95C13.37,19.75 14,18.94 14,18H10Z" /></svg>);
+
+
 export const SentimintLogo: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg viewBox="0 0 240 80" xmlns="http://www.w3.org/2000/svg" {...props}>
         <rect x="2" y="2" width="236" height="76" rx="8" fill="none" stroke="rgb(var(--color-primary-container))" strokeWidth="4" />
@@ -68,30 +75,54 @@ export const SettingsIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => 
     <svg {...iconProps} {...props}><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
 );
 
-// Moods represented by letters in a scalable SVG
-const MoodLetterSvg: React.FC<{ letter: string } & React.SVGProps<SVGSVGElement>> = ({ letter, ...props }) => (
-    <svg {...props} viewBox="0 0 24 24">
-        <text
-            x="50%"
-            y="55%"
-            dominantBaseline="middle"
-            textAnchor="middle"
-            fontSize="16"
-            fontWeight="bold"
-            fontFamily="sans-serif"
-            fill="currentColor"
-        >
-            {letter}
-        </text>
+// Mood Icons - Monochrome Emojis
+const MoodRegretIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg {...iconProps} {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.5 15C15 14 14.1 13.5 12 13.5C9.9 13.5 9 14 8.5 15" />
+        <circle cx="9" cy="10" r="0.5" fill="currentColor" />
+        <circle cx="15" cy="10" r="0.5" fill="currentColor" />
+    </svg>
+);
+const MoodUnsureIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg {...iconProps} {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 15H16" transform="rotate(-5 12 15)" />
+        <circle cx="9" cy="10" r="0.5" fill="currentColor" />
+        <circle cx="15" cy="10" r="0.5" fill="currentColor" />
+    </svg>
+);
+const MoodNeutralIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg {...iconProps} {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 15H15" />
+        <circle cx="9" cy="10" r="0.5" fill="currentColor" />
+        <circle cx="15" cy="10" r="0.5" fill="currentColor" />
+    </svg>
+);
+const MoodGoodIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg {...iconProps} {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 14.5C9 15.5 10.5 16.5 12 16.5C13.5 16.5 15 15.5 15.5 14.5" />
+        <circle cx="9" cy="10" r="0.5" fill="currentColor" />
+        <circle cx="15" cy="10" r="0.5" fill="currentColor" />
+    </svg>
+);
+const MoodHappyIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg {...iconProps} {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 14C8.5 16 10 17 12 17C14 17 15.5 16 16 14H8Z" fill="currentColor"/>
+        <circle cx="9" cy="10" r="0.5" fill="currentColor" />
+        <circle cx="15" cy="10" r="0.5" fill="currentColor" />
     </svg>
 );
 
-export const MOOD_MAP: Record<Mood, { label: string; emoji: string; color: string; icon: React.FC<any> }> = {
-    [1]: { label: 'Regret', emoji: 'R', color: 'text-[#EF4444]', icon: (props) => <MoodLetterSvg letter="R" {...props} /> },
-    [2]: { label: 'Unsure', emoji: 'U', color: 'text-[#FB923C]', icon: (props) => <MoodLetterSvg letter="U" {...props} /> },
-    [3]: { label: 'Neutral', emoji: 'N', color: 'text-[#9CA3AF]', icon: (props) => <MoodLetterSvg letter="N" {...props} /> },
-    [4]: { label: 'Good', emoji: 'G', color: 'text-[#34D399]', icon: (props) => <MoodLetterSvg letter="G" {...props} /> },
-    [5]: { label: 'Happy', emoji: 'H', color: 'text-[#22C55E]', icon: (props) => <MoodLetterSvg letter="H" {...props} /> },
+export const MOOD_MAP: Record<Mood, { label: string; color: string; icon: React.FC<any> }> = {
+    [1]: { label: 'Regret', color: 'text-red-500', icon: MoodRegretIcon },
+    [2]: { label: 'Unsure', color: 'text-amber-500', icon: MoodUnsureIcon },
+    [3]: { label: 'Neutral', color: 'text-slate-500', icon: MoodNeutralIcon },
+    [4]: { label: 'Good', color: 'text-teal-500', icon: MoodGoodIcon },
+    [5]: { label: 'Happy', color: 'text-emerald-500', icon: MoodHappyIcon },
 };
 
 
@@ -147,4 +178,15 @@ export const SendIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 
 export const SparkleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg {...iconProps} {...props}><path d="M12,2.6L9.3,9.3L2.6,12L9.3,14.7L12,21.4L14.7,14.7L21.4,12L14.7,9.3L12,2.6M22,20L20.5,16.5L17,15L20.5,13.5L22,10L23.5,13.5L27,15L23.5,16.5L22,20Z" /></svg>
+);
+
+export const MintorAiIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg {...iconProps} {...props} viewBox="0 0 24 24">
+        <path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M17.2,14.8C16.9,15.1 16.5,15.3 16,15.3C15,15.3 14.2,14.5 14.2,13.5C14.2,13.2 14.3,12.9 14.4,12.7L12,11.5V12.5C12,13.4 11.2,14.2 10.2,14.2C9.2,14.2 8.4,13.4 8.4,12.5C8.4,11.5 9.2,10.7 10.2,10.7C10.5,10.7 10.8,10.8 11,11L13.4,9.8C13.3,9.6 13.2,9.3 13.2,9C13.2,8 14,7.2 15,7.2C16,7.2 16.8,8 16.8,9C16.8,9.3 16.7,9.6 16.6,9.8L15.3,10.5L17.6,11.7C17.8,11.4 18.1,11.2 18.5,11.2C19.5,11.2 20.3,12 20.3,13C20.3,14 19.5,14.8 18.5,14.8C18.1,14.8 17.6,14.6 17.2,14.8Z"/>
+    </svg>
+);
+
+
+export const RecurringIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg {...iconProps} {...props}><path d="M12,4C7.58,4 4,7.58 4,12C4,16.42 7.58,20 12,20C16.42,20 20,16.42 20,12C20,7.58 16.42,4 12,4M12,18C8.69,18 6,15.31 6,12C6,8.69 8.69,6 12,6C15.31,6 18,8.69 18,12C18,15.31 15.31,18 12,18M12.5,12.5L15.3,14.2L14.5,15.5L11,13.3V7H12.5V12.5Z" /></svg>
 );

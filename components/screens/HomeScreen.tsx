@@ -1,16 +1,25 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import type { Transaction, Period, Screen } from '../../types';
+import type { Transaction, Period, Screen, SmartInsight } from '../../types';
 import { useAppContext } from '../../App';
 import { MOOD_MAP } from '../../constants';
 import TransactionList from '../TransactionList';
 import ProgressBar from '../ProgressBar';
-import WeeklyDigest from '../WeeklyDigest';
 import { mintorAiService } from '../../services/mintorAi';
+import SmartInsightCard from '../SmartInsightCard';
+import WeeklyDigest from '../WeeklyDigest';
 
 interface HomeScreenProps {
     onEditTransaction: (tx: Transaction) => void;
     setScreen: (screen: Screen) => void;
 }
+
+const getWeekKey = (d: Date) => {
+    const date = new Date(d.getTime());
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+    const week1 = new Date(date.getFullYear(), 0, 4);
+    return date.getFullYear() + '-' + (1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7));
+};
 
 const PeriodSelector: React.FC<{ selected: Period, onSelect: (value: Period) => void }> = ({ selected, onSelect }) => {
     const [isCompact, setIsCompact] = useState(window.innerWidth < 360);
@@ -65,11 +74,27 @@ const PeriodSelector: React.FC<{ selected: Period, onSelect: (value: Period) => 
 export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenProps) {
     const { transactions, formatCurrency, setIsBulkMode, budgets } = useAppContext();
     const [period, setPeriod] = useState<Period>('M');
+    const [insight, setInsight] = useState<SmartInsight | null>(null);
     const [digest, setDigest] = useState<{ summary: string | null; weekKey: string } | null>(null);
 
     useEffect(() => {
-        const digestData = mintorAiService.generateWeeklyDigest();
-        setDigest(digestData);
+        const insightData = mintorAiService.getSmartInsight();
+        setInsight(insightData);
+    }, [transactions]);
+    
+    useEffect(() => {
+        const today = new Date();
+        const todayKey = getWeekKey(today);
+        const lastDigestKey = localStorage.getItem('sentimint_last_digest_week');
+        
+        // Show digest on Mondays if it hasn't been shown for the current week
+        if (today.getDay() === 1 && todayKey !== lastDigestKey) {
+            const summary = mintorAiService.generateWeeklyDigest(transactions);
+            if (summary) {
+                setDigest({ summary, weekKey: todayKey });
+                localStorage.setItem('sentimint_last_digest_week', todayKey);
+            }
+        }
     }, [transactions]);
 
     const filteredTransactions = useMemo(() => {
@@ -138,24 +163,30 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                         <p className="text-body-m text-on-surface-variant">Total Spent</p>
                         <p className="text-headline-m font-bold text-on-surface-variant">{formatCurrency(totalSpent)}</p>
                         {avgMood && (
-                            <div className="inline-flex items-center gap-1 bg-surface text-on-surface px-3 py-1 rounded-full mt-2 text-sm">
-                                <span>Avg. Mood:</span>
+                            <div className="inline-flex items-center gap-1.5 bg-surface text-on-surface px-3 py-2 rounded-full mt-2 text-sm">
+                                <span className="leading-none">Avg. Mood:</span>
                                 <avgMood.icon className={`w-5 h-5 ${avgMood.color}`} />
-                                <span>{avgMood.label}</span>
+                                <span className="leading-none">{avgMood.label}</span>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
-            
+
             {digest && (
-                <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '100ms' }}>
+                 <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '100ms' }}>
                     <WeeklyDigest digest={digest} />
+                 </div>
+            )}
+            
+            {insight && (
+                <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '150ms' }}>
+                    <SmartInsightCard insight={insight} setScreen={setScreen} />
                 </div>
             )}
 
             {budgetStatus.length > 0 && (
-                <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '150ms' }}>
+                <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '200ms' }}>
                     <div className="flex justify-between items-center mb-2">
                         <h3 className="text-title-m font-medium text-on-surface">Monthly Budgets</h3>
                         <button onClick={() => setScreen('Goals')} className="text-primary font-medium text-sm">Manage</button>
@@ -174,7 +205,7 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                 </div>
             )}
 
-            <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '200ms' }}>
+            <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '250ms' }}>
                 <div className="flex justify-between items-center mb-2">
                     <h3 className="text-title-m font-medium text-on-surface">Recent Expenses</h3>
                     <button onClick={() => setScreen('Transactions')} className="text-primary font-medium text-sm">View All</button>

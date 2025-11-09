@@ -1,28 +1,42 @@
 import React from 'react';
-import { MINTOR_AI_ASSISTANT, SentimintLogo } from '../../constants';
+import { SentimintLogo, SearchIcon, MintorAiIcon } from '../../constants';
 import { hapticClick } from '../../services/haptics';
 
 interface TopAppBarProps {
     onMintorClick: () => void;
+    onSearchClick: () => void;
 }
 
-export default function TopAppBar({ onMintorClick }: TopAppBarProps) {
+export default function TopAppBar({ onMintorClick, onSearchClick }: TopAppBarProps) {
     return (
         <header 
             className="flex items-center justify-between px-4 pb-3 bg-surface shadow-md sticky top-0 z-20"
-            style={{ paddingTop: `calc(1.25rem + env(safe-area-inset-top))` }}
+            style={{ paddingTop: `calc(1rem + env(safe-area-inset-top))` }}
         >
             <SentimintLogo className="h-8 text-on-surface"/>
             
-            <button
-                onClick={() => {
-                    hapticClick();
-                    onMintorClick();
-                }}
-                className="flex items-center gap-2 bg-surface-variant text-on-surface-variant px-3 h-8 rounded-lg shadow-sm hover:shadow-md transition-shadow text-sm font-medium border border-primary"
-            >
-                <span>{MINTOR_AI_ASSISTANT.name}</span>
-            </button>
+            <div className="flex items-center gap-2">
+                <button
+                    onClick={() => {
+                        hapticClick();
+                        onSearchClick();
+                    }}
+                    className="flex items-center justify-center w-10 h-10 rounded-full text-on-surface-variant hover:bg-surface-variant transition-colors"
+                    aria-label="Search"
+                >
+                    <SearchIcon className="w-6 h-6" />
+                </button>
+                <button
+                    onClick={() => {
+                        hapticClick();
+                        onMintorClick();
+                    }}
+                    className="flex items-center justify-center w-10 h-10 rounded-full text-on-surface-variant hover:bg-surface-variant transition-colors"
+                    aria-label="Open Mintor AI"
+                >
+                    <MintorAiIcon className="w-7 h-7 text-primary" />
+                </button>
+            </div>
         </header>
     );
 }

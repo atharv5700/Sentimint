@@ -16,6 +16,9 @@ const TransactionCard: React.FC<{
     const { formatCurrency } = useAppContext();
     const longPressTimeout = useRef<number | null>(null);
     const pressStartPos = useRef<{x: number, y: number} | null>(null);
+    
+    const moodInfo = MOOD_MAP[tx.mood];
+    const MoodIcon = moodInfo.icon;
 
     const getEventPos = (e: React.MouseEvent | React.TouchEvent) => {
         if ('touches' in e) {
@@ -73,7 +76,6 @@ const TransactionCard: React.FC<{
         pressStartPos.current = null;
     };
 
-    const moodInfo = MOOD_MAP[tx.mood];
 
     return (
         <div 
@@ -86,7 +88,7 @@ const TransactionCard: React.FC<{
             onMouseUp={handlePressEnd}
             onMouseLeave={handlePressEnd}
             onContextMenu={(e) => e.preventDefault()}
-            className={`flex items-start p-3 my-2 rounded-2xl shadow-sm transition-all duration-200 cursor-pointer ${isSelected ? 'bg-secondary-container transform scale-[1.02]' : 'bg-surface'}`}
+            className={`flex items-center p-3 my-2 rounded-2xl shadow-sm transition-all duration-200 cursor-pointer ${isSelected ? 'bg-secondary-container transform scale-[1.02]' : 'bg-surface'}`}
         >
             {isBulkMode && (
                 <div className="mr-3 self-center">
@@ -95,16 +97,15 @@ const TransactionCard: React.FC<{
                     </div>
                 </div>
             )}
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant text-lg">
-                <moodInfo.icon className={`w-7 h-7 ${moodInfo.color}`} />
+            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-surface-variant`}>
+                <MoodIcon className={`w-7 h-7 ${moodInfo.color}`} />
             </div>
-            <div className="flex-1 ml-4">
-                <p className="font-medium text-on-surface">{tx.merchant || tx.category}</p>
+            <div className="flex-1 ml-4 min-w-0">
+                <p className="font-medium text-on-surface truncate">{tx.merchant || tx.category}</p>
                 <p className="text-sm text-on-surface-variant">{tx.category}</p>
             </div>
-            <div className="text-right">
-                <p className="font-bold text-on-surface">{formatCurrency(tx.amount)}</p>
-
+            <div className="text-right ml-2">
+                <p className="font-bold text-on-surface whitespace-nowrap">{formatCurrency(tx.amount)}</p>
                 <p className="text-xs text-on-surface-variant">{new Date(tx.ts).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
             </div>
         </div>
@@ -251,7 +252,6 @@ export default function TransactionList({ transactions, onEditTransaction, showD
     };
     
     const transactionsByMonth = useMemo(() => {
-        // Fix: Explicitly type the accumulator to prevent type errors.
         const acc: Record<string, Transaction[]> = {};
         return transactions.reduce((acc, tx) => {
             const month = new Date(tx.ts).toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -273,7 +273,6 @@ export default function TransactionList({ transactions, onEditTransaction, showD
                 <div key={month} className="mb-4">
                     <h3 className="sticky top-16 bg-background/80 backdrop-blur-sm z-10 py-2 text-title-m font-medium text-on-surface-variant">{month}</h3>
                     <div className="stagger-children">
-                        {/* FIX: Add a guard to ensure `txs` is an array before mapping. */}
                         {Array.isArray(txs) && txs.map((tx, index) => (
                             <TransactionCard 
                                 key={tx.id} 

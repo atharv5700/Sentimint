@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, createContext, useContext, useMemo } from 'react';
-import type { Screen, Theme, Transaction, Goal, Budget } from './types';
+import type { Screen, Theme, Transaction, Goal, Budget, RecurringTransaction } from './types';
 import { dbService } from './services/db';
 import { hapticClick, hapticSuccess } from './services/haptics';
 import HomeScreen from './components/screens/HomeScreen';
@@ -7,11 +7,15 @@ import TransactionsScreen from './components/screens/TransactionsScreen';
 import InsightsScreen from './components/screens/InsightsScreen';
 import GoalsScreen, { GoalModal, BudgetModal } from './components/screens/GoalsScreen';
 import SettingsScreen from './components/screens/SettingsScreen';
+import ImportScreen from './components/screens/ImportScreen';
+import ManageCategoriesScreen from './components/screens/ManageCategoriesScreen';
 import BottomNav from './components/layout/BottomNav';
 import TopAppBar from './components/layout/TopAppBar';
 import AddTransactionModal from './components/AddTransactionModal';
 import MintorAiModal from './components/MintorAiModal';
+import GlobalSearchModal from './components/GlobalSearchModal';
 import { PlusIcon } from './constants';
+import RecurringTransactionModal from './components/RecurringTransactionModal';
 
 interface FabConfig {
     onClick: () => void;
@@ -22,7 +26,10 @@ export interface AppContextType {
   transactions: Transaction[];
   goals: Goal[];
   budgets: Budget[];
+  recurringTransactions: RecurringTransaction[];
+  customCategories: string[];
   theme: Theme;
+  setScreen: (screen: Screen) => void;
   setTheme: (theme: Theme) => void;
   addTransaction: (tx: Omit<Transaction, 'id' | 'ts'>) => Promise<void>;
   updateTransaction: (tx: Transaction) => Promise<void>;
@@ -34,13 +41,21 @@ export interface AppContextType {
   addBudget: (budget: Omit<Budget, 'id' | 'created_at'>) => Promise<void>;
   updateBudget: (budget: Budget) => Promise<void>;
   deleteBudget: (id: string) => Promise<void>;
+  addRecurringTransaction: (rTx: Omit<RecurringTransaction, 'id' | 'last_added_date'>) => Promise<void>;
+  updateRecurringTransaction: (rTx: RecurringTransaction) => Promise<void>;
+  deleteRecurringTransaction: (id: string) => Promise<void>;
+  addCustomCategory: (category: string) => Promise<void>;
+  deleteCustomCategory: (category: string) => Promise<void>;
   linkTransactionToGoal: (txId: string, goalId: string | null) => Promise<void>;
   formatCurrency: (amount: number) => string;
   isBulkMode: boolean;
   setIsBulkMode: (isBulk: boolean) => void;
   setFabConfig: (config: FabConfig | null) => void;
+  openTransactionModal: (tx?: Transaction | null) => void;
   openGoalModal: (goal?: Goal | null) => void;
   openBudgetModal: (budget?: Budget | null) => void;
+  openRecurringTransactionModal: (rTx?: RecurringTransaction | null) => void;
+  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -65,31 +80,35 @@ export default function App() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [goals, setGoals] = useState<Goal[]>([]);
     const [budgets, setBudgets] = useState<Budget[]>([]);
+    const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
+    const [customCategories, setCustomCategories] = useState<string[]>([]);
     const [theme, setThemeState] = useState<Theme>(dbService.getTheme());
     const [isDataReady, setIsDataReady] = useState(false);
     
     const [isAddTxModalOpen, setAddTxModalOpen] = useState(false);
     const [editingTx, setEditingTx] = useState<Transaction | null>(null);
     const [isMintorModalOpen, setMintorModalOpen] = useState(false);
+    const [isSearchModalOpen, setSearchModalOpen] = useState(false);
     const [isGoalModalOpen, setGoalModalOpen] = useState(false);
     const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
     const [isBudgetModalOpen, setBudgetModalOpen] = useState(false);
     const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
+    const [isRecurringTxModalOpen, setRecurringTxModalOpen] = useState(false);
+    const [editingRecurringTx, setEditingRecurringTx] = useState<RecurringTransaction | null>(null);
 
     const [isBulkMode, setIsBulkMode] = useState(false);
     const [fabConfig, setFabConfig] = useState<FabConfig | null>(null);
 
-    const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen || isGoalModalOpen || isBudgetModalOpen, [isAddTxModalOpen, isMintorModalOpen, isGoalModalOpen, isBudgetModalOpen]);
+    const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen || isGoalModalOpen || isBudgetModalOpen || isRecurringTxModalOpen || isSearchModalOpen, [isAddTxModalOpen, isMintorModalOpen, isGoalModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isSearchModalOpen]);
 
-    const recalculateGoals = useCallback(async () => {
+    const recalculateGoals = useCallback(async (txs: Transaction[]) => {
         const allGoals = dbService.getGoals();
-        const allTransactions = dbService.getTransactions();
         let goalsWereUpdated = false;
 
         if (!Array.isArray(allGoals)) return;
 
         for (const goal of allGoals) {
-            const linkedTxs = allTransactions.filter(t => t.goal_id === goal.id);
+            const linkedTxs = txs.filter(t => t.goal_id === goal.id);
             const newCurrentAmount = linkedTxs.reduce((sum, currentTx) => sum + currentTx.amount, 0);
             const newCompletedStatus = newCurrentAmount >= goal.target_amount;
 
@@ -108,13 +127,24 @@ export default function App() {
         }
     }, []);
 
+    const refreshData = useCallback(async () => {
+        const freshTxs = dbService.getTransactions();
+        setTransactions(freshTxs);
+        setBudgets(dbService.getBudgets());
+        setRecurringTransactions(dbService.getRecurringTransactions());
+        setCustomCategories(dbService.getCustomCategories());
+        await recalculateGoals(freshTxs);
+    }, [recalculateGoals]);
+
     const loadData = useCallback(async () => {
         await dbService.init();
-        setTransactions(dbService.getTransactions());
-        setBudgets(dbService.getBudgets());
-        await recalculateGoals();
+        const recurringProcessed = await dbService.processRecurringTransactions();
+        if (recurringProcessed) {
+            console.log('Recurring transactions were processed.');
+        }
+        await refreshData();
         setIsDataReady(true);
-    }, [recalculateGoals]);
+    }, [refreshData]);
 
     useEffect(() => {
         loadData();
@@ -138,13 +168,13 @@ export default function App() {
         const handlePopState = () => {
             if (isAddTxModalOpen) setAddTxModalOpen(false);
             if (isMintorModalOpen) setMintorModalOpen(false);
+            if (isSearchModalOpen) setSearchModalOpen(false);
             if (isGoalModalOpen) setGoalModalOpen(false);
             if (isBudgetModalOpen) setBudgetModalOpen(false);
+            if (isRecurringTxModalOpen) setRecurringTxModalOpen(false);
         };
     
         if (isAModalOpen) {
-            // Push a state only if one isn't already there. This prevents multiple history entries
-            // if one modal opens another.
             if (!window.history.state?.modal) {
                 window.history.pushState({ modal: true }, '');
             }
@@ -154,7 +184,7 @@ export default function App() {
         return () => {
             window.removeEventListener('popstate', handlePopState);
         };
-    }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen, isGoalModalOpen, isBudgetModalOpen]);
+    }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen, isSearchModalOpen, isGoalModalOpen, isBudgetModalOpen, isRecurringTxModalOpen]);
 
 
     const setTheme = (newTheme: Theme) => {
@@ -163,69 +193,92 @@ export default function App() {
     };
 
     const addTransaction = async (tx: Omit<Transaction, 'id' | 'ts'>) => {
-        const newTx = await dbService.addTransaction(tx);
-        setTransactions(prev => [newTx, ...prev].sort((a, b) => b.ts - a.ts));
-        await recalculateGoals();
+        await dbService.addTransaction(tx);
+        await refreshData();
         hapticSuccess();
     };
 
     const updateTransaction = async (tx: Transaction) => {
         await dbService.updateTransaction(tx);
-        setTransactions(prev => prev.map(t => t.id === tx.id ? tx : t));
-        await recalculateGoals();
+        await refreshData();
         hapticSuccess();
     };
 
     const deleteTransaction = async (id: string) => {
         await dbService.deleteTransaction(id);
-        setTransactions(prev => prev.filter(t => t.id !== id));
-        await recalculateGoals();
+        await refreshData();
         hapticSuccess();
     };
 
     const deleteTransactions = async (ids: string[]) => {
         await dbService.deleteTransactions(ids);
-        setTransactions(prev => prev.filter(t => !ids.includes(t.id)));
-        await recalculateGoals();
+        await refreshData();
         hapticSuccess();
     };
     
     const addGoal = async (goal: Omit<Goal, 'id' | 'created_at' | 'current_amount' | 'completed_bool'>) => {
-        const newGoal = await dbService.addGoal(goal);
-        setGoals(prev => [newGoal, ...prev]);
+        await dbService.addGoal(goal);
+        await refreshData();
         hapticSuccess();
     };
 
     const updateGoal = async (goal: Goal) => {
         await dbService.updateGoal(goal);
-        setGoals(prev => {
-            const updated = prev.map(g => g.id === goal.id ? goal : g);
-            return updated.sort((a, b) => a.completed_bool ? 1 : -1);
-        });
+        await refreshData();
         hapticSuccess();
     };
     
     const deleteGoal = async (id: string) => {
         await dbService.deleteGoal(id);
-        setGoals(prev => prev.filter(g => g.id !== id));
+        await refreshData();
         hapticSuccess();
     };
 
     const addBudget = async (budget: Omit<Budget, 'id' | 'created_at'>) => {
-        const newBudget = await dbService.addBudget(budget);
-        setBudgets(prev => [...prev, newBudget].sort((a,b) => a.category.localeCompare(b.category)));
+        await dbService.addBudget(budget);
+        await refreshData();
         hapticSuccess();
     };
 
     const updateBudget = async (budget: Budget) => {
         await dbService.updateBudget(budget);
-        setBudgets(prev => prev.map(b => b.id === budget.id ? budget : b));
+        await refreshData();
         hapticSuccess();
     };
     
     const deleteBudget = async (id: string) => {
         await dbService.deleteBudget(id);
-        setBudgets(prev => prev.filter(b => b.id !== id));
+        await refreshData();
+        hapticSuccess();
+    };
+
+    const addRecurringTransaction = async (rTx: Omit<RecurringTransaction, 'id' | 'last_added_date'>) => {
+        await dbService.addRecurringTransaction(rTx);
+        await refreshData();
+        hapticSuccess();
+    };
+    
+    const updateRecurringTransaction = async (rTx: RecurringTransaction) => {
+        await dbService.updateRecurringTransaction(rTx);
+        await refreshData();
+        hapticSuccess();
+    };
+    
+    const deleteRecurringTransaction = async (id: string) => {
+        await dbService.deleteRecurringTransaction(id);
+        await refreshData();
+        hapticSuccess();
+    };
+
+    const addCustomCategory = async (category: string) => {
+        await dbService.addCustomCategory(category);
+        await refreshData();
+        hapticSuccess();
+    };
+
+    const deleteCustomCategory = async (category: string) => {
+        await dbService.deleteCustomCategory(category);
+        await refreshData();
         hapticSuccess();
     };
 
@@ -236,18 +289,15 @@ export default function App() {
         await updateTransaction(updatedTx);
     };
 
-    const handleEditTransaction = (tx: Transaction) => {
+    const openTransactionModal = (tx: Transaction | null = null) => {
         setEditingTx(tx);
         setAddTxModalOpen(true);
     };
 
     const createModalCloser = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
-        // If the history state was pushed by a modal, go back to pop it.
-        // This will trigger the popstate listener which then sets the state to false.
         if (window.history.state?.modal) {
             window.history.back();
         } else {
-            // Otherwise, just set the state directly (e.g., if history API is not supported)
             setter(false);
         }
     };
@@ -258,6 +308,7 @@ export default function App() {
     };
     
     const handleCloseMintorModal = createModalCloser(setMintorModalOpen);
+    const handleCloseSearchModal = createModalCloser(setSearchModalOpen);
 
     const handleCloseGoalModal = () => {
         setEditingGoal(null);
@@ -267,6 +318,11 @@ export default function App() {
     const handleCloseBudgetModal = () => {
         setEditingBudget(null);
         createModalCloser(setBudgetModalOpen)();
+    };
+    
+    const handleCloseRecurringTxModal = () => {
+        setEditingRecurringTx(null);
+        createModalCloser(setRecurringTxModalOpen)();
     };
     
     const openGoalModal = (goal: Goal | null = null) => {
@@ -279,6 +335,11 @@ export default function App() {
         setBudgetModalOpen(true);
     };
 
+    const openRecurringTransactionModal = (rTx: RecurringTransaction | null = null) => {
+        setEditingRecurringTx(rTx);
+        setRecurringTxModalOpen(true);
+    };
+
     const handleSetScreen = (newScreen: Screen) => {
         setIsBulkMode(false); // Reset bulk mode on screen change.
         setScreen(newScreen);
@@ -287,32 +348,36 @@ export default function App() {
     const renderScreen = () => {
         switch (screen) {
             case 'Home':
-                return <HomeScreen onEditTransaction={handleEditTransaction} setScreen={handleSetScreen} />;
+                return <HomeScreen onEditTransaction={openTransactionModal} setScreen={handleSetScreen} />;
             case 'Transactions':
-                return <TransactionsScreen onEditTransaction={handleEditTransaction} />;
+                return <TransactionsScreen onEditTransaction={openTransactionModal} />;
             case 'Insights':
                 return <InsightsScreen />;
             case 'Goals':
                 return <GoalsScreen />;
             case 'Settings':
-                return <SettingsScreen />;
+                return <SettingsScreen setScreen={handleSetScreen} />;
+            case 'Import':
+                return <ImportScreen setScreen={handleSetScreen} />;
+            case 'ManageCategories':
+                return <ManageCategoriesScreen setScreen={handleSetScreen} />;
             default:
-                return <HomeScreen onEditTransaction={handleEditTransaction} setScreen={handleSetScreen} />;
+                return <HomeScreen onEditTransaction={openTransactionModal} setScreen={handleSetScreen} />;
         }
     };
 
     const fabDetails = useMemo(() => {
-        if (screen === 'Home' || screen === 'Transactions') {
+        if (screen === 'Home') {
             return {
                 onClick: () => {
                     hapticClick();
-                    setAddTxModalOpen(true);
+                    openTransactionModal(null);
                 },
                 'aria-label': 'Add Transaction',
                 show: true,
             };
         }
-        if (screen === 'Goals' && fabConfig) {
+        if ((screen === 'Goals' || screen === 'Transactions') && fabConfig) {
             return { ...fabConfig, show: true };
         }
         return { show: false, onClick: () => {}, 'aria-label': '' };
@@ -330,7 +395,10 @@ export default function App() {
         transactions,
         goals,
         budgets,
+        recurringTransactions,
+        customCategories,
         theme,
+        setScreen: handleSetScreen,
         setTheme,
         addTransaction,
         updateTransaction,
@@ -342,13 +410,21 @@ export default function App() {
         addBudget,
         updateBudget,
         deleteBudget,
+        addRecurringTransaction,
+        updateRecurringTransaction,
+        deleteRecurringTransaction,
+        addCustomCategory,
+        deleteCustomCategory,
         linkTransactionToGoal,
         formatCurrency,
         isBulkMode,
         setIsBulkMode,
         setFabConfig,
+        openTransactionModal,
         openGoalModal,
         openBudgetModal,
+        openRecurringTransactionModal,
+        refreshData,
     };
 
     return (
@@ -358,13 +434,16 @@ export default function App() {
                     className="flex flex-col h-screen"
                     aria-hidden={isAModalOpen}
                 >
-                    <TopAppBar onMintorClick={() => setMintorModalOpen(true)} />
+                    <TopAppBar 
+                        onMintorClick={() => setMintorModalOpen(true)} 
+                        onSearchClick={() => setSearchModalOpen(true)}
+                    />
                     <main className="flex-grow overflow-y-auto pb-24">
                         <div key={screen} className="animate-screenFadeIn">
                             {renderScreen()}
                         </div>
                     </main>
-                    <BottomNav activeScreen={screen} setScreen={handleSetScreen} />
+                    {screen !== 'Import' && screen !== 'ManageCategories' && <BottomNav activeScreen={screen} setScreen={handleSetScreen} />}
                 </div>
                 
                 {fabDetails.show && !isAModalOpen && !isBulkMode && (
@@ -389,6 +468,13 @@ export default function App() {
                         isOpen={isMintorModalOpen} 
                         onClose={handleCloseMintorModal}
                         navigateTo={handleSetScreen}
+                        activeScreen={screen}
+                    />
+                )}
+                {isSearchModalOpen && (
+                    <GlobalSearchModal 
+                        isOpen={isSearchModalOpen}
+                        onClose={handleCloseSearchModal}
                     />
                 )}
                  {isGoalModalOpen && (
@@ -401,6 +487,13 @@ export default function App() {
                     <BudgetModal 
                         onClose={handleCloseBudgetModal} 
                         budgetToEdit={editingBudget}
+                    />
+                )}
+                {isRecurringTxModalOpen && (
+                    <RecurringTransactionModal
+                        isOpen={isRecurringTxModalOpen}
+                        onClose={handleCloseRecurringTxModal}
+                        rTxToEdit={editingRecurringTx}
                     />
                 )}
             </div>

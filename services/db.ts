@@ -1,4 +1,4 @@
-import type { Transaction, Goal, Theme, Mood, Budget } from '../types';
+import type { Transaction, Goal, Theme, Mood, Budget, RecurringTransaction } from '../types';
 
 const DB_KEY = 'sentimint_db';
 const THEME_KEY = 'sentimint_theme';
@@ -40,6 +40,8 @@ interface Database {
     transactions: Transaction[];
     goals: Goal[];
     budgets: Budget[];
+    recurring_transactions: RecurringTransaction[];
+    customCategories: string[];
 }
 
 class DbService {
@@ -47,6 +49,8 @@ class DbService {
         transactions: [],
         goals: [],
         budgets: [],
+        recurring_transactions: [],
+        customCategories: [],
     };
 
     constructor() {
@@ -61,6 +65,8 @@ class DbService {
                 transactions: data.transactions || [],
                 goals: data.goals || [],
                 budgets: data.budgets || [],
+                recurring_transactions: data.recurring_transactions || [],
+                customCategories: data.customCategories || [],
             };
         }
     }
@@ -79,7 +85,7 @@ class DbService {
     }
 
     public async init() {
-        if (this.db.transactions.length === 0) {
+        if (this.db.transactions.length === 0 && this.db.recurring_transactions.length === 0) {
             console.log("No transactions found, seeding data.");
             await this.seedRecentTransactions();
         }
@@ -126,6 +132,60 @@ class DbService {
         this.save();
     }
 
+    public async processRecurringTransactions(): Promise<boolean> {
+        let changed = false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        for (const rTx of this.db.recurring_transactions) {
+            let nextDueDate = new Date(rTx.last_added_date || rTx.start_date);
+            
+            while (nextDueDate.getTime() <= today.getTime()) {
+                // If the due date is after the start date, add it
+                if (nextDueDate.getTime() >= new Date(rTx.start_date).getTime()) {
+                     const newTx: Omit<Transaction, 'id' | 'ts'> = {
+                        amount: rTx.amount,
+                        currency: rTx.currency,
+                        category: rTx.category,
+                        merchant: rTx.merchant,
+                        mood: rTx.mood,
+                        note: rTx.note,
+                        tags_json: rTx.tags_json,
+                        goal_id: null
+                    };
+                    const createdTx = {
+                        ...newTx,
+                        id: `tx-recurring-${rTx.id}-${nextDueDate.getTime()}`,
+                        ts: nextDueDate.getTime(),
+                    };
+
+                    // Avoid adding duplicates
+                    if (!this.db.transactions.some(t => t.id === createdTx.id)) {
+                        this.db.transactions.push(createdTx);
+                        rTx.last_added_date = nextDueDate.getTime();
+                        changed = true;
+                    }
+                }
+
+                // Calculate next due date
+                if (rTx.frequency === 'daily') {
+                    nextDueDate.setDate(nextDueDate.getDate() + 1);
+                } else if (rTx.frequency === 'weekly') {
+                    nextDueDate.setDate(nextDueDate.getDate() + 7);
+                } else if (rTx.frequency === 'monthly') {
+                    nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+                } else {
+                    break; // Should not happen
+                }
+            }
+        }
+        
+        if (changed) {
+            this.save();
+        }
+        return changed;
+    }
+
 
     // Transactions
     public getTransactions(): Transaction[] {
@@ -158,6 +218,35 @@ class DbService {
 
     public async deleteTransactions(ids: string[]): Promise<void> {
         this.db.transactions = this.db.transactions.filter(t => !ids.includes(t.id));
+        this.save();
+    }
+
+    // Recurring Transactions
+    public getRecurringTransactions(): RecurringTransaction[] {
+        return [...this.db.recurring_transactions].sort((a,b) => a.start_date - b.start_date);
+    }
+
+    public async addRecurringTransaction(rTx: Omit<RecurringTransaction, 'id' | 'last_added_date'>): Promise<RecurringTransaction> {
+        const newRTx: RecurringTransaction = {
+            ...rTx,
+            id: `rtx-${Date.now()}`,
+            last_added_date: null,
+        };
+        this.db.recurring_transactions.push(newRTx);
+        this.save();
+        return newRTx;
+    }
+
+    public async updateRecurringTransaction(rTx: RecurringTransaction): Promise<void> {
+        const index = this.db.recurring_transactions.findIndex(t => t.id === rTx.id);
+        if (index > -1) {
+            this.db.recurring_transactions[index] = rTx;
+            this.save();
+        }
+    }
+
+    public async deleteRecurringTransaction(id: string): Promise<void> {
+        this.db.recurring_transactions = this.db.recurring_transactions.filter(t => t.id !== id);
         this.save();
     }
 
@@ -221,6 +310,23 @@ class DbService {
         this.save();
     }
 
+    // Custom Categories
+    public getCustomCategories(): string[] {
+        return [...this.db.customCategories];
+    }
+    
+    public async addCustomCategory(category: string): Promise<void> {
+        if (!this.db.customCategories.includes(category)) {
+            this.db.customCategories.push(category);
+            this.save();
+        }
+    }
+
+    public async deleteCustomCategory(category: string): Promise<void> {
+        this.db.customCategories = this.db.customCategories.filter(c => c !== category);
+        this.save();
+    }
+
     // Theme
     public getTheme(): Theme {
         const theme = localStorage.getItem(THEME_KEY) as Theme | null;
@@ -248,8 +354,13 @@ class DbService {
             transactions: [],
             goals: [],
             budgets: [],
+            recurring_transactions: [],
+            customCategories: [],
         };
         localStorage.removeItem(DB_KEY);
+        localStorage.removeItem(THEME_KEY);
+        // We can reload to force the app to re-initialize
+        window.location.reload();
     }
 }
 

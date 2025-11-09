@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../../App';
-import type { Theme } from '../../types';
+import type { Theme, Screen } from '../../types';
 import { dbService } from '../../services/db';
 import { hapticClick, hapticSuccess, hapticError } from '../../services/haptics';
 
@@ -77,9 +77,49 @@ export const ExportDataModal: React.FC<{ csvData: string; onClose: () => void }>
     );
 };
 
-export default function SettingsScreen() {
+const DeleteDataModal: React.FC<{ onConfirm: () => void; onClose: () => void }> = ({ onConfirm, onClose }) => {
+    const [confirmText, setConfirmText] = useState('');
+    const isConfirmed = confirmText === 'DELETE';
+
+    return (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-backdropFadeIn">
+            <div className="bg-surface rounded-3xl p-6 w-full max-w-sm animate-modalSlideUp">
+                <h2 className="text-headline-m mb-2 text-error">Are you sure?</h2>
+                <p className="text-body-m text-on-surface-variant mb-4">
+                    This will permanently delete all your data, including transactions, goals, and budgets. This action cannot be undone.
+                </p>
+                <p className="text-body-m text-on-surface-variant mb-4">
+                    To confirm, please type <strong>DELETE</strong> in the box below.
+                </p>
+                <input
+                    type="text"
+                    value={confirmText}
+                    onChange={(e) => setConfirmText(e.target.value)}
+                    className="w-full bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-error"
+                />
+                <div className="flex justify-end gap-2 mt-6">
+                    <button onClick={() => { hapticClick(); onClose(); }} className="px-4 py-2 rounded-full text-primary">Cancel</button>
+                    <button 
+                        onClick={() => { hapticClick(); onConfirm(); }} 
+                        disabled={!isConfirmed}
+                        className="px-6 py-2 rounded-full bg-error text-on-error disabled:bg-outline disabled:text-on-surface-variant"
+                    >
+                        Delete Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+interface SettingsScreenProps {
+    setScreen: (screen: Screen) => void;
+}
+
+export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
     const { theme, setTheme } = useAppContext();
     const [showExportModal, setShowExportModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [csvData, setCsvData] = useState('');
 
     const handleExport = () => {
@@ -93,6 +133,11 @@ export default function SettingsScreen() {
             alert("Error preparing data for export. Please try again.");
         }
     };
+    
+    const handleDeleteData = () => {
+        dbService.deleteAllData();
+        // The app will reload automatically from the db service.
+    };
 
     return (
         <div className="p-4 space-y-6 stagger-children">
@@ -105,26 +150,39 @@ export default function SettingsScreen() {
                 />
             </div>
             
-            <div className="bg-surface-variant p-4 rounded-3xl" style={{'--stagger-delay': 2} as React.CSSProperties}>
+             <div className="bg-surface-variant p-4 rounded-3xl" style={{'--stagger-delay': 2} as React.CSSProperties}>
+                 <h2 className="text-title-m font-medium mb-4 text-on-surface-variant">Personalization</h2>
+                 <div className="flex flex-col gap-2">
+                     <button onClick={() => setScreen('ManageCategories')} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface hover:bg-surface/80 transition-colors">Manage Categories</button>
+                 </div>
+            </div>
+
+            <div className="bg-surface-variant p-4 rounded-3xl" style={{'--stagger-delay': 3} as React.CSSProperties}>
                  <h2 className="text-title-m font-medium mb-4 text-on-surface-variant">Data Management</h2>
                  <div className="flex flex-col gap-2">
                      <button onClick={handleExport} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface hover:bg-surface/80 transition-colors">Export Data to CSV</button>
+                     <button onClick={() => setScreen('Import')} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface hover:bg-surface/80 transition-colors">Import Data from CSV</button>
                  </div>
             </div>
+
+             <div className="bg-error-container p-4 rounded-3xl" style={{'--stagger-delay': 4} as React.CSSProperties}>
+                 <h2 className="text-title-m font-medium mb-2 text-on-error-container">Danger Zone</h2>
+                 <button onClick={() => { hapticError(); setShowDeleteModal(true); }} className="w-full text-left p-3 rounded-xl bg-error/80 text-on-error hover:bg-error/100 transition-colors font-medium">Delete All Data</button>
+            </div>
             
-            <div className="bg-surface-variant p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 3} as React.CSSProperties}>
+            <div className="bg-surface-variant p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 5} as React.CSSProperties}>
                 <h2 className="text-title-m font-medium mb-2">About Sentimint</h2>
                 <p className="text-body-m mb-4">Our mission is to help you build a healthier relationship with your finances by understanding the emotions behind your spending.</p>
                 <h3 className="text-title-s font-medium mb-1 text-on-surface-variant/90">Privacy Commitment</h3>
                 <p className="text-body-m">Your privacy is paramount. Mintor AI and all data processing run entirely on-device; your data never leaves your phone.</p>
             </div>
             
-            <div className="bg-surface-variant p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 4} as React.CSSProperties}>
+            <div className="bg-surface-variant p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 6} as React.CSSProperties}>
                  <h2 className="text-title-m font-medium mb-3">App Information</h2>
                  <div className="space-y-2 text-body-m">
                     <div className="flex justify-between">
                         <span className="text-on-surface-variant/80">Version</span>
-                        <span className="font-medium text-on-surface-variant">1.2.0</span>
+                        <span className="font-medium text-on-surface-variant">2.3.0</span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-on-surface-variant/80">Developer</span>
@@ -138,6 +196,7 @@ export default function SettingsScreen() {
             </div>
 
             {showExportModal && <ExportDataModal csvData={csvData} onClose={() => setShowExportModal(false)} />}
+            {showDeleteModal && <DeleteDataModal onClose={() => setShowDeleteModal(false)} onConfirm={handleDeleteData} />}
         </div>
     );
 }
