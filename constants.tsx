@@ -61,7 +61,7 @@ export const InsightsIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => 
 );
 
 export const GoalsIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg {...iconProps} {...props}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
+    <svg {...iconProps} {...props}><path d="M12,2A7,7 0 0,1 19,9C19,11.38 17.81,13.47 16,14.74V17A1,1 0 0,1 15,18H9A1,1 0 0,1 8,17V14.74C6.19,13.47 5,11.38 5,9A7,7 0 0,1 12,2M9,21V20H15V21H9Z"/></svg>
 );
 
 export const SettingsIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

@@ -58,20 +58,54 @@ const GoalCard: React.FC<{ goal: Goal, onEdit: (goal: Goal) => void }> = ({ goal
     );
 };
 
+const GOAL_EMOJIS = ['🎯', '💰', '✈️', '🚗', '🏠', '🎓', '💻', '🎁', '❤️', '📈', '🧘', '📚', '💍', '👶', '🎸', '👟', '🖼️', '🎉'];
+
+const EmojiPicker: React.FC<{ onSelect: (emoji: string) => void; onClose: () => void }> = ({ onSelect, onClose }) => {
+    return (
+        <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm z-10 flex items-center justify-center p-4 rounded-3xl" onClick={onClose}>
+            <div className="bg-surface-variant rounded-2xl p-4 w-full max-w-xs animate-modalSlideUp" onClick={e => e.stopPropagation()}>
+                <h3 className="text-title-m text-center mb-4 text-on-surface-variant">Choose an Icon</h3>
+                <div className="grid grid-cols-6 gap-2">
+                    {GOAL_EMOJIS.map(emoji => (
+                        <button
+                            key={emoji}
+                            onClick={() => {
+                                hapticClick();
+                                onSelect(emoji);
+                            }}
+                            className="text-3xl p-2 rounded-full hover:bg-black/10 transition-colors"
+                            aria-label={emoji}
+                        >
+                            {emoji}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null }> = ({ onClose, goalToEdit }) => {
     const { addGoal, updateGoal } = useAppContext();
     const [title, setTitle] = useState('');
     const [targetAmount, setTargetAmount] = useState('');
-    const [emoji, setEmoji] = useState('');
+    const [emoji, setEmoji] = useState('🎯');
     const [deadline, setDeadline] = useState('');
     const [dateInputType, setDateInputType] = useState('text');
+    const [isPickerOpen, setIsPickerOpen] = useState(false);
     
      useEffect(() => {
         if (goalToEdit) {
             setTitle(goalToEdit.title);
             setTargetAmount(String(goalToEdit.target_amount));
-            setEmoji(goalToEdit.emoji);
+            setEmoji(goalToEdit.emoji || '🎯');
             setDeadline(goalToEdit.deadline_ts ? new Date(goalToEdit.deadline_ts).toISOString().split('T')[0] : '');
+        } else {
+            setTitle('');
+            setTargetAmount('');
+            setEmoji('🎯');
+            setDeadline('');
         }
     }, [goalToEdit]);
 
@@ -82,7 +116,7 @@ const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null }> = ({
         const amount = parseFloat(targetAmount);
         const deadline_ts = deadline ? new Date(deadline).getTime() : null;
         
-        const goalData = { title: title.trim(), target_amount: amount, emoji: emoji || '🎯', deadline_ts };
+        const goalData = { title: title.trim(), target_amount: amount, emoji, deadline_ts };
 
         if(goalToEdit) {
             updateGoal({ ...goalToEdit, ...goalData });
@@ -94,11 +128,13 @@ const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null }> = ({
     
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-backdropFadeIn">
-            <div className="bg-surface rounded-3xl p-6 w-full max-w-sm animate-modalSlideUp">
+            <div className="relative bg-surface rounded-3xl p-6 w-full max-w-sm animate-modalSlideUp overflow-hidden">
                 <h2 className="text-headline-m mb-4">{goalToEdit ? 'Edit' : 'New'} Goal</h2>
                 <div className="space-y-4">
                      <div className="flex gap-2">
-                        <input type="text" value={emoji} onChange={e => setEmoji(e.target.value)} maxLength={2} placeholder="🎯" className="w-16 h-14 text-center text-3xl bg-surface-variant p-3 rounded-xl placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary" />
+                        <button type="button" onClick={() => { hapticClick(); setIsPickerOpen(true); }} className="w-16 h-14 text-center text-3xl bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary">
+                            {emoji}
+                        </button>
                         <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Goal Title" className="flex-1 w-full bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary" />
                      </div>
                      <input type="text" inputMode="numeric" value={targetAmount ? new Intl.NumberFormat('en-IN').format(parseFloat(targetAmount)) : ''} onChange={e => setTargetAmount(e.target.value.replace(/[^0-9]/g, ''))} placeholder="Target Amount (₹)" className="w-full bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary" />
@@ -134,6 +170,7 @@ const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null }> = ({
                     <button onClick={() => { hapticClick(); onClose(); }} className="px-4 py-2 rounded-full text-primary">Cancel</button>
                     <button onClick={handleSave} disabled={!isFormValid} className="px-6 py-2 rounded-full bg-primary text-on-primary disabled:bg-outline">Save</button>
                 </div>
+                 {isPickerOpen && <EmojiPicker onSelect={(selectedEmoji) => { setEmoji(selectedEmoji); setIsPickerOpen(false); }} onClose={() => setIsPickerOpen(false)} />}
             </div>
         </div>
     );
@@ -280,7 +317,7 @@ export default function GoalsScreen() {
                 )}
             </div>
             
-            <button onClick={handleFabClick} className="fixed bottom-24 right-6 bg-primary-container text-on-primary-container rounded-2xl shadow-lg w-14 h-14 flex items-center justify-center z-10">
+            <button onClick={handleFabClick} className="fixed bottom-24 right-6 bg-primary-container text-on-primary-container rounded-2xl shadow-lg w-14 h-14 flex items-center justify-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-modalSlideUp z-10">
                 <PlusIcon className="w-7 h-7" />
             </button>
             
