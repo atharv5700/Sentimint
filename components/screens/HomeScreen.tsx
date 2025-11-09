@@ -172,8 +172,10 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                             <div className="flex justify-center items-center gap-2 mt-2">
                                 {avgMood && (
                                     <div className="flex items-center justify-center bg-surface text-on-surface px-3 py-1.5 rounded-full text-sm">
-                                        <span className="text-on-surface-variant mr-1">Avg. Mood:</span>
-                                        <span className="font-medium">{avgMood.label}</span>
+                                        <span>
+                                            <span className="text-on-surface-variant mr-1">Avg. Mood:</span>
+                                            <span className="font-medium">{avgMood.label}</span>
+                                        </span>
                                     </div>
                                 )}
                                 <StreakCounter streak={streak} />
