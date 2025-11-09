@@ -5,7 +5,7 @@ import { hapticClick, hapticSuccess } from './services/haptics';
 import HomeScreen from './components/screens/HomeScreen';
 import TransactionsScreen from './components/screens/TransactionsScreen';
 import InsightsScreen from './components/screens/InsightsScreen';
-import GoalsScreen from './components/screens/GoalsScreen';
+import GoalsScreen, { GoalModal, BudgetModal } from './components/screens/GoalsScreen';
 import SettingsScreen from './components/screens/SettingsScreen';
 import BottomNav from './components/layout/BottomNav';
 import TopAppBar from './components/layout/TopAppBar';
@@ -18,7 +18,7 @@ interface FabConfig {
     'aria-label': string;
 }
 
-interface AppContextType {
+export interface AppContextType {
   transactions: Transaction[];
   goals: Goal[];
   budgets: Budget[];
@@ -39,6 +39,8 @@ interface AppContextType {
   isBulkMode: boolean;
   setIsBulkMode: (isBulk: boolean) => void;
   setFabConfig: (config: FabConfig | null) => void;
+  openGoalModal: (goal?: Goal | null) => void;
+  openBudgetModal: (budget?: Budget | null) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -69,10 +71,15 @@ export default function App() {
     const [isAddTxModalOpen, setAddTxModalOpen] = useState(false);
     const [editingTx, setEditingTx] = useState<Transaction | null>(null);
     const [isMintorModalOpen, setMintorModalOpen] = useState(false);
+    const [isGoalModalOpen, setGoalModalOpen] = useState(false);
+    const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+    const [isBudgetModalOpen, setBudgetModalOpen] = useState(false);
+    const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
+
     const [isBulkMode, setIsBulkMode] = useState(false);
     const [fabConfig, setFabConfig] = useState<FabConfig | null>(null);
 
-    const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen, [isAddTxModalOpen, isMintorModalOpen]);
+    const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen || isGoalModalOpen || isBudgetModalOpen, [isAddTxModalOpen, isMintorModalOpen, isGoalModalOpen, isBudgetModalOpen]);
 
     const recalculateGoals = useCallback(async () => {
         const allGoals = dbService.getGoals();
@@ -131,6 +138,8 @@ export default function App() {
         const handlePopState = () => {
             if (isAddTxModalOpen) setAddTxModalOpen(false);
             if (isMintorModalOpen) setMintorModalOpen(false);
+            if (isGoalModalOpen) setGoalModalOpen(false);
+            if (isBudgetModalOpen) setBudgetModalOpen(false);
         };
     
         if (isAModalOpen) {
@@ -145,7 +154,7 @@ export default function App() {
         return () => {
             window.removeEventListener('popstate', handlePopState);
         };
-    }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen]);
+    }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen, isGoalModalOpen, isBudgetModalOpen]);
 
 
     const setTheme = (newTheme: Theme) => {
@@ -250,6 +259,26 @@ export default function App() {
     
     const handleCloseMintorModal = createModalCloser(setMintorModalOpen);
 
+    const handleCloseGoalModal = () => {
+        setEditingGoal(null);
+        createModalCloser(setGoalModalOpen)();
+    };
+    
+    const handleCloseBudgetModal = () => {
+        setEditingBudget(null);
+        createModalCloser(setBudgetModalOpen)();
+    };
+    
+    const openGoalModal = (goal: Goal | null = null) => {
+        setEditingGoal(goal);
+        setGoalModalOpen(true);
+    };
+
+    const openBudgetModal = (budget: Budget | null = null) => {
+        setEditingBudget(budget);
+        setBudgetModalOpen(true);
+    };
+
     const handleSetScreen = (newScreen: Screen) => {
         setIsBulkMode(false); // Reset bulk mode on screen change.
         setScreen(newScreen);
@@ -318,6 +347,8 @@ export default function App() {
         isBulkMode,
         setIsBulkMode,
         setFabConfig,
+        openGoalModal,
+        openBudgetModal,
     };
 
     return (
@@ -358,6 +389,18 @@ export default function App() {
                         isOpen={isMintorModalOpen} 
                         onClose={handleCloseMintorModal}
                         navigateTo={handleSetScreen}
+                    />
+                )}
+                 {isGoalModalOpen && (
+                    <GoalModal 
+                        onClose={handleCloseGoalModal} 
+                        goalToEdit={editingGoal}
+                    />
+                )}
+                {isBudgetModalOpen && (
+                    <BudgetModal 
+                        onClose={handleCloseBudgetModal} 
+                        budgetToEdit={editingBudget}
                     />
                 )}
             </div>

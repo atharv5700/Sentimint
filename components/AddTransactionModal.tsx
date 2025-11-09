@@ -134,7 +134,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
     return (
         <>
             <div className="fixed inset-0 bg-black/50 z-40 flex items-end justify-center transition-opacity duration-300 animate-backdropFadeIn">
-                <div className="bg-surface rounded-t-[28px] p-2 sm:p-4 w-full max-w-2xl flex flex-col h-[90vh] sm:h-auto sm:max-h-[90vh] animate-modalSlideUp">
+                <div className="bg-surface rounded-t-[28px] p-2 sm:p-4 w-full max-w-2xl flex flex-col max-h-[90vh] animate-modalSlideUp">
                     <div className="flex justify-center mb-2 flex-shrink-0">
                         <div className="w-8 h-1 bg-outline rounded-full"></div>
                     </div>
@@ -145,7 +145,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
                         </button>
                     </div>
 
-                    <div className="flex-grow space-y-4 overflow-y-auto pb-16 px-2 sm:px-0">
+                    <div className="overflow-y-auto pb-4 px-2 sm:px-0 space-y-4">
                         {/* Amount */}
                         <div>
                             <label className="text-label-s text-on-surface-variant">Amount</label>
@@ -217,7 +217,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
                         </div>
                     </div>
 
-                    <div className="mt-auto pt-2 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0">
+                    <div className="pt-4 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0 pb-safe">
                         <button onClick={handleSave} disabled={!isFormValid} className="w-full py-4 rounded-full bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant">Save</button>
                     </div>
                 </div>

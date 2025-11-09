@@ -60,35 +60,7 @@ const GoalCard: React.FC<{ goal: Goal, onEdit: (goal: Goal) => void }> = ({ goal
     );
 };
 
-const GOAL_EMOJIS = ['🎯', '💰', '✈️', '🚗', '🏠', '🎓', '💻', '🎁', '❤️', '📈', '🧘', '📚', '💍', '👶', '🎸', '👟', '🖼️', '🎉'];
-
-const EmojiPicker: React.FC<{ onSelect: (emoji: string) => void; onClose: () => void }> = ({ onSelect, onClose }) => {
-    return (
-        <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm z-20 flex items-center justify-center p-4 rounded-[28px]" onClick={onClose}>
-            <div className="bg-surface-variant rounded-2xl p-4 w-full max-w-xs animate-modalSlideUp" onClick={e => e.stopPropagation()}>
-                <h3 className="text-title-m text-center mb-4 text-on-surface-variant">Choose an Icon</h3>
-                <div className="grid grid-cols-6 gap-2">
-                    {GOAL_EMOJIS.map(emoji => (
-                        <button
-                            key={emoji}
-                            onClick={() => {
-                                hapticClick();
-                                onSelect(emoji);
-                            }}
-                            className="text-3xl p-2 rounded-full hover:bg-black/10 transition-colors"
-                            aria-label={emoji}
-                        >
-                            {emoji}
-                        </button>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-
-const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null }> = ({ onClose, goalToEdit }) => {
+export const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null }> = ({ onClose, goalToEdit }) => {
     const { addGoal, updateGoal, theme } = useAppContext();
     const [title, setTitle] = useState('');
     const [targetAmount, setTargetAmount] = useState('');
@@ -96,6 +68,33 @@ const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null }> = ({
     const [deadline, setDeadline] = useState('');
     const [isPickerOpen, setIsPickerOpen] = useState(false);
     
+    const GOAL_EMOJIS = ['🎯', '💰', '✈️', '🚗', '🏠', '🎓', '💻', '🎁', '❤️', '📈', '🧘', '📚', '💍', '👶', '🎸', '👟', '🖼️', '🎉'];
+
+    const EmojiPicker: React.FC<{ onSelect: (emoji: string) => void; onClose: () => void }> = ({ onSelect, onClose }) => {
+        return (
+            <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm z-20 flex items-center justify-center p-4 rounded-[28px]" onClick={onClose}>
+                <div className="bg-surface-variant rounded-2xl p-4 w-full max-w-xs animate-modalSlideUp" onClick={e => e.stopPropagation()}>
+                    <h3 className="text-title-m text-center mb-4 text-on-surface-variant">Choose an Icon</h3>
+                    <div className="grid grid-cols-6 gap-2">
+                        {GOAL_EMOJIS.map(emoji => (
+                            <button
+                                key={emoji}
+                                onClick={() => {
+                                    hapticClick();
+                                    onSelect(emoji);
+                                }}
+                                className="text-3xl p-2 rounded-full hover:bg-black/10 transition-colors"
+                                aria-label={emoji}
+                            >
+                                {emoji}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
      useEffect(() => {
         if (goalToEdit) {
             setTitle(goalToEdit.title);
@@ -147,35 +146,33 @@ const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null }> = ({
                     </button>
                 </div>
                 
-                <div className="flex-grow overflow-y-auto px-2 sm:px-0">
-                    <div className="space-y-4">
-                         <div>
-                            <label className="text-label-s text-on-surface-variant">Target Amount</label>
-                            <input type="text" inputMode="decimal" placeholder="₹0" value={targetAmount ? `₹${formattedAmount}` : ''} onChange={(e) => setTargetAmount(e.target.value.replace(/[^0-9.]/g, ''))} className="w-full text-4xl sm:text-display-l bg-transparent focus:outline-none p-0 border-0"/>
+                <div className="overflow-y-auto px-2 sm:px-0 pb-4 space-y-4">
+                    <div>
+                        <label className="text-label-s text-on-surface-variant">Target Amount</label>
+                        <input type="text" inputMode="decimal" placeholder="₹0" value={targetAmount ? `₹${formattedAmount}` : ''} onChange={(e) => setTargetAmount(e.target.value.replace(/[^0-9.]/g, ''))} className="w-full text-4xl sm:text-display-l bg-transparent focus:outline-none p-0 border-0"/>
+                    </div>
+                    <div>
+                        <label className="text-label-s text-on-surface-variant">Goal Title</label>
+                         <div className="flex items-center gap-0 bg-surface-variant rounded-xl mt-1 focus-within:ring-2 focus-within:ring-primary">
+                            <button type="button" onClick={() => { hapticClick(); setIsPickerOpen(true); }} className="h-12 w-12 text-center text-2xl p-3 flex items-center justify-center focus:outline-none rounded-l-xl hover:bg-black/5">
+                                {emoji}
+                            </button>
+                            <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. New Laptop" className="w-full bg-transparent p-3 focus:outline-none min-w-0" />
                         </div>
-                        <div>
-                            <label className="text-label-s text-on-surface-variant">Goal Title</label>
-                             <div className="flex items-center gap-0 bg-surface-variant rounded-xl mt-1 focus-within:ring-2 focus-within:ring-primary">
-                                <button type="button" onClick={() => { hapticClick(); setIsPickerOpen(true); }} className="h-12 w-12 text-center text-2xl p-3 flex items-center justify-center focus:outline-none rounded-l-xl hover:bg-black/5">
-                                    {emoji}
-                                </button>
-                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. New Laptop" className="w-full bg-transparent p-3 focus:outline-none min-w-0" />
-                            </div>
-                        </div>
-                         <div>
-                             <label className="text-label-s text-on-surface-variant">Deadline (Optional)</label>
-                             <input 
-                                type="date"
-                                value={deadline} 
-                                onChange={e => setDeadline(e.target.value)}
-                                className="w-full bg-surface-variant p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary"
-                                style={{colorScheme: theme}}
-                            />
-                        </div>
+                    </div>
+                     <div>
+                         <label className="text-label-s text-on-surface-variant">Deadline (Optional)</label>
+                         <input 
+                            type="date"
+                            value={deadline} 
+                            onChange={e => setDeadline(e.target.value)}
+                            className="w-full bg-surface-variant p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary"
+                            style={{colorScheme: theme}}
+                        />
                     </div>
                 </div>
                 
-                <div className="mt-6 pt-4 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0 pb-safe">
+                <div className="pt-4 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0 pb-safe">
                      <button onClick={handleSave} disabled={!isFormValid} className="w-full py-4 rounded-full bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant">Save</button>
                 </div>
 
@@ -207,7 +204,7 @@ const BudgetListItem: React.FC<{ budget: Budget, spent: number, onEdit: (budget:
     );
 };
 
-const BudgetModal: React.FC<{ onClose: () => void, budgetToEdit: Budget | null }> = ({ onClose, budgetToEdit }) => {
+export const BudgetModal: React.FC<{ onClose: () => void, budgetToEdit: Budget | null }> = ({ onClose, budgetToEdit }) => {
     const { addBudget, updateBudget, budgets } = useAppContext();
     
     const [category, setCategory] = useState('');
@@ -261,44 +258,42 @@ const BudgetModal: React.FC<{ onClose: () => void, budgetToEdit: Budget | null }
                     </button>
                 </div>
                 
-                <div className="flex-grow overflow-y-auto px-2 sm:px-0">
-                    <div className="space-y-4">
-                        <div>
-                            <label className="text-label-s text-on-surface-variant">Budget Amount</label>
-                            <input 
-                                type="text" 
-                                inputMode="decimal" 
-                                placeholder="₹0" 
-                                value={amount ? `₹${formattedAmount}` : ''} 
-                                onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} 
-                                className="w-full text-4xl sm:text-display-l bg-transparent focus:outline-none p-0 border-0"
-                            />
-                        </div>
+                <div className="overflow-y-auto px-2 sm:px-0 pb-4 space-y-6">
+                    <div>
+                        <label className="text-label-s text-on-surface-variant">Budget Amount</label>
+                        <input 
+                            type="text" 
+                            inputMode="decimal" 
+                            placeholder="₹0" 
+                            value={amount ? `₹${formattedAmount}` : ''} 
+                            onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} 
+                            className="w-full text-4xl sm:text-display-l bg-transparent focus:outline-none p-0 border-0"
+                        />
+                    </div>
 
-                        <div>
-                             <label className="text-label-s text-on-surface-variant mb-1 block">Category</label>
-                             {budgetToEdit ? (
-                                <div className="inline-block px-3 py-1.5 rounded-lg text-sm bg-tertiary-container text-on-tertiary-container cursor-not-allowed">
-                                    {budgetToEdit.category}
-                                </div>
-                             ) : (
-                                <div className="flex flex-wrap gap-2">
-                                    {availableCategories.length > 0 ? availableCategories.map(cat => (
-                                        <button 
-                                            key={cat} 
-                                            onClick={() => setCategory(cat)} 
-                                            className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${category === cat ? 'bg-primary-container text-on-primary-container' : 'bg-surface-variant text-on-surface-variant'}`}
-                                        >
-                                            {cat}
-                                        </button>
-                                    )) : <p className="text-sm text-on-surface-variant">All categories have budgets.</p>}
-                                </div>
-                             )}
-                        </div>
+                    <div>
+                         <label className="text-label-s text-on-surface-variant mb-1 block">Category</label>
+                         {budgetToEdit ? (
+                            <div className="inline-block px-3 py-1.5 rounded-lg text-sm bg-tertiary-container text-on-tertiary-container cursor-not-allowed">
+                                {budgetToEdit.category}
+                            </div>
+                         ) : (
+                            <div className="flex flex-wrap gap-2">
+                                {availableCategories.length > 0 ? availableCategories.map(cat => (
+                                    <button 
+                                        key={cat} 
+                                        onClick={() => setCategory(cat)} 
+                                        className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${category === cat ? 'bg-primary-container text-on-primary-container' : 'bg-surface-variant text-on-surface-variant'}`}
+                                    >
+                                        {cat}
+                                    </button>
+                                )) : <p className="text-sm text-on-surface-variant">All categories have budgets.</p>}
+                            </div>
+                         )}
                     </div>
                 </div>
                 
-                <div className="mt-6 pt-4 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0 pb-safe">
+                <div className="pt-4 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0 pb-safe">
                     <button onClick={handleSave} disabled={!isFormValid} className="w-full py-4 rounded-full bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant">Save</button>
                 </div>
             </div>
@@ -336,15 +331,9 @@ function usePrevious<T>(value: T): T | undefined {
 
 
 export default function GoalsScreen() {
-    const { goals, budgets, transactions, setFabConfig } = useAppContext();
+    const { goals, budgets, transactions, setFabConfig, openGoalModal, openBudgetModal } = useAppContext();
     const [activeTab, setActiveTab] = useState<'goals' | 'budgets'>('goals');
-    
-    const [isGoalModalOpen, setGoalModalOpen] = useState(false);
-    const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
-    const [isBudgetModalOpen, setBudgetModalOpen] = useState(false);
-    const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
     const [celebratingGoalId, setCelebratingGoalId] = useState<string | null>(null);
-
     const prevGoals = usePrevious(goals);
 
     useEffect(() => {
@@ -376,59 +365,30 @@ export default function GoalsScreen() {
         }, {} as Record<string, number>);
     }, [transactions, budgets]);
 
-    const handleEditGoal = (goal: Goal) => { setEditingGoal(goal); setGoalModalOpen(true); };
-    const handleAddNewGoal = useCallback(() => { setEditingGoal(null); setGoalModalOpen(true); }, []);
-    const handleEditBudget = (budget: Budget) => { setEditingBudget(budget); setBudgetModalOpen(true); };
-    const handleAddNewBudget = useCallback(() => { setEditingBudget(null); setBudgetModalOpen(true); }, []);
-    
-    const closeModal = () => {
-        if (window.history.state?.modal) {
-            window.history.back();
-        } else {
-            setGoalModalOpen(false);
-            setBudgetModalOpen(false);
-        }
-    }
+    const handleEditGoal = (goal: Goal) => openGoalModal(goal);
+    const handleAddNewGoal = useCallback(() => openGoalModal(null), [openGoalModal]);
+    const handleEditBudget = (budget: Budget) => openBudgetModal(budget);
+    const handleAddNewBudget = useCallback(() => openBudgetModal(null), [openBudgetModal]);
 
     useEffect(() => {
-        const isAModalOpen = isGoalModalOpen || isBudgetModalOpen;
-        
-        document.body.style.overflow = isAModalOpen ? 'hidden' : 'auto';
-
-        if (isAModalOpen) {
-            setFabConfig(null);
-            if (!window.history.state?.modal) {
-                window.history.pushState({ modal: true }, '');
+        const fabAction = () => {
+            hapticClick();
+            if (activeTab === 'goals') {
+                handleAddNewGoal();
+            } else {
+                handleAddNewBudget();
             }
-        } else {
-            const fabAction = () => {
-                hapticClick();
-                if (activeTab === 'goals') {
-                    handleAddNewGoal();
-                } else {
-                    handleAddNewBudget();
-                }
-            };
-
-            setFabConfig({
-                onClick: fabAction,
-                'aria-label': activeTab === 'goals' ? 'Add new goal' : 'Add new budget',
-            });
-        }
-        
-        const handlePopState = (event: PopStateEvent) => {
-            setGoalModalOpen(false);
-            setBudgetModalOpen(false);
         };
-    
-        window.addEventListener('popstate', handlePopState);
-    
+
+        setFabConfig({
+            onClick: fabAction,
+            'aria-label': activeTab === 'goals' ? 'Add new goal' : 'Add new budget',
+        });
+        
         return () => {
-            window.removeEventListener('popstate', handlePopState);
-            document.body.style.overflow = 'auto';
             setFabConfig(null);
         };
-    }, [activeTab, setFabConfig, handleAddNewGoal, handleAddNewBudget, isGoalModalOpen, isBudgetModalOpen]);
+    }, [activeTab, setFabConfig, handleAddNewGoal, handleAddNewBudget]);
 
 
     return (
@@ -466,9 +426,6 @@ export default function GoalsScreen() {
                     </div>
                 )}
             </div>
-            
-            {isGoalModalOpen && <GoalModal onClose={closeModal} goalToEdit={editingGoal} />}
-            {isBudgetModalOpen && <BudgetModal onClose={closeModal} budgetToEdit={editingBudget} />}
         </div>
     );
 }

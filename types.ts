@@ -1,3 +1,5 @@
+import type { AppContextType as AppContextTypeExtended } from './App';
+
 export type Screen = 'Home' | 'Transactions' | 'Insights' | 'Goals' | 'Settings';
 
 export type Theme = 'light' | 'dark';
@@ -60,3 +62,6 @@ export interface FabConfig {
     onClick: () => void;
     'aria-label': string;
 }
+
+// Re-export the extended type for use in other files
+export type AppContextType = AppContextTypeExtended;
