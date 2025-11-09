@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Goal, Budget } from '../../types';
 import { useAppContext } from '../../App';
 import { PlusIcon, TrashIcon, CheckIcon, PencilIcon, DEFAULT_CATEGORIES, CloseIcon } from '../../constants';
@@ -247,7 +247,7 @@ const BudgetModal: React.FC<{ onClose: () => void, budgetToEdit: Budget | null }
 
 
 export default function GoalsScreen() {
-    const { goals, budgets, transactions } = useAppContext();
+    const { goals, budgets, transactions, setFabConfig } = useAppContext();
     const [activeTab, setActiveTab] = useState<'goals' | 'budgets'>('goals');
     
     const [isGoalModalOpen, setGoalModalOpen] = useState(false);
@@ -272,15 +272,30 @@ export default function GoalsScreen() {
     }, [transactions, budgets]);
 
     const handleEditGoal = (goal: Goal) => { setEditingGoal(goal); setGoalModalOpen(true); };
-    const handleAddNewGoal = () => { setEditingGoal(null); setGoalModalOpen(true); };
+    const handleAddNewGoal = useCallback(() => { setEditingGoal(null); setGoalModalOpen(true); }, []);
     const handleEditBudget = (budget: Budget) => { setEditingBudget(budget); setBudgetModalOpen(true); };
-    const handleAddNewBudget = () => { setEditingBudget(null); setBudgetModalOpen(true); };
+    const handleAddNewBudget = useCallback(() => { setEditingBudget(null); setBudgetModalOpen(true); }, []);
     
-    const handleFabClick = () => {
-        hapticClick();
-        if (activeTab === 'goals') handleAddNewGoal();
-        else handleAddNewBudget();
-    };
+    useEffect(() => {
+        const fabAction = () => {
+            hapticClick();
+            if (activeTab === 'goals') {
+                handleAddNewGoal();
+            } else {
+                handleAddNewBudget();
+            }
+        };
+
+        setFabConfig({
+            onClick: fabAction,
+            'aria-label': activeTab === 'goals' ? 'Add new goal' : 'Add new budget',
+        });
+
+        return () => {
+            setFabConfig(null);
+        };
+    }, [activeTab, setFabConfig, handleAddNewGoal, handleAddNewBudget]);
+
 
     return (
         <div className="relative min-h-full">
@@ -316,10 +331,6 @@ export default function GoalsScreen() {
                     </div>
                 )}
             </div>
-            
-            <button onClick={handleFabClick} className="fixed bottom-24 right-6 bg-primary-container text-on-primary-container rounded-2xl shadow-lg w-14 h-14 flex items-center justify-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-modalSlideUp z-10">
-                <PlusIcon className="w-7 h-7" />
-            </button>
             
             {isGoalModalOpen && <GoalModal onClose={() => setGoalModalOpen(false)} goalToEdit={editingGoal} />}
             {isBudgetModalOpen && <BudgetModal onClose={() => setBudgetModalOpen(false)} budgetToEdit={editingBudget} />}

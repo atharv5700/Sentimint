@@ -150,15 +150,25 @@ export default function InsightsDashboard({ period }: { period: Period }) {
             acc[tx.merchant].total += tx.amount;
             acc[tx.merchant].moods.push(tx.mood);
             return acc;
-        }, {});
+        }, {} as Record<string, {total: number, moods: number[]}>);
 
         const merchantsArray = Object.entries(merchants);
 
         return merchantsArray
             .sort((a, b) => b[1].total - a[1].total)
             .slice(0, 5)
-            .map(([name, data]) => ({ name, total: data.total, moods: data.moods.slice(-7) }));
+            .map(([name, data]) => {
+                const avgMoodValue = data.moods.length > 0
+                    ? Math.round(data.moods.reduce((a, b) => a + b, 0) / data.moods.length)
+                    : 3; // Default to Neutral if no moods
+                return {
+                    name,
+                    total: data.total,
+                    avgMood: MOOD_MAP[avgMoodValue as keyof typeof MOOD_MAP] || MOOD_MAP[3]
+                };
+            });
     }, [filteredTransactions]);
+
 
     const tickColor = theme === 'dark' ? '#C2C7C5' : '#424846';
     const primaryColor = theme === 'dark' ? 'rgb(31 200 167)' : 'rgb(0 107 88)';
@@ -201,37 +211,38 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                 <div className="md:col-span-2" style={{'--stagger-delay': 3} as React.CSSProperties}>
                     <Widget title="Spending Over Time" onExport={() => handleExport(spendingOverTime)} aria-label="Line chart showing total, positive mood, and negative mood spending over the selected period.">
                         <ResponsiveContainer>
-                            <LineChart data={spendingOverTime}>
+                            <LineChart data={spendingOverTime} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
                                 <XAxis dataKey="name" tick={{ fill: tickColor, fontSize: 12 }} />
                                 <YAxis tick={{ fill: tickColor, fontSize: 12 }} tickFormatter={(val) => compactCurrency(val)}/>
                                 <Tooltip content={<CustomTooltip formatter={(value: number) => formatCurrency(value)} />} />
                                 <Legend verticalAlign="bottom" wrapperStyle={{paddingTop: '16px'}}/>
-                                <Line type="monotone" dataKey="Total" name="Total Spend" stroke="rgb(var(--color-tertiary))" strokeWidth={2} dot={false} />
-                                <Line type="monotone" dataKey="Positive" name="Positive Mood" stroke={MOOD_COLORS['Happy']} dot={false} />
-                                <Line type="monotone" dataKey="Negative" name="Negative Mood" stroke={MOOD_COLORS['Regret']} dot={false} />
+                                <Line type="monotone" dataKey="Total" name="Total Spend" stroke="rgb(var(--color-tertiary))" strokeWidth={2} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
+                                <Line type="monotone" dataKey="Positive" name="Positive Mood" stroke={MOOD_COLORS['Happy']} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
+                                <Line type="monotone" dataKey="Negative" name="Negative Mood" stroke={MOOD_COLORS['Regret']} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
                             </LineChart>
                         </ResponsiveContainer>
                     </Widget>
                 </div>
-                <div style={{'--stagger-delay': 4} as React.CSSProperties}>
-                    <Widget title="Top 5 Merchants" onExport={() => handleExport(topMerchants.map(m=>({name: m.name, total: m.total})))} aria-label="Table showing the top 5 merchants by total spending, with a sparkline of recent mood scores.">
+                <div className="md:col-span-2" style={{'--stagger-delay': 4} as React.CSSProperties}>
+                    <Widget title="Top 5 Merchants" onExport={() => handleExport(topMerchants.map(m=>({name: m.name, total: m.total, avg_mood: m.avgMood.label})))} aria-label="Table showing the top 5 merchants by total spending, with their average transaction mood.">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead>
                                     <tr className="border-b border-outline">
                                         <th className="p-2 text-label-s">Merchant</th>
-                                        <th className="p-2 text-label-s">Mood (last 7)</th>
+                                        <th className="p-2 text-label-s">Avg. Mood</th>
                                         <th className="p-2 text-label-s text-right">Total</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {topMerchants.map(({name, total, moods}) => (
+                                    {topMerchants.map(({name, total, avgMood}) => (
                                         <tr key={name} className="border-b border-outline-variant/50">
                                             <td className="p-2 text-body-m">{name}</td>
                                             <td className="p-2">
-                                                <div className="flex gap-0.5">
-                                                    {moods.map((mood, i) => <div key={i} className="w-2 h-4 rounded-sm" style={{backgroundColor: MOOD_COLORS[MOOD_MAP[mood as keyof typeof MOOD_MAP].label]}}></div>)}
+                                                <div className="flex items-center gap-1.5">
+                                                     <avgMood.icon className={`w-5 h-5 ${avgMood.color}`} />
+                                                     <span className="text-sm hidden sm:inline">{avgMood.label}</span>
                                                 </div>
                                             </td>
                                             <td className="p-2 text-body-m font-medium text-right">{formatCurrency(total)}</td>

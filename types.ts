@@ -55,3 +55,8 @@ export type MintorAction = {
     type: 'navigate' | 'function' | 'query';
     payload: string;
 };
+
+export interface FabConfig {
+    onClick: () => void;
+    'aria-label': string;
+}

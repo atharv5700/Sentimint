@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import React, { useState, useEffect, useCallback, createContext, useContext, useMemo } from 'react';
 import type { Screen, Theme, Transaction, Goal, Budget } from './types';
 import { dbService } from './services/db';
 import { hapticClick, hapticSuccess } from './services/haptics';
@@ -12,6 +12,11 @@ import TopAppBar from './components/layout/TopAppBar';
 import AddTransactionModal from './components/AddTransactionModal';
 import MintorAiModal from './components/MintorAiModal';
 import { PlusIcon } from './constants';
+
+interface FabConfig {
+    onClick: () => void;
+    'aria-label': string;
+}
 
 interface AppContextType {
   transactions: Transaction[];
@@ -33,6 +38,7 @@ interface AppContextType {
   formatCurrency: (amount: number) => string;
   isBulkMode: boolean;
   setIsBulkMode: (isBulk: boolean) => void;
+  setFabConfig: (config: FabConfig | null) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -64,6 +70,7 @@ export default function App() {
     const [editingTx, setEditingTx] = useState<Transaction | null>(null);
     const [isMintorModalOpen, setMintorModalOpen] = useState(false);
     const [isBulkMode, setIsBulkMode] = useState(false);
+    const [fabConfig, setFabConfig] = useState<FabConfig | null>(null);
 
 
     const recalculateGoals = useCallback(async () => {
@@ -231,6 +238,23 @@ export default function App() {
         }
     };
 
+    const fabDetails = useMemo(() => {
+        if (screen === 'Home' || screen === 'Transactions') {
+            return {
+                onClick: () => {
+                    hapticClick();
+                    setAddTxModalOpen(true);
+                },
+                'aria-label': 'Add Transaction',
+                show: true,
+            };
+        }
+        if (screen === 'Goals' && fabConfig) {
+            return { ...fabConfig, show: true };
+        }
+        return { show: false, onClick: () => {}, 'aria-label': '' };
+    }, [screen, fabConfig]);
+
     if (!isDataReady) {
         return (
             <div className="flex items-center justify-center h-screen bg-background">
@@ -259,6 +283,7 @@ export default function App() {
         formatCurrency,
         isBulkMode,
         setIsBulkMode,
+        setFabConfig,
     };
 
     return (
@@ -277,14 +302,11 @@ export default function App() {
                     <BottomNav activeScreen={screen} setScreen={handleSetScreen} />
                 </div>
                 
-                {(screen === 'Home' || screen === 'Transactions') && !isModalOpen && !isBulkMode && (
+                {fabDetails.show && !isModalOpen && !isBulkMode && (
                      <button
-                        onClick={() => {
-                            hapticClick();
-                            setAddTxModalOpen(true);
-                        }}
+                        onClick={fabDetails.onClick}
                         className="fixed bottom-24 right-6 bg-primary-container text-on-primary-container rounded-2xl shadow-lg w-14 h-14 flex items-center justify-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-modalSlideUp z-10"
-                        aria-label="Add Transaction"
+                        aria-label={fabDetails['aria-label']}
                     >
                         <PlusIcon className="w-7 h-7" />
                     </button>
