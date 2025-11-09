@@ -66,8 +66,8 @@
             },
             keyframes: {
                 modalSlideUp: {
-                    '0%': { opacity: 0, transform: 'translateY(50px) scale(0.95)' },
-                    '100%': { opacity: 1, transform: 'translateY(0) scale(1)' },
+                    '0%': { opacity: 0, transform: 'translateY(100%)' },
+                    '100%': { opacity: 1, transform: 'translateY(0)' },
                 },
                 backdropFadeIn: {
                     '0%': { opacity: 0 },
@@ -76,6 +76,10 @@
                 screenFadeIn: {
                     '0%': { opacity: 0, transform: 'translateY(10px)' },
                     '100%': { opacity: 1, transform: 'translateY(0)' },
+                },
+                'confetti-fall': {
+                    '0%': { transform: 'translateY(-10vh) rotateZ(0deg)', opacity: 1 },
+                    '100%': { transform: 'translateY(110vh) rotateZ(720deg)', opacity: 0 },
                 },
             },
           },
@@ -176,8 +180,12 @@
 
       /* Custom styles for date input */
       input[type="date"] {
-          position: relative;
-          color: rgb(var(--color-on-surface));
+        position: relative;
+        color: rgb(var(--color-on-surface));
+        color-scheme: light; /* Default */
+      }
+      .dark input[type="date"] {
+        color-scheme: dark;
       }
       input[type="date"]::-webkit-calendar-picker-indicator {
           filter: invert(var(--is-dark));
@@ -190,18 +198,21 @@
           width: 1.5rem;
           height: 1.5rem;
       }
-      input[type="date"]:not(:valid) {
-          color: transparent;
+
+      .pb-safe {
+        padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
       }
-      input[type="date"]:not(:valid)::before {
-          content: 'Deadline (Optional)';
-          position: absolute;
-          left: 0.75rem;
-          top: 50%;
-          transform: translateY(-50%);
-          color: rgb(var(--color-on-surface-variant));
-          pointer-events: none;
+
+      .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        will-change: transform, opacity;
+        animation-name: confetti-fall;
+        animation-timing-function: linear;
+        animation-iteration-count: 1;
       }
+
     </style>
   <script type="importmap">
 {

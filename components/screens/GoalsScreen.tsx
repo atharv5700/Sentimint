@@ -1,10 +1,9 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import type { Goal, Budget } from '../../types';
 import { useAppContext } from '../../App';
 import { PlusIcon, TrashIcon, CheckIcon, PencilIcon, DEFAULT_CATEGORIES, CloseIcon } from '../../constants';
-import { hapticClick, hapticError } from '../../services/haptics';
+import { hapticClick, hapticError, hapticSuccess } from '../../services/haptics';
 import ProgressBar from '../ProgressBar';
-import CustomSelect from '../CustomSelect';
 
 
 const ProgressRing: React.FC<{ progress: number }> = ({ progress }) => {
@@ -47,7 +46,10 @@ const GoalCard: React.FC<{ goal: Goal, onEdit: (goal: Goal) => void }> = ({ goal
                         <span className="text-body-m text-on-surface font-bold">{formatCurrency(goal.current_amount)}</span>
                         <span className="text-label-s text-on-surface-variant">of {formatCurrency(goal.target_amount)}</span>
                     </div>
-                    <div className="flex justify-between text-label-s text-on-surface-variant mt-1">
+                    <div className="mt-2">
+                        <ProgressBar progress={progress} />
+                    </div>
+                    <div className="flex justify-between text-label-s text-on-surface-variant mt-2">
                         <span>{formatCurrency(remaining)} left</span>
                         {daysLeft !== null && <span>{daysLeft >= 0 ? `${daysLeft} days left` : 'Deadline passed'}</span>}
                     </div>
@@ -62,7 +64,7 @@ const GOAL_EMOJIS = ['🎯', '💰', '✈️', '🚗', '🏠', '🎓', '💻', '
 
 const EmojiPicker: React.FC<{ onSelect: (emoji: string) => void; onClose: () => void }> = ({ onSelect, onClose }) => {
     return (
-        <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm z-10 flex items-center justify-center p-4 rounded-3xl" onClick={onClose}>
+        <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm z-20 flex items-center justify-center p-4 rounded-[28px]" onClick={onClose}>
             <div className="bg-surface-variant rounded-2xl p-4 w-full max-w-xs animate-modalSlideUp" onClick={e => e.stopPropagation()}>
                 <h3 className="text-title-m text-center mb-4 text-on-surface-variant">Choose an Icon</h3>
                 <div className="grid grid-cols-6 gap-2">
@@ -87,12 +89,11 @@ const EmojiPicker: React.FC<{ onSelect: (emoji: string) => void; onClose: () => 
 
 
 const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null }> = ({ onClose, goalToEdit }) => {
-    const { addGoal, updateGoal } = useAppContext();
+    const { addGoal, updateGoal, theme } = useAppContext();
     const [title, setTitle] = useState('');
     const [targetAmount, setTargetAmount] = useState('');
     const [emoji, setEmoji] = useState('🎯');
     const [deadline, setDeadline] = useState('');
-    const [dateInputType, setDateInputType] = useState('text');
     const [isPickerOpen, setIsPickerOpen] = useState(false);
     
      useEffect(() => {
@@ -109,11 +110,11 @@ const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null }> = ({
         }
     }, [goalToEdit]);
 
-    const isFormValid = title.trim().length > 0 && parseFloat(targetAmount) > 0;
+    const isFormValid = title.trim().length > 0 && parseFloat(targetAmount.replace(/,/g, '')) > 0;
 
     const handleSave = () => {
         if (!isFormValid) { hapticError(); return; }
-        const amount = parseFloat(targetAmount);
+        const amount = parseFloat(targetAmount.replace(/,/g, ''));
         const deadline_ts = deadline ? new Date(deadline).getTime() : null;
         
         const goalData = { title: title.trim(), target_amount: amount, emoji, deadline_ts };
@@ -126,51 +127,59 @@ const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null }> = ({
         onClose();
     };
     
-    return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-backdropFadeIn">
-            <div className="relative bg-surface rounded-3xl p-4 sm:p-6 w-full max-w-sm animate-modalSlideUp overflow-hidden">
-                <h2 className="text-headline-m mb-4">{goalToEdit ? 'Edit' : 'New'} Goal</h2>
-                <div className="space-y-4">
-                     <div className="flex flex-col sm:flex-row gap-2">
-                        <button type="button" onClick={() => { hapticClick(); setIsPickerOpen(true); }} className="sm:flex-shrink-0 h-14 text-center text-3xl bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary">
-                            {emoji}
-                        </button>
-                        <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Goal Title" className="flex-1 w-full bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary min-w-0" />
-                     </div>
-                     <input type="text" inputMode="numeric" value={targetAmount ? new Intl.NumberFormat('en-IN').format(parseFloat(targetAmount)) : ''} onChange={e => setTargetAmount(e.target.value.replace(/[^0-9]/g, ''))} placeholder="Target Amount (₹)" className="w-full bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary" />
-                    <div className="relative">
-                         <input 
-                            type={dateInputType}
-                            value={deadline} 
-                            onChange={e => setDeadline(e.target.value)} 
-                            onFocus={() => setDateInputType('date')}
-                            onBlur={() => { if(!deadline) setDateInputType('text')}}
-                            placeholder="Deadline (Optional)"
-                            className={`w-full bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary ${!deadline && dateInputType === 'text' ? 'text-on-surface-variant' : 'text-on-surface'}`}
-                         />
-                         {dateInputType === 'date' && (
-                             <style>{`
-                                input[type="date"]::-webkit-calendar-picker-indicator {
-                                    filter: invert(var(--is-dark));
-                                    opacity: 0.8;
-                                    cursor: pointer;
-                                    position: absolute;
-                                    right: 0.75rem;
-                                    top: 50%;
-                                    transform: translateY(-50%);
-                                    width: 1.5rem;
-                                    height: 1.5rem;
-                                }
-                             `}</style>
-                         )}
-                     </div>
+    const formattedAmount = useMemo(() => {
+        if (!targetAmount) return '';
+        const numericAmount = parseFloat(targetAmount.replace(/,/g, ''));
+        if (isNaN(numericAmount)) return '';
+        return new Intl.NumberFormat('en-IN').format(numericAmount);
+    }, [targetAmount]);
 
+    return (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center p-0 animate-backdropFadeIn" onClick={onClose}>
+            <div className="relative bg-surface rounded-t-[28px] p-2 sm:p-4 w-full max-w-2xl flex flex-col max-h-[90vh] animate-modalSlideUp" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-center mb-2 flex-shrink-0">
+                    <div className="w-8 h-1 bg-outline rounded-full"></div>
                 </div>
-                <div className="flex justify-end gap-2 mt-6">
-                    <button onClick={() => { hapticClick(); onClose(); }} className="px-4 py-2 rounded-full text-primary">Cancel</button>
-                    <button onClick={handleSave} disabled={!isFormValid} className="px-6 py-2 rounded-full bg-primary text-on-primary disabled:bg-outline">Save</button>
+                <div className="flex justify-between items-center mb-4 flex-shrink-0 px-2 sm:px-0">
+                    <h2 className="text-headline-m">{goalToEdit ? 'Edit' : 'New'} Goal</h2>
+                    <button onClick={() => { hapticClick(); onClose(); }} className="text-on-surface-variant p-2" aria-label="Close add goal modal">
+                        <CloseIcon />
+                    </button>
                 </div>
-                 {isPickerOpen && <EmojiPicker onSelect={(selectedEmoji) => { setEmoji(selectedEmoji); setIsPickerOpen(false); }} onClose={() => setIsPickerOpen(false)} />}
+                
+                <div className="flex-grow overflow-y-auto px-2 sm:px-0">
+                    <div className="space-y-4">
+                         <div>
+                            <label className="text-label-s text-on-surface-variant">Target Amount</label>
+                            <input type="text" inputMode="decimal" placeholder="₹0" value={targetAmount ? `₹${formattedAmount}` : ''} onChange={(e) => setTargetAmount(e.target.value.replace(/[^0-9.]/g, ''))} className="w-full text-4xl sm:text-display-l bg-transparent focus:outline-none p-0 border-0"/>
+                        </div>
+                        <div>
+                            <label className="text-label-s text-on-surface-variant">Goal Title</label>
+                             <div className="flex items-center gap-0 bg-surface-variant rounded-xl mt-1 focus-within:ring-2 focus-within:ring-primary">
+                                <button type="button" onClick={() => { hapticClick(); setIsPickerOpen(true); }} className="h-12 w-12 text-center text-2xl p-3 flex items-center justify-center focus:outline-none rounded-l-xl hover:bg-black/5">
+                                    {emoji}
+                                </button>
+                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. New Laptop" className="w-full bg-transparent p-3 focus:outline-none min-w-0" />
+                            </div>
+                        </div>
+                         <div>
+                             <label className="text-label-s text-on-surface-variant">Deadline (Optional)</label>
+                             <input 
+                                type="date"
+                                value={deadline} 
+                                onChange={e => setDeadline(e.target.value)}
+                                className="w-full bg-surface-variant p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary"
+                                style={{colorScheme: theme}}
+                            />
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="mt-6 pt-4 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0 pb-safe">
+                     <button onClick={handleSave} disabled={!isFormValid} className="w-full py-4 rounded-full bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant">Save</button>
+                </div>
+
+                {isPickerOpen && <EmojiPicker onSelect={(selectedEmoji) => { setEmoji(selectedEmoji); setIsPickerOpen(false); }} onClose={() => setIsPickerOpen(false)} />}
             </div>
         </div>
     );
@@ -182,7 +191,7 @@ const BudgetListItem: React.FC<{ budget: Budget, spent: number, onEdit: (budget:
     const remaining = budget.amount - spent;
     
     return (
-        <div onClick={() => onEdit(budget)} className="bg-surface-variant p-4 rounded-3xl cursor-pointer hover:bg-surface-variant/80 transition-colors">
+        <div onClick={() => { hapticClick(); onEdit(budget); }} className="bg-surface-variant p-4 rounded-3xl cursor-pointer hover:bg-surface-variant/80 transition-colors">
             <div className="flex justify-between items-center mb-2">
                 <span className="font-medium text-on-surface-variant">{budget.category}</span>
                 <button onClick={(e) => { e.stopPropagation(); hapticClick(); deleteBudget(budget.id); }} className="text-on-surface-variant/50 hover:text-error p-1"><TrashIcon className="w-5 h-5"/></button>
@@ -201,18 +210,29 @@ const BudgetListItem: React.FC<{ budget: Budget, spent: number, onEdit: (budget:
 const BudgetModal: React.FC<{ onClose: () => void, budgetToEdit: Budget | null }> = ({ onClose, budgetToEdit }) => {
     const { addBudget, updateBudget, budgets } = useAppContext();
     
+    const [category, setCategory] = useState('');
+    const [amount, setAmount] = useState('');
+
     const availableCategories = useMemo(() => DEFAULT_CATEGORIES.filter(cat => 
         !budgets.some(b => b.category === cat) || (budgetToEdit && budgetToEdit.category === cat)
     ), [budgets, budgetToEdit]);
     
-    const [category, setCategory] = useState(budgetToEdit ? budgetToEdit.category : (availableCategories[0] || ''));
-    const [amount, setAmount] = useState(budgetToEdit ? String(budgetToEdit.amount) : '');
+    useEffect(() => {
+        if (budgetToEdit) {
+            setCategory(budgetToEdit.category);
+            setAmount(String(budgetToEdit.amount));
+        } else {
+            setCategory('');
+            setAmount('');
+        }
+    }, [budgetToEdit]);
     
-    const isFormValid = parseFloat(amount) > 0 && category;
+    const isFormValid = parseFloat(amount.replace(/,/g, '')) > 0 && !!category;
 
     const handleSave = () => {
         if (!isFormValid) { hapticError(); return; }
-        const budgetData = { category, amount: parseFloat(amount) };
+        const budgetAmount = parseFloat(amount.replace(/,/g, ''));
+        const budgetData = { category, amount: budgetAmount };
         if (budgetToEdit) {
             updateBudget({ ...budgetData, id: budgetToEdit.id, created_at: budgetToEdit.created_at });
         } else {
@@ -220,30 +240,99 @@ const BudgetModal: React.FC<{ onClose: () => void, budgetToEdit: Budget | null }
         }
         onClose();
     };
-    
-    const categoryOptions = (budgetToEdit ? [{value: budgetToEdit.category, label: budgetToEdit.category}] : []).concat(availableCategories.map(c => ({value: c, label: c})));
+
+    const formattedAmount = useMemo(() => {
+        if (!amount) return '';
+        const numericAmount = parseFloat(amount.replace(/,/g, ''));
+        if (isNaN(numericAmount)) return '';
+        return new Intl.NumberFormat('en-IN').format(numericAmount);
+    }, [amount]);
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 animate-backdropFadeIn">
-            <div className="bg-surface rounded-3xl p-4 sm:p-6 w-full max-w-sm animate-modalSlideUp">
-                <h2 className="text-headline-m mb-4">{budgetToEdit ? 'Edit' : 'New'} Budget</h2>
-                <div className="space-y-4">
-                    <CustomSelect 
-                        value={category}
-                        onChange={(val) => setCategory(val as string)}
-                        options={categoryOptions}
-                        disabled={!!budgetToEdit}
-                    />
-                    <input type="text" inputMode="numeric" value={amount ? new Intl.NumberFormat('en-IN').format(parseFloat(amount)) : ''} onChange={e => setAmount(e.target.value.replace(/[^0-9]/g, ''))} placeholder="Budget Amount (₹)" className="w-full bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary" />
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-end justify-center p-0 animate-backdropFadeIn" onClick={onClose}>
+            <div className="bg-surface rounded-t-[28px] p-2 sm:p-4 w-full max-w-2xl flex flex-col max-h-[90vh] animate-modalSlideUp" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-center mb-2 flex-shrink-0">
+                    <div className="w-8 h-1 bg-outline rounded-full"></div>
                 </div>
-                <div className="flex justify-end gap-2 mt-6">
-                    <button onClick={() => { hapticClick(); onClose(); }} className="px-4 py-2 rounded-full text-primary">Cancel</button>
-                    <button onClick={handleSave} disabled={!isFormValid} className="px-6 py-2 rounded-full bg-primary text-on-primary disabled:bg-outline">Save</button>
+                <div className="flex justify-between items-center mb-4 flex-shrink-0 px-2 sm:px-0">
+                    <h2 className="text-headline-m">{budgetToEdit ? 'Edit' : 'New'} Budget</h2>
+                    <button onClick={() => { hapticClick(); onClose(); }} className="text-on-surface-variant p-2" aria-label="Close add budget modal">
+                        <CloseIcon />
+                    </button>
+                </div>
+                
+                <div className="flex-grow overflow-y-auto px-2 sm:px-0">
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-label-s text-on-surface-variant">Budget Amount</label>
+                            <input 
+                                type="text" 
+                                inputMode="decimal" 
+                                placeholder="₹0" 
+                                value={amount ? `₹${formattedAmount}` : ''} 
+                                onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} 
+                                className="w-full text-4xl sm:text-display-l bg-transparent focus:outline-none p-0 border-0"
+                            />
+                        </div>
+
+                        <div>
+                             <label className="text-label-s text-on-surface-variant mb-1 block">Category</label>
+                             {budgetToEdit ? (
+                                <div className="inline-block px-3 py-1.5 rounded-lg text-sm bg-tertiary-container text-on-tertiary-container cursor-not-allowed">
+                                    {budgetToEdit.category}
+                                </div>
+                             ) : (
+                                <div className="flex flex-wrap gap-2">
+                                    {availableCategories.length > 0 ? availableCategories.map(cat => (
+                                        <button 
+                                            key={cat} 
+                                            onClick={() => setCategory(cat)} 
+                                            className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${category === cat ? 'bg-primary-container text-on-primary-container' : 'bg-surface-variant text-on-surface-variant'}`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    )) : <p className="text-sm text-on-surface-variant">All categories have budgets.</p>}
+                                </div>
+                             )}
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="mt-6 pt-4 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0 pb-safe">
+                    <button onClick={handleSave} disabled={!isFormValid} className="w-full py-4 rounded-full bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant">Save</button>
                 </div>
             </div>
         </div>
     );
 };
+
+const Confetti: React.FC = () => {
+    const confettiCount = 150;
+    const colors = ['#1FC7A6', '#FF7043', '#44637D', '#FFB49E', '#65F7D6'];
+
+    const confetti = useMemo(() => Array.from({ length: confettiCount }).map((_, i) => {
+        const style: React.CSSProperties = {
+            left: `${Math.random() * 100}%`,
+            animation: `confetti-fall ${3 + Math.random() * 2}s ${Math.random() * 2}s linear forwards`,
+            backgroundColor: colors[Math.floor(Math.random() * colors.length)],
+        };
+        return <div key={i} className="confetti" style={style}></div>;
+    }), []);
+
+    return (
+        <div className="fixed inset-0 pointer-events-none z-[9999]" aria-hidden="true">
+            {confetti}
+        </div>
+    );
+};
+
+function usePrevious<T>(value: T): T | undefined {
+  const ref = useRef<T>();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+}
 
 
 export default function GoalsScreen() {
@@ -254,6 +343,22 @@ export default function GoalsScreen() {
     const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
     const [isBudgetModalOpen, setBudgetModalOpen] = useState(false);
     const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
+    const [celebratingGoalId, setCelebratingGoalId] = useState<string | null>(null);
+
+    const prevGoals = usePrevious(goals);
+
+    useEffect(() => {
+        if (prevGoals && prevGoals.length > 0 && goals.length > 0) {
+            const justCompletedGoal = goals.find(
+                g => g.completed_bool && !prevGoals.find(pg => pg.id === g.id)?.completed_bool
+            );
+            if (justCompletedGoal) {
+                setCelebratingGoalId(justCompletedGoal.id);
+                hapticSuccess();
+                setTimeout(() => setCelebratingGoalId(null), 4000); // Animation duration
+            }
+        }
+    }, [goals, prevGoals]);
 
     const { activeGoals, completedGoals } = useMemo(() => ({
         activeGoals: goals.filter(g => !g.completed_bool),
@@ -276,29 +381,59 @@ export default function GoalsScreen() {
     const handleEditBudget = (budget: Budget) => { setEditingBudget(budget); setBudgetModalOpen(true); };
     const handleAddNewBudget = useCallback(() => { setEditingBudget(null); setBudgetModalOpen(true); }, []);
     
+    const closeModal = () => {
+        if (window.history.state?.modal) {
+            window.history.back();
+        } else {
+            setGoalModalOpen(false);
+            setBudgetModalOpen(false);
+        }
+    }
+
     useEffect(() => {
-        const fabAction = () => {
-            hapticClick();
-            if (activeTab === 'goals') {
-                handleAddNewGoal();
-            } else {
-                handleAddNewBudget();
+        const isAModalOpen = isGoalModalOpen || isBudgetModalOpen;
+        
+        document.body.style.overflow = isAModalOpen ? 'hidden' : 'auto';
+
+        if (isAModalOpen) {
+            setFabConfig(null);
+            if (!window.history.state?.modal) {
+                window.history.pushState({ modal: true }, '');
             }
+        } else {
+            const fabAction = () => {
+                hapticClick();
+                if (activeTab === 'goals') {
+                    handleAddNewGoal();
+                } else {
+                    handleAddNewBudget();
+                }
+            };
+
+            setFabConfig({
+                onClick: fabAction,
+                'aria-label': activeTab === 'goals' ? 'Add new goal' : 'Add new budget',
+            });
+        }
+        
+        const handlePopState = (event: PopStateEvent) => {
+            setGoalModalOpen(false);
+            setBudgetModalOpen(false);
         };
-
-        setFabConfig({
-            onClick: fabAction,
-            'aria-label': activeTab === 'goals' ? 'Add new goal' : 'Add new budget',
-        });
-
+    
+        window.addEventListener('popstate', handlePopState);
+    
         return () => {
+            window.removeEventListener('popstate', handlePopState);
+            document.body.style.overflow = 'auto';
             setFabConfig(null);
         };
-    }, [activeTab, setFabConfig, handleAddNewGoal, handleAddNewBudget]);
+    }, [activeTab, setFabConfig, handleAddNewGoal, handleAddNewBudget, isGoalModalOpen, isBudgetModalOpen]);
 
 
     return (
         <div className="relative min-h-full">
+            {celebratingGoalId && <Confetti />}
             <div className="p-4">
                 <div className="flex justify-center p-1 bg-surface-variant/50 rounded-full mx-auto max-w-sm mb-6">
                     {(['goals', 'budgets'] as const).map(tab => (
@@ -332,8 +467,8 @@ export default function GoalsScreen() {
                 )}
             </div>
             
-            {isGoalModalOpen && <GoalModal onClose={() => setGoalModalOpen(false)} goalToEdit={editingGoal} />}
-            {isBudgetModalOpen && <BudgetModal onClose={() => setBudgetModalOpen(false)} budgetToEdit={editingBudget} />}
+            {isGoalModalOpen && <GoalModal onClose={closeModal} goalToEdit={editingGoal} />}
+            {isBudgetModalOpen && <BudgetModal onClose={closeModal} budgetToEdit={editingBudget} />}
         </div>
     );
 }
