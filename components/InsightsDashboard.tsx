@@ -56,16 +56,40 @@ export default function InsightsDashboard({ period }: { period: Period }) {
     const { transactions, formatCurrency, theme } = useAppContext();
     const [exportModal, setExportModal] = useState<{isOpen: boolean, data: string}>({ isOpen: false, data: ''});
 
-    const filteredTransactions = useMemo(() => {
+    const { currentPeriodTxs, previousPeriodTxs } = useMemo(() => {
         const now = new Date();
-        const startOfPeriod = new Date(now);
-        switch (period) {
-            case 'D': startOfPeriod.setHours(0, 0, 0, 0); break;
-            case 'W': startOfPeriod.setDate(now.getDate() - now.getDay()); startOfPeriod.setHours(0, 0, 0, 0); break;
-            case 'M': startOfPeriod.setDate(1); startOfPeriod.setHours(0, 0, 0, 0); break;
-            case 'Y': startOfPeriod.setMonth(0, 1); startOfPeriod.setHours(0, 0, 0, 0); break;
+        
+        // Calculate current period start
+        const currentStart = new Date(now);
+        if (period === 'D') currentStart.setHours(0, 0, 0, 0);
+        else if (period === 'W') {
+            currentStart.setDate(now.getDate() - now.getDay());
+            currentStart.setHours(0, 0, 0, 0);
         }
-        return transactions.filter(tx => tx.ts >= startOfPeriod.getTime());
+        else if (period === 'M') {
+            currentStart.setDate(1);
+            currentStart.setHours(0, 0, 0, 0);
+        }
+        else if (period === 'Y') {
+            currentStart.setMonth(0, 1);
+            currentStart.setHours(0, 0, 0, 0);
+        }
+
+        // Calculate previous period start
+        const previousStart = new Date(currentStart);
+        if (period === 'D') previousStart.setDate(previousStart.getDate() - 1);
+        else if (period === 'W') previousStart.setDate(previousStart.getDate() - 7);
+        else if (period === 'M') previousStart.setMonth(previousStart.getMonth() - 1);
+        else if (period === 'Y') previousStart.setFullYear(previousStart.getFullYear() - 1);
+
+        // Calculate previous period end
+        const previousEnd = new Date(currentStart);
+        previousEnd.setMilliseconds(previousEnd.getMilliseconds() - 1);
+
+        const currentTxs = transactions.filter(tx => tx.ts >= currentStart.getTime());
+        const previousTxs = transactions.filter(tx => tx.ts >= previousStart.getTime() && tx.ts < previousEnd.getTime());
+        
+        return { currentPeriodTxs: currentTxs, previousPeriodTxs: previousTxs };
     }, [transactions, period]);
 
     const handleExport = (data: any[]) => {
@@ -76,7 +100,7 @@ export default function InsightsDashboard({ period }: { period: Period }) {
     }
 
     const moodDistribution = useMemo(() => {
-        const counts: Record<string, number> = filteredTransactions.reduce((acc: Record<string, number>, tx: Transaction) => {
+        const counts: Record<string, number> = currentPeriodTxs.reduce((acc: Record<string, number>, tx: Transaction) => {
             const moodLabel = MOOD_MAP[tx.mood].label;
             acc[moodLabel] = (acc[moodLabel] || 0) + tx.amount;
             return acc;
@@ -89,10 +113,10 @@ export default function InsightsDashboard({ period }: { period: Period }) {
             .filter(([, value]) => typeof value === 'number' && value > 0)
             .map(([name, value]) => ({ name: `${name} ${((value/total)*100).toFixed(0)}%`, value }));
 
-    }, [filteredTransactions]);
+    }, [currentPeriodTxs]);
 
     const spendingByCategory = useMemo(() => {
-        const totals: Record<string, number> = filteredTransactions.reduce((acc: Record<string, number>, tx: Transaction) => {
+        const totals: Record<string, number> = currentPeriodTxs.reduce((acc: Record<string, number>, tx: Transaction) => {
             acc[tx.category] = (acc[tx.category] || 0) + tx.amount;
             return acc;
         }, {});
@@ -102,49 +126,77 @@ export default function InsightsDashboard({ period }: { period: Period }) {
             .map(([name, value]) => ({ name, value }))
             .sort((a,b) => b.value - a.value)
             .slice(0, 5);
-    }, [filteredTransactions]);
+    }, [currentPeriodTxs]);
 
     const spendingOverTime = useMemo(() => {
-        const dataMap: { [key: string]: { Total: number, Positive: number, Negative: number } } = {};
+        const processTxs = (txs: Transaction[], isPrevious = false) => {
+            const dataMap: { [key: string]: number } = {};
+            txs.forEach(tx => {
+                let key: string;
+                const date = new Date(tx.ts);
+                const prevDate = new Date(tx.ts);
+                if (isPrevious) {
+                    if (period === 'D') prevDate.setDate(prevDate.getDate() + 1);
+                    else if (period === 'W') prevDate.setDate(prevDate.getDate() + 7);
+                    else if (period === 'M') prevDate.setMonth(prevDate.getMonth() + 1);
+                    else if (period === 'Y') prevDate.setFullYear(prevDate.getFullYear() + 1);
+                }
+                const effectiveDate = isPrevious ? prevDate : date;
+
+                if (period === 'D') key = effectiveDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+                else if (period === 'W') key = effectiveDate.toLocaleDateString('en-IN', { weekday: 'short' });
+                else if (period === 'M') key = `W${Math.ceil(effectiveDate.getDate() / 7)}`;
+                else key = effectiveDate.toLocaleDateString('en-IN', { month: 'short' });
+                
+                dataMap[key] = (dataMap[key] || 0) + tx.amount;
+            });
+            return dataMap;
+        };
         
-        filteredTransactions.forEach(tx => {
-            let key;
+        const currentDataMap = processTxs(currentPeriodTxs);
+        const previousDataMap = processTxs(previousPeriodTxs, true);
+        
+        const moodDataMap: { [key: string]: { Positive: number, Negative: number } } = {};
+        currentPeriodTxs.forEach(tx => {
             const date = new Date(tx.ts);
+            let key: string;
             if (period === 'D') key = date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
             else if (period === 'W') key = date.toLocaleDateString('en-IN', { weekday: 'short' });
             else if (period === 'M') key = `W${Math.ceil(date.getDate() / 7)}`;
             else key = date.toLocaleDateString('en-IN', { month: 'short' });
 
-            if (!dataMap[key]) dataMap[key] = { Total: 0, Positive: 0, Negative: 0 };
-            
-            dataMap[key].Total += tx.amount;
-            if (tx.mood >= 4) dataMap[key].Positive += tx.amount;
-            if (tx.mood <= 2) dataMap[key].Negative += tx.amount;
+            if (!moodDataMap[key]) moodDataMap[key] = { Positive: 0, Negative: 0 };
+            if (tx.mood >= 4) moodDataMap[key].Positive += tx.amount;
+            if (tx.mood <= 2) moodDataMap[key].Negative += tx.amount;
         });
-        
-        const entries = Object.entries(dataMap);
-        let sortedEntries: [string, { Total: number; Positive: number; Negative: number; }][];
 
-        if (period === 'D') {
-            sortedEntries = entries.sort((a, b) => a[0].localeCompare(b[0]));
-        } else if (period === 'W') {
+        const allKeys = [...new Set([...Object.keys(currentDataMap), ...Object.keys(previousDataMap)])];
+
+        let sortedKeys: string[];
+        if (period === 'W') {
             const dayOrder = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            sortedEntries = entries.sort((a, b) => dayOrder.indexOf(a[0]) - dayOrder.indexOf(b[0]));
+            sortedKeys = allKeys.sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
         } else if (period === 'M') {
-            sortedEntries = entries.sort((a, b) => a[0].localeCompare(b[0]));
+            sortedKeys = allKeys.sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
         } else if (period === 'Y') {
             const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            sortedEntries = entries.sort((a, b) => monthOrder.indexOf(a[0]) - monthOrder.indexOf(b[0]));
+            sortedKeys = allKeys.sort((a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b));
         } else {
-            sortedEntries = entries;
+            sortedKeys = allKeys.sort();
         }
 
-        return sortedEntries.map(([name, values]) => ({ name, ...values }));
+        return sortedKeys.map(key => ({
+            name: key,
+            'Current Period': currentDataMap[key] || 0,
+            'Previous Period': previousDataMap[key] || 0,
+            'Positive': moodDataMap[key]?.Positive || 0,
+            'Negative': moodDataMap[key]?.Negative || 0,
+        }));
 
-    }, [filteredTransactions, period]);
+    }, [currentPeriodTxs, previousPeriodTxs, period]);
 
     const topMerchants = useMemo(() => {
-        const merchants: Record<string, {total: number, moods: number[]}> = filteredTransactions.reduce((acc, tx) => {
+        const merchants: Record<string, {total: number, moods: number[]}> = currentPeriodTxs.reduce((acc, tx) => {
             if (!tx.merchant) return acc;
             if (!acc[tx.merchant]) acc[tx.merchant] = { total: 0, moods: [] };
             acc[tx.merchant].total += tx.amount;
@@ -167,14 +219,15 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                     avgMood: MOOD_MAP[avgMoodValue as keyof typeof MOOD_MAP] || MOOD_MAP[3]
                 };
             });
-    }, [filteredTransactions]);
+    }, [currentPeriodTxs]);
 
 
     const tickColor = theme === 'dark' ? '#C2C7C5' : '#424846';
     const primaryColor = theme === 'dark' ? 'rgb(31 200 167)' : 'rgb(0 107 88)';
+    const secondaryColor = theme === 'dark' ? 'rgb(255 180 158)' : 'rgb(255 112 67)';
     const compactCurrency = (val: number) => new Intl.NumberFormat('en-IN', { notation: 'compact', compactDisplay: 'short' }).format(val);
 
-    if (filteredTransactions.length === 0) {
+    if (currentPeriodTxs.length === 0) {
         return <div className="text-center text-on-surface-variant p-8">Not enough data for this period.</div>;
     }
 
@@ -209,7 +262,12 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                     </Widget>
                 </div>
                 <div className="md:col-span-2" style={{'--stagger-delay': 3} as React.CSSProperties}>
-                    <Widget title="Spending Over Time" onExport={() => handleExport(spendingOverTime)} aria-label="Line chart showing total, positive mood, and negative mood spending over the selected period.">
+                    <Widget 
+                        title="Spending Comparison" 
+                        subtitle="Current vs. Previous Period"
+                        onExport={() => handleExport(spendingOverTime)} 
+                        aria-label="Line chart showing total, positive mood, and negative mood spending over the selected period, compared to the previous period."
+                    >
                         <ResponsiveContainer>
                             <LineChart data={spendingOverTime} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
@@ -217,9 +275,10 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                                 <YAxis tick={{ fill: tickColor, fontSize: 12 }} tickFormatter={(val) => compactCurrency(val)}/>
                                 <Tooltip content={<CustomTooltip formatter={(value: number) => formatCurrency(value)} />} />
                                 <Legend verticalAlign="bottom" wrapperStyle={{paddingTop: '16px'}}/>
-                                <Line type="monotone" dataKey="Total" name="Total Spend" stroke="rgb(var(--color-tertiary))" strokeWidth={2} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
-                                <Line type="monotone" dataKey="Positive" name="Positive Mood" stroke={MOOD_COLORS['Happy']} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
-                                <Line type="monotone" dataKey="Negative" name="Negative Mood" stroke={MOOD_COLORS['Regret']} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
+                                <Line type="monotone" dataKey="Current Period" stroke={primaryColor} strokeWidth={2} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
+                                <Line type="monotone" dataKey="Previous Period" stroke={secondaryColor} strokeWidth={2} strokeDasharray="5 5" dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
+                                <Line type="monotone" dataKey="Positive" name="Positive Mood (Current)" stroke={MOOD_COLORS['Happy']} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
+                                <Line type="monotone" dataKey="Negative" name="Negative Mood (Current)" stroke={MOOD_COLORS['Regret']} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
                             </LineChart>
                         </ResponsiveContainer>
                     </Widget>
