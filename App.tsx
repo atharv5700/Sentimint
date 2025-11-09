@@ -7,7 +7,7 @@ import TransactionsScreen from './components/screens/TransactionsScreen';
 import InsightsScreen from './components/screens/InsightsScreen';
 import GoalsScreen, { GoalModal, BudgetModal } from './components/screens/GoalsScreen';
 import SettingsScreen from './components/screens/SettingsScreen';
-import ImportScreen from './components/screens/ImportScreen';
+import ImportDataModal from './components/screens/ImportScreen';
 import ManageCategoriesScreen from './components/screens/ManageCategoriesScreen';
 import BottomNav from './components/layout/BottomNav';
 import TopAppBar from './components/layout/TopAppBar';
@@ -55,6 +55,7 @@ export interface AppContextType {
   openGoalModal: (goal?: Goal | null) => void;
   openBudgetModal: (budget?: Budget | null) => void;
   openRecurringTransactionModal: (rTx?: RecurringTransaction | null) => void;
+  openImportModal: () => void;
   refreshData: () => Promise<void>;
 }
 
@@ -95,11 +96,12 @@ export default function App() {
     const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
     const [isRecurringTxModalOpen, setRecurringTxModalOpen] = useState(false);
     const [editingRecurringTx, setEditingRecurringTx] = useState<RecurringTransaction | null>(null);
+    const [isImportModalOpen, setImportModalOpen] = useState(false);
 
     const [isBulkMode, setIsBulkMode] = useState(false);
     const [fabConfig, setFabConfig] = useState<FabConfig | null>(null);
 
-    const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen || isGoalModalOpen || isBudgetModalOpen || isRecurringTxModalOpen || isSearchModalOpen, [isAddTxModalOpen, isMintorModalOpen, isGoalModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isSearchModalOpen]);
+    const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen || isGoalModalOpen || isBudgetModalOpen || isRecurringTxModalOpen || isSearchModalOpen || isImportModalOpen, [isAddTxModalOpen, isMintorModalOpen, isGoalModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isSearchModalOpen, isImportModalOpen]);
 
     const recalculateGoals = useCallback(async (txs: Transaction[]) => {
         const allGoals = dbService.getGoals();
@@ -172,6 +174,7 @@ export default function App() {
             if (isGoalModalOpen) setGoalModalOpen(false);
             if (isBudgetModalOpen) setBudgetModalOpen(false);
             if (isRecurringTxModalOpen) setRecurringTxModalOpen(false);
+            if (isImportModalOpen) setImportModalOpen(false);
         };
     
         if (isAModalOpen) {
@@ -184,7 +187,7 @@ export default function App() {
         return () => {
             window.removeEventListener('popstate', handlePopState);
         };
-    }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen, isSearchModalOpen, isGoalModalOpen, isBudgetModalOpen, isRecurringTxModalOpen]);
+    }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen, isSearchModalOpen, isGoalModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isImportModalOpen]);
 
 
     const setTheme = (newTheme: Theme) => {
@@ -325,6 +328,8 @@ export default function App() {
         createModalCloser(setRecurringTxModalOpen)();
     };
     
+    const handleCloseImportModal = createModalCloser(setImportModalOpen);
+    
     const openGoalModal = (goal: Goal | null = null) => {
         setEditingGoal(goal);
         setGoalModalOpen(true);
@@ -338,6 +343,10 @@ export default function App() {
     const openRecurringTransactionModal = (rTx: RecurringTransaction | null = null) => {
         setEditingRecurringTx(rTx);
         setRecurringTxModalOpen(true);
+    };
+
+    const openImportModal = () => {
+        setImportModalOpen(true);
     };
 
     const handleSetScreen = (newScreen: Screen) => {
@@ -357,8 +366,6 @@ export default function App() {
                 return <GoalsScreen />;
             case 'Settings':
                 return <SettingsScreen setScreen={handleSetScreen} />;
-            case 'Import':
-                return <ImportScreen setScreen={handleSetScreen} />;
             case 'ManageCategories':
                 return <ManageCategoriesScreen setScreen={handleSetScreen} />;
             default:
@@ -424,6 +431,7 @@ export default function App() {
         openGoalModal,
         openBudgetModal,
         openRecurringTransactionModal,
+        openImportModal,
         refreshData,
     };
 
@@ -443,7 +451,7 @@ export default function App() {
                             {renderScreen()}
                         </div>
                     </main>
-                    {screen !== 'Import' && screen !== 'ManageCategories' && <BottomNav activeScreen={screen} setScreen={handleSetScreen} />}
+                    {screen !== 'ManageCategories' && <BottomNav activeScreen={screen} setScreen={handleSetScreen} />}
                 </div>
                 
                 {fabDetails.show && !isAModalOpen && !isBulkMode && (
@@ -494,6 +502,12 @@ export default function App() {
                         isOpen={isRecurringTxModalOpen}
                         onClose={handleCloseRecurringTxModal}
                         rTxToEdit={editingRecurringTx}
+                    />
+                )}
+                {isImportModalOpen && (
+                    <ImportDataModal
+                        isOpen={isImportModalOpen}
+                        onClose={handleCloseImportModal}
                     />
                 )}
             </div>

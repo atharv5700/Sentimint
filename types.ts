@@ -1,7 +1,7 @@
 import React from 'react';
 import type { AppContextType as AppContextTypeExtended } from './App';
 
-export type Screen = 'Home' | 'Transactions' | 'Insights' | 'Goals' | 'Settings' | 'Import' | 'ManageCategories';
+export type Screen = 'Home' | 'Transactions' | 'Insights' | 'Goals' | 'Settings' | 'ManageCategories';
 
 export type Theme = 'light' | 'dark';
 
