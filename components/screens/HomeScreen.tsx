@@ -48,7 +48,7 @@ const PeriodSelector: React.FC<{ selected: Period, onSelect: (value: Period) => 
                 {options.map(({ value }) => (
                      <button
                         key={value}
-                        onClick={() => onSelect(value)}
+                        onClick={() => { hapticClick(); onSelect(value); }}
                         className={`${baseClasses} w-10 h-10 text-sm ${selected === value ? selectedClasses : 'bg-surface-variant/50'}`}
                     >
                         {value}
@@ -63,7 +63,7 @@ const PeriodSelector: React.FC<{ selected: Period, onSelect: (value: Period) => 
             {options.map(({label, value}) => (
                 <button
                     key={value}
-                    onClick={() => onSelect(value)}
+                    onClick={() => { hapticClick(); onSelect(value); }}
                     className={`${baseClasses} px-4 py-1.5 text-sm ${selected === value ? selectedClasses : unselectedClasses}`}
                 >
                     {label}
@@ -193,7 +193,7 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                 <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '200ms' }}>
                     <div className="flex justify-between items-center mb-2">
                         <h3 className="text-title-m font-medium text-on-surface">Monthly Budgets</h3>
-                        <button onClick={() => setScreen('Goals')} className="text-primary font-medium text-sm">Manage</button>
+                        <button onClick={() => { hapticClick(); setScreen('Goals'); }} className="text-primary font-medium text-sm">Manage</button>
                     </div>
                     <div className="bg-surface-variant p-4 rounded-3xl space-y-4">
                         {budgetStatus.slice(0, 3).map(budget => (
@@ -212,7 +212,7 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
             <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '250ms' }}>
                 <div className="flex justify-between items-center mb-2">
                     <h3 className="text-title-m font-medium text-on-surface">Recent Expenses</h3>
-                    <button onClick={() => setScreen('Transactions')} className="text-primary font-medium text-sm">View All</button>
+                    <button onClick={() => { hapticClick(); setScreen('Transactions'); }} className="text-primary font-medium text-sm">View All</button>
                 </div>
                 {filteredTransactions.length > 0 ? (
                     <TransactionList 

@@ -9,7 +9,7 @@ const SegmentedButton: React.FC<{ options: {label: string, value: Theme}[], sele
         {options.map(({label, value}) => (
             <button
                 key={value}
-                onClick={() => onSelect(value)}
+                onClick={() => { hapticClick(); onSelect(value); }}
                 className={`w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${
                     selected === value ? 'bg-secondary-container text-on-secondary-container shadow' : 'text-on-surface-variant'
                 }`}
@@ -112,7 +112,7 @@ export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
              <div className="bg-surface-variant p-4 rounded-3xl" style={{'--stagger-delay': 2} as React.CSSProperties}>
                  <h2 className="text-title-m font-medium mb-4 text-on-surface-variant">Personalization</h2>
                  <div className="flex flex-col gap-2">
-                     <button onClick={() => setScreen('ManageCategories')} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface hover:bg-surface/80 transition-colors">Manage Categories</button>
+                     <button onClick={() => { hapticClick(); setScreen('ManageCategories'); }} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface hover:bg-surface/80 transition-colors">Manage Categories</button>
                  </div>
             </div>
 

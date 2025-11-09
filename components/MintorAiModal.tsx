@@ -50,7 +50,7 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScree
             setMessages([{
                 id: `bot-${Date.now()}`,
                 sender: 'bot',
-                text: "Hi! I'm Mintor, your offline financial assistant. I run completely on your device to keep your data private.\n\nWhat would you like to do?",
+                text: "Hi! I'm Mintor. I can analyze your spending, help with financial questions, and more.\n\nTo answer general questions, I use Google's AI, but be assured your personal financial data always stays on your device and is not shared.\n\nHow can I help you today?",
                 actions: mintorAiService.getContextualStartingPrompts(activeScreen),
             }]);
         }

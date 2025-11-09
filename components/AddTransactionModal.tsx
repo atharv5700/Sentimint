@@ -77,6 +77,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
     }, [transaction, isOpen, allCategories]);
 
     const handleTagToggle = (tag: string) => {
+        hapticClick();
         setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
     };
 
@@ -163,7 +164,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
                             <label className="text-label-s text-on-surface-variant mb-1 block">Category</label>
                             <div className="flex flex-wrap gap-2">
                                 {allCategories.map(cat => (
-                                    <button key={cat} onClick={() => setCategory(cat)} className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${category === cat ? 'bg-primary-container text-on-primary-container' : 'bg-surface-variant text-on-surface-variant'}`}>{cat}</button>
+                                    <button key={cat} onClick={() => { hapticClick(); setCategory(cat); }} className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${category === cat ? 'bg-primary-container text-on-primary-container' : 'bg-surface-variant text-on-surface-variant'}`}>{cat}</button>
                                 ))}
                             </div>
                         </div>
@@ -172,7 +173,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
                             <label className="text-label-s text-on-surface-variant mb-2 block">How did this purchase make you feel?</label>
                             <div className="grid grid-cols-5 gap-1 sm:gap-2">
                             {Object.entries(MOOD_MAP).map(([level, { label, icon: Icon }]) => (
-                                <button key={level} onClick={() => setMood(parseInt(level) as Mood)} className={`flex flex-col items-center gap-1 p-1 sm:p-2 rounded-lg transition-colors duration-200 ${mood === parseInt(level) ? 'bg-secondary-container' : 'hover:bg-surface-variant'}`}>
+                                <button key={level} onClick={() => { hapticClick(); setMood(parseInt(level) as Mood); }} className={`flex flex-col items-center gap-1 p-1 sm:p-2 rounded-lg transition-colors duration-200 ${mood === parseInt(level) ? 'bg-secondary-container' : 'hover:bg-surface-variant'}`}>
                                     <Icon className={`w-7 h-7 sm:w-8 sm:h-8 ${mood === parseInt(level) ? 'text-on-secondary-container' : 'text-on-surface-variant'}`} />
                                     <span className={`text-[10px] sm:text-label-s text-center ${mood === parseInt(level) ? 'text-on-secondary-container font-medium' : 'text-on-surface-variant'}`}>{label}</span>
                                 </button>
@@ -197,7 +198,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
                                         className="bg-surface-variant text-sm p-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary w-24"
                                     />
                                 ) : (
-                                    <button onClick={() => setIsAddingTag(true)} className="flex items-center justify-center w-8 h-8 rounded-lg text-sm bg-surface-variant text-on-surface-variant">
+                                    <button onClick={() => { hapticClick(); setIsAddingTag(true); }} className="flex items-center justify-center w-8 h-8 rounded-lg text-sm bg-surface-variant text-on-surface-variant">
                                         <PlusIcon className="w-5 h-5" />
                                     </button>
                                 )}

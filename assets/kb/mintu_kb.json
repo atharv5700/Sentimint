@@ -27,7 +27,7 @@
     "change theme": "You can switch between light and dark themes in the 'Settings' page under the 'Appearance' section."
   },
   "appAbout": {
-    "sentimint": "Sentimint is your personal, offline-first finance tracker. It helps you understand the emotions behind your spending to build healthier financial habits. All your data stays on your device, ensuring complete privacy."
+    "sentimint": "Sentimint is your personal finance tracker. It helps you understand the emotions behind your spending to build healthier financial habits. For smart features, I use Google's AI, but your core financial data always stays private on your device."
   },
   "savingTips": {
     "general": [
@@ -39,12 +39,5 @@
       "Plan your meals for the week to avoid impulsive food orders and reduce grocery waste.",
       "Unsubscribe from marketing emails to reduce the temptation of sales and promotions."
     ]
-  },
-  "smallTalk": {
-    "hi|hello|hey": ["Hello! How can I help you with your finances today?", "Hi there! What can I do for you?", "Hey! Ready to talk about money?"],
-    "how are you|hows it going": ["I'm just a set of algorithms, but I'm running perfectly! How can I assist you?", "I'm doing great, thanks for asking! What's on your mind?"],
-    "thank you|thanks": ["You're welcome!", "Happy to help!", "Anytime!"],
-    "bye|goodbye": ["Goodbye! Keep tracking!", "See you later!"],
-    "who are you": ["I'm Mintor, your personal and private financial assistant. I run entirely on your device to help you manage your money without compromising your data privacy."]
   }
 }

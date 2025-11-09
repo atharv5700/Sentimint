@@ -24,7 +24,7 @@ export default function TopAppBar({ onMintorClick, onSearchClick }: TopAppBarPro
                     className="flex items-center justify-center w-10 h-10 rounded-full text-on-surface-variant hover:bg-surface-variant transition-colors"
                     aria-label="Search"
                 >
-                    <SearchIcon className="w-6 h-6" />
+                    <SearchIcon className="w-7 h-7" />
                 </button>
                 <button
                     onClick={() => {
@@ -34,7 +34,7 @@ export default function TopAppBar({ onMintorClick, onSearchClick }: TopAppBarPro
                     className="flex items-center justify-center w-10 h-10 rounded-full text-on-surface-variant hover:bg-surface-variant transition-colors"
                     aria-label="Open Mintor AI"
                 >
-                    <MintorAiIcon className="w-7 h-7 text-primary" />
+                    <MintorAiIcon className="w-8 h-8 text-primary" />
                 </button>
             </div>
         </header>

@@ -224,7 +224,7 @@ export default function InsightsDashboard({ period }: { period: Period }) {
 
     const tickColor = theme === 'dark' ? '#C2C7C5' : '#424846';
     const primaryColor = theme === 'dark' ? 'rgb(31 200 167)' : 'rgb(0 107 88)';
-    const secondaryColor = theme === 'dark' ? 'rgb(255 180 158)' : 'rgb(255 112 67)';
+    const tertiaryColor = theme === 'dark' ? 'rgb(167 199 228)' : 'rgb(68 99 125)';
     const compactCurrency = (val: number) => new Intl.NumberFormat('en-IN', { notation: 'compact', compactDisplay: 'short' }).format(val);
 
     if (currentPeriodTxs.length === 0) {
@@ -277,7 +277,7 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                                 <Tooltip content={<CustomTooltip formatter={(value: number) => formatCurrency(value)} />} />
                                 <Legend verticalAlign="bottom" wrapperStyle={{paddingTop: '16px'}}/>
                                 <Line type="monotone" dataKey="Current Period" stroke={primaryColor} strokeWidth={2} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
-                                <Line type="monotone" dataKey="Previous Period" stroke={secondaryColor} strokeWidth={2} strokeDasharray="5 5" dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
+                                <Line type="monotone" dataKey="Previous Period" stroke={tertiaryColor} strokeWidth={2} strokeDasharray="5 5" dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
                                 <Line type="monotone" dataKey="Positive" name="Positive Mood (Current)" stroke={MOOD_COLORS['Happy']} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
                                 <Line type="monotone" dataKey="Negative" name="Negative Mood (Current)" stroke={MOOD_COLORS['Regret']} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{r: 6}} />
                             </LineChart>

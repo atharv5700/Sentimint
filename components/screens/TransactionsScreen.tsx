@@ -90,7 +90,7 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
         <div className="p-4">
             <div className="flex justify-center p-1 bg-surface-variant/50 rounded-full mx-auto max-w-sm mb-4">
                 {(['transactions', 'recurring'] as const).map(tab => (
-                    <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${activeTab === tab ? 'bg-primary-container text-on-primary-container shadow' : 'text-on-surface-variant'}`}>
+                    <button key={tab} onClick={() => { hapticClick(); setActiveTab(tab); }} className={`w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${activeTab === tab ? 'bg-primary-container text-on-primary-container shadow' : 'text-on-surface-variant'}`}>
                         {tab}
                     </button>
                 ))}

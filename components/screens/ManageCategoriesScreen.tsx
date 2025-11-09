@@ -44,7 +44,7 @@ export default function ManageCategoriesScreen({ setScreen }: ManageCategoriesSc
         <div className="p-4 pb-24">
             <header className="flex justify-between items-center mb-6">
                 <h1 className="text-headline-m">Manage Categories</h1>
-                <button onClick={() => setScreen('Settings')} className="p-2">
+                <button onClick={() => { hapticClick(); setScreen('Settings'); }} className="p-2">
                     <CloseIcon />
                 </button>
             </header>

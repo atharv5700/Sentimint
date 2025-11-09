@@ -253,7 +253,7 @@ export const BudgetModal: React.FC<{ onClose: () => void, budgetToEdit: Budget |
                                 {availableCategories.length > 0 ? availableCategories.map(cat => (
                                     <button 
                                         key={cat} 
-                                        onClick={() => setCategory(cat)} 
+                                        onClick={() => { hapticClick(); setCategory(cat); }} 
                                         className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${category === cat ? 'bg-primary-container text-on-primary-container' : 'bg-surface-variant text-on-surface-variant'}`}
                                     >
                                         {cat}
@@ -367,7 +367,7 @@ export default function GoalsScreen() {
             <div className="p-4">
                 <div className="flex justify-center p-1 bg-surface-variant/50 rounded-full mx-auto max-w-sm mb-6">
                     {(['goals', 'budgets'] as const).map(tab => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${activeTab === tab ? 'bg-primary-container text-on-primary-container shadow' : 'text-on-surface-variant'}`}>
+                        <button key={tab} onClick={() => { hapticClick(); setActiveTab(tab); }} className={`w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${activeTab === tab ? 'bg-primary-container text-on-primary-container shadow' : 'text-on-surface-variant'}`}>
                             {tab}
                         </button>
                     ))}
