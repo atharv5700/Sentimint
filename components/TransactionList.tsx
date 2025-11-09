@@ -194,7 +194,7 @@ const TagModal: React.FC<{onApply: (tags: string[]) => void, onClose: () => void
 
 const LinkGoalModal: React.FC<{goals: Goal[], onLink: (goalId: string | null) => void, onClose: () => void}> = ({ goals, onLink, onClose }) => {
     const [selectedGoal, setSelectedGoal] = useState<string|null>(null);
-    const goalOptions = [{value: '', label: 'None'}, ...(Array.isArray(goals) ? goals.filter(g => !g.completed_bool).map(g => ({value: g.id, label: `${g.emoji} ${g.title}`})) : [])];
+    const goalOptions = [{value: '', label: 'None'}, ...(Array.isArray(goals) ? goals.filter(g => !g.completed_bool).map(g => ({value: g.id, label: g.title})) : [])];
 
     const handleLink = () => {
         hapticClick();

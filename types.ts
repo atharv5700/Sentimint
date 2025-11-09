@@ -33,7 +33,6 @@ export type Goal = {
     target_amount: number;
     current_amount: number;
     deadline_ts: number | null;
-    emoji: string;
     created_at: number;
     completed_bool: boolean;
 };

@@ -32,7 +32,9 @@ const GoalCard: React.FC<{ goal: Goal, onEdit: (goal: Goal) => void }> = ({ goal
             <div className="flex items-start">
                 <div className="relative w-[60px] h-[60px] flex-shrink-0">
                     <ProgressRing progress={progress} />
-                    <div className="absolute inset-0 flex items-center justify-center text-3xl">{goal.emoji}</div>
+                    <div className="absolute inset-0 flex items-center justify-center text-on-surface-variant font-bold text-sm">
+                        {`${Math.round(progress)}%`}
+                    </div>
                 </div>
                 <div className="flex-1 ml-4 min-w-0">
                     <div className="flex justify-between items-start">
@@ -64,47 +66,16 @@ export const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null 
     const { addGoal, updateGoal, theme } = useAppContext();
     const [title, setTitle] = useState('');
     const [targetAmount, setTargetAmount] = useState('');
-    const [emoji, setEmoji] = useState('🎯');
     const [deadline, setDeadline] = useState('');
-    const [isPickerOpen, setIsPickerOpen] = useState(false);
-    
-    const GOAL_EMOJIS = ['🎯', '💰', '✈️', '🚗', '🏠', '🎓', '💻', '🎁', '❤️', '📈', '🧘', '📚', '💍', '👶', '🎸', '👟', '🖼️', '🎉'];
-
-    const EmojiPicker: React.FC<{ onSelect: (emoji: string) => void; onClose: () => void }> = ({ onSelect, onClose }) => {
-        return (
-            <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm z-20 flex items-center justify-center p-4 rounded-[28px]" onClick={onClose}>
-                <div className="bg-surface-variant rounded-2xl p-4 w-full max-w-xs animate-modalSlideUp" onClick={e => e.stopPropagation()}>
-                    <h3 className="text-title-m text-center mb-4 text-on-surface-variant">Choose an Icon</h3>
-                    <div className="grid grid-cols-6 gap-2">
-                        {GOAL_EMOJIS.map(emoji => (
-                            <button
-                                key={emoji}
-                                onClick={() => {
-                                    hapticClick();
-                                    onSelect(emoji);
-                                }}
-                                className="text-3xl p-2 rounded-full hover:bg-black/10 transition-colors"
-                                aria-label={emoji}
-                            >
-                                {emoji}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    };
 
      useEffect(() => {
         if (goalToEdit) {
             setTitle(goalToEdit.title);
             setTargetAmount(String(goalToEdit.target_amount));
-            setEmoji(goalToEdit.emoji || '🎯');
             setDeadline(goalToEdit.deadline_ts ? new Date(goalToEdit.deadline_ts).toISOString().split('T')[0] : '');
         } else {
             setTitle('');
             setTargetAmount('');
-            setEmoji('🎯');
             setDeadline('');
         }
     }, [goalToEdit]);
@@ -116,7 +87,7 @@ export const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null 
         const amount = parseFloat(targetAmount.replace(/,/g, ''));
         const deadline_ts = deadline ? new Date(deadline).getTime() : null;
         
-        const goalData = { title: title.trim(), target_amount: amount, emoji, deadline_ts };
+        const goalData = { title: title.trim(), target_amount: amount, deadline_ts };
 
         if(goalToEdit) {
             updateGoal({ ...goalToEdit, ...goalData });
@@ -153,12 +124,13 @@ export const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null 
                     </div>
                     <div>
                         <label className="text-label-s text-on-surface-variant">Goal Title</label>
-                         <div className="flex items-center gap-0 bg-surface-variant rounded-xl mt-1 focus-within:ring-2 focus-within:ring-primary">
-                            <button type="button" onClick={() => { hapticClick(); setIsPickerOpen(true); }} className="h-12 w-12 text-center text-2xl p-3 flex items-center justify-center focus:outline-none rounded-l-xl hover:bg-black/5">
-                                {emoji}
-                            </button>
-                            <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. New Laptop" className="w-full bg-transparent p-3 focus:outline-none min-w-0" />
-                        </div>
+                         <input 
+                            type="text" 
+                            value={title} 
+                            onChange={e => setTitle(e.target.value)} 
+                            placeholder="e.g. New Laptop" 
+                            className="w-full bg-surface-variant p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary" 
+                        />
                     </div>
                      <div>
                          <label className="text-label-s text-on-surface-variant">Deadline (Optional)</label>
@@ -175,8 +147,6 @@ export const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null 
                 <div className="pt-4 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0 pb-safe">
                      <button onClick={handleSave} disabled={!isFormValid} className="w-full py-4 rounded-full bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant">Save</button>
                 </div>
-
-                {isPickerOpen && <EmojiPicker onSelect={(selectedEmoji) => { setEmoji(selectedEmoji); setIsPickerOpen(false); }} onClose={() => setIsPickerOpen(false)} />}
             </div>
         </div>
     );

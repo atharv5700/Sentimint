@@ -40,7 +40,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
     const [isAddingTag, setIsAddingTag] = useState(false);
     const customTagInputRef = useRef<HTMLInputElement>(null);
 
-    const goalOptions = [{value: '', label: 'None'}, ...goals.filter(g => !g.completed_bool).map(g => ({value: g.id, label: `${g.emoji} ${g.title}`}))]
+    const goalOptions = [{value: '', label: 'None'}, ...goals.filter(g => !g.completed_bool).map(g => ({value: g.id, label: g.title}))]
 
     // Available tags are now default + any custom tags for THIS transaction
     const availableTags = [...new Set([...DEFAULT_TAGS, ...tags])];
