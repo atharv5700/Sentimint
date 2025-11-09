@@ -290,7 +290,7 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                                 <thead>
                                     <tr className="border-b border-outline">
                                         <th className="p-2 text-label-s">Merchant</th>
-                                        <th className="p-2 text-label-s">Avg. Mood</th>
+                                        <th className="p-2 text-label-s text-center">Avg. Mood</th>
                                         <th className="p-2 text-label-s text-right">Total</th>
                                     </tr>
                                 </thead>
@@ -299,7 +299,7 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                                         <tr key={name} className="border-b border-outline-variant/50">
                                             <td className="p-2 text-body-m">{name}</td>
                                             <td className="p-2">
-                                                <div className="flex items-center gap-1.5">
+                                                <div className="flex items-center justify-center gap-1.5">
                                                      <avgMood.icon className={`w-5 h-5 ${avgMood.color}`} />
                                                      <span className="text-sm hidden sm:inline">{avgMood.label}</span>
                                                 </div>

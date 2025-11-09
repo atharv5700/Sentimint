@@ -498,8 +498,13 @@ export const mintorAiService = {
             const match = query.toLowerCase().match(intent.regex);
             if (match) {
                 const handler = intent.handler;
-                // FIX: Removed extraneous trailing comma from function call.
-                const text = handler.length === 2 ? handler(match, data) : handler(match);
+                // FIX: The TypeScript compiler cannot narrow the handler's union type based on its `length` property. An explicit check with type assertions is used to ensure the correct function signature is called.
+                let text: string;
+                if (handler.length === 2) {
+                    text = (handler as (matches: string[], data: MintorData) => string)(match, data);
+                } else {
+                    text = (handler as (matches: string[]) => string)(match);
+                }
                 return {
                     sender: 'bot',
                     text,

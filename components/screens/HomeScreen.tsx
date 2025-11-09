@@ -163,10 +163,9 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                         <p className="text-body-m text-on-surface-variant">Total Spent</p>
                         <p className="text-headline-m font-bold text-on-surface-variant">{formatCurrency(totalSpent)}</p>
                         {avgMood && (
-                            <div className="inline-flex items-center gap-1.5 bg-surface text-on-surface px-3 py-2 rounded-full mt-2 text-sm">
-                                <span className="leading-none">Avg. Mood:</span>
-                                <avgMood.icon className={`w-5 h-5 ${avgMood.color}`} />
-                                <span className="leading-none">{avgMood.label}</span>
+                            <div className="inline-flex items-center gap-1 bg-surface text-on-surface px-3 py-1.5 rounded-full mt-2 text-sm">
+                                <span className="leading-none text-on-surface-variant">Avg. Mood:</span>
+                                <span className="leading-none font-medium">{avgMood.label}</span>
                             </div>
                         )}
                     </div>

@@ -182,7 +182,19 @@ export const SparkleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 
 export const MintorAiIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg {...iconProps} {...props} viewBox="0 0 24 24">
-        <path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M17.2,14.8C16.9,15.1 16.5,15.3 16,15.3C15,15.3 14.2,14.5 14.2,13.5C14.2,13.2 14.3,12.9 14.4,12.7L12,11.5V12.5C12,13.4 11.2,14.2 10.2,14.2C9.2,14.2 8.4,13.4 8.4,12.5C8.4,11.5 9.2,10.7 10.2,10.7C10.5,10.7 10.8,10.8 11,11L13.4,9.8C13.3,9.6 13.2,9.3 13.2,9C13.2,8 14,7.2 15,7.2C16,7.2 16.8,8 16.8,9C16.8,9.3 16.7,9.6 16.6,9.8L15.3,10.5L17.6,11.7C17.8,11.4 18.1,11.2 18.5,11.2C19.5,11.2 20.3,12 20.3,13C20.3,14 19.5,14.8 18.5,14.8C18.1,14.8 17.6,14.6 17.2,14.8Z"/>
+        <circle cx="12" cy="12" r="12" />
+        <text 
+            x="12" 
+            y="12" 
+            textAnchor="middle" 
+            dominantBaseline="central" 
+            fontSize="9" 
+            fontWeight="bold" 
+            fill="rgb(var(--color-on-primary))" 
+            style={{fontFamily: 'Roboto, sans-serif', userSelect: 'none'}}
+        >
+            AI
+        </text>
     </svg>
 );
 

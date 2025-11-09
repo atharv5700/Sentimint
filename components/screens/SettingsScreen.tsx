@@ -162,22 +162,18 @@ export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
                  <div className="flex flex-col gap-2">
                      <button onClick={handleExport} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface hover:bg-surface/80 transition-colors">Export Data to CSV</button>
                      <button onClick={() => setScreen('Import')} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface hover:bg-surface/80 transition-colors">Import Data from CSV</button>
+                     <button onClick={() => { hapticError(); setShowDeleteModal(true); }} className="w-full text-left p-3 rounded-xl bg-error-container text-on-error-container hover:bg-error-container/80 transition-colors font-medium">Delete All Data</button>
                  </div>
             </div>
-
-             <div className="bg-error-container p-4 rounded-3xl" style={{'--stagger-delay': 4} as React.CSSProperties}>
-                 <h2 className="text-title-m font-medium mb-2 text-on-error-container">Danger Zone</h2>
-                 <button onClick={() => { hapticError(); setShowDeleteModal(true); }} className="w-full text-left p-3 rounded-xl bg-error/80 text-on-error hover:bg-error/100 transition-colors font-medium">Delete All Data</button>
-            </div>
             
-            <div className="bg-surface-variant p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 5} as React.CSSProperties}>
+            <div className="bg-surface-variant p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 4} as React.CSSProperties}>
                 <h2 className="text-title-m font-medium mb-2">About Sentimint</h2>
                 <p className="text-body-m mb-4">Our mission is to help you build a healthier relationship with your finances by understanding the emotions behind your spending.</p>
                 <h3 className="text-title-s font-medium mb-1 text-on-surface-variant/90">Privacy Commitment</h3>
                 <p className="text-body-m">Your privacy is paramount. Mintor AI and all data processing run entirely on-device; your data never leaves your phone.</p>
             </div>
             
-            <div className="bg-surface-variant p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 6} as React.CSSProperties}>
+            <div className="bg-surface-variant p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 5} as React.CSSProperties}>
                  <h2 className="text-title-m font-medium mb-3">App Information</h2>
                  <div className="space-y-2 text-body-m">
                     <div className="flex justify-between">
