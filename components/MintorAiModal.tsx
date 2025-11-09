@@ -49,8 +49,13 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo }: MintorAiM
             setMessages([{
                 id: `bot-${Date.now()}`,
                 sender: 'bot',
-                text: "Hi! I'm Mintor, your offline financial assistant. How can I help you?",
-                actions: [{ label: 'What can you do?', type: 'query', payload: 'help'}]
+                text: "Hi! I'm Mintor, your offline financial assistant. I run completely on your device to keep your data private.\n\nWhat would you like to do?",
+                actions: [
+                    { label: 'Analyze my spending', type: 'query', payload: 'Analyze my spending this month' },
+                    { label: 'Give me saving tips', type: 'query', payload: 'Give me saving tips' },
+                    { label: 'What is an emergency fund?', type: 'query', payload: 'What is an emergency fund?' },
+                    { label: 'How do I edit a transaction?', type: 'query', payload: 'How do I edit a transaction?' },
+                ]
             }]);
         }
     }, [isOpen, messages.length]);
