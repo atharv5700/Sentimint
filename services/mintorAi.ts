@@ -1,3 +1,4 @@
+import { GoogleGenAI, Type } from '@google/genai';
 import type { Transaction, Goal, MintorAiMessage, MintorAction, SmartInsight, AppContextType, Screen } from '../types';
 import { dbService } from './db';
 import { ChartBarIcon, LightbulbIcon, TrendingUpIcon, TrophyIcon } from '../constants';
@@ -415,11 +416,71 @@ const getContextualStartingPrompts = (screen: Screen): MintorAction[] => {
     }
 }
 
+const scanReceipt = async (base64ImageData: string, mimeType: string): Promise<{ merchant: string; amount: number; note: string }> => {
+    if (!process.env.API_KEY) {
+        throw new Error("API_KEY environment variable not set.");
+    }
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+    const responseSchema = {
+        type: Type.OBJECT,
+        properties: {
+            merchant: {
+                type: Type.STRING,
+                description: 'The name of the store or merchant.',
+            },
+            amount: {
+                type: Type.NUMBER,
+                description: 'The final total amount of the transaction.',
+            },
+            note: {
+                type: Type.STRING,
+                description: 'A brief description or a list of items from the receipt.',
+            },
+        },
+        required: ['merchant', 'amount'],
+    };
+
+    const imagePart = {
+        inlineData: {
+            data: base64ImageData,
+            mimeType,
+        },
+    };
+
+    const textPart = {
+        text: "Analyze this receipt image. Extract the merchant name, the final total amount as a number, and a brief note describing the items. Respond in JSON format. If a value isn't clear, use your best guess or omit it.",
+    };
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: { parts: [imagePart, textPart] },
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: responseSchema,
+        },
+    });
+
+    try {
+        const jsonText = response.text.trim();
+        const parsedJson = JSON.parse(jsonText);
+        return {
+            merchant: parsedJson.merchant || '',
+            amount: parsedJson.amount || 0,
+            note: parsedJson.note || '',
+        };
+    } catch (e) {
+        console.error("Failed to parse Gemini response:", e);
+        throw new Error("Could not understand the receipt. Please try another image.");
+    }
+};
+
 
 export const mintorAiService = {
     getSmartInsight,
     getContextualStartingPrompts,
     generateWeeklyDigest,
+    scanReceipt,
     getResponse: async (query: string): Promise<Omit<MintorAiMessage, 'id'>> => {
 
         const kb = await getKbData();
