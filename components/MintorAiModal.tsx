@@ -129,8 +129,7 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScree
                     <div ref={chatEndRef} />
                 </main>
                 <footer 
-                    className="p-4 border-t border-outline-variant"
-                    style={{ paddingBottom: `calc(1rem + env(safe-area-inset-bottom))` }}
+                    className="p-4 border-t border-outline-variant pb-safe"
                 >
                     <div className="flex items-center gap-2">
                         <input

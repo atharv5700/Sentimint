@@ -23,7 +23,7 @@ export default function InsightsScreen() {
 
     return (
         <div className="p-4 space-y-6">
-            <div className="animate-screenFadeIn" style={{ animationDelay: '50ms' }}>
+            <div className="animate-screenFadeIn pt-4" style={{ animationDelay: '50ms' }}>
                 <SegmentedButton
                     options={[
                         {label: 'Day', value: 'D'}, 

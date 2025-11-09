@@ -267,6 +267,7 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                         subtitle="Current vs. Previous Period"
                         onExport={() => handleExport(spendingOverTime)} 
                         aria-label="Line chart showing total, positive mood, and negative mood spending over the selected period, compared to the previous period."
+                        id="spending-comparison-chart-widget"
                     >
                         <ResponsiveContainer>
                             <LineChart data={spendingOverTime} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>

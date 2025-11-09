@@ -71,9 +71,9 @@ export default function ManageCategoriesScreen({ setScreen }: ManageCategoriesSc
             
             <section className="mb-6">
                  <h2 className="text-title-m font-medium mb-2 text-on-surface-variant">Custom Categories</h2>
-                 <div className="flex flex-col gap-2">
-                    {customCategories.length > 0 ? customCategories.map(cat => (
-                         <div key={cat} className="flex justify-between items-center bg-surface p-3 rounded-xl">
+                 <div className="flex flex-col gap-2 stagger-children">
+                    {customCategories.length > 0 ? customCategories.map((cat, i) => (
+                         <div key={cat} className="flex justify-between items-center bg-surface p-3 rounded-xl" style={{'--stagger-delay': i} as React.CSSProperties}>
                             <span>{cat}</span>
                             <button 
                                 onClick={() => handleDeleteCategory(cat)}
