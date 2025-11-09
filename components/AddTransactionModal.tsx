@@ -134,22 +134,22 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
     return (
         <>
             <div className="fixed inset-0 bg-black/50 z-40 flex items-end justify-center transition-opacity duration-300 animate-backdropFadeIn">
-                <div className="bg-surface rounded-t-[28px] p-4 w-full max-w-2xl transform transition-transform duration-300 translate-y-0 animate-modalSlideUp">
-                    <div className="flex justify-center mb-2">
+                <div className="bg-surface rounded-t-[28px] p-2 sm:p-4 w-full max-w-2xl flex flex-col h-[90vh] sm:h-auto sm:max-h-[90vh] animate-modalSlideUp">
+                    <div className="flex justify-center mb-2 flex-shrink-0">
                         <div className="w-8 h-1 bg-outline rounded-full"></div>
                     </div>
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex justify-between items-center mb-4 flex-shrink-0 px-2 sm:px-0">
                         <h2 className="text-headline-m">{transaction ? 'Edit' : 'Add'} Transaction</h2>
                         <button onClick={() => { hapticClick(); onClose(); }} className="text-on-surface-variant p-2" aria-label="Close add transaction modal">
                             <CloseIcon />
                         </button>
                     </div>
 
-                    <div className="space-y-4 max-h-[70vh] overflow-y-auto pb-4 modal-content">
+                    <div className="flex-grow space-y-4 overflow-y-auto pb-16 px-2 sm:px-0">
                         {/* Amount */}
                         <div>
                             <label className="text-label-s text-on-surface-variant">Amount</label>
-                            <input type="text" inputMode="decimal" placeholder="₹0" value={amount ? `₹${formattedAmount}` : ''} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} className="w-full text-display-l bg-transparent focus:outline-none p-0 border-0"/>
+                            <input type="text" inputMode="decimal" placeholder="₹0" value={amount ? `₹${formattedAmount}` : ''} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} className="w-full text-4xl sm:text-display-l bg-transparent focus:outline-none p-0 border-0"/>
                         </div>
                         {/* Merchant */}
                         <div>
@@ -168,11 +168,11 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
                         {/* Mood */}
                         <div>
                             <label className="text-label-s text-on-surface-variant mb-2 block">How did this purchase make you feel?</label>
-                            <div className="flex justify-between w-full">
+                            <div className="grid grid-cols-5 gap-1 sm:gap-2">
                             {Object.entries(MOOD_MAP).map(([level, { label, icon: Icon }]) => (
-                                <button key={level} onClick={() => setMood(parseInt(level) as Mood)} className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors duration-200 w-16 ${mood === parseInt(level) ? 'bg-secondary-container' : 'hover:bg-surface-variant'}`}>
-                                    <Icon className={`w-8 h-8 ${mood === parseInt(level) ? 'text-on-secondary-container' : 'text-on-surface-variant'}`} />
-                                    <span className={`text-label-s ${mood === parseInt(level) ? 'text-on-secondary-container font-medium' : 'text-on-surface-variant'}`}>{label}</span>
+                                <button key={level} onClick={() => setMood(parseInt(level) as Mood)} className={`flex flex-col items-center gap-1 p-1 sm:p-2 rounded-lg transition-colors duration-200 ${mood === parseInt(level) ? 'bg-secondary-container' : 'hover:bg-surface-variant'}`}>
+                                    <Icon className={`w-7 h-7 sm:w-8 sm:h-8 ${mood === parseInt(level) ? 'text-on-secondary-container' : 'text-on-surface-variant'}`} />
+                                    <span className={`text-[10px] sm:text-label-s text-center ${mood === parseInt(level) ? 'text-on-secondary-container font-medium' : 'text-on-surface-variant'}`}>{label}</span>
                                 </button>
                             ))}
                             </div>
@@ -217,7 +217,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
                         </div>
                     </div>
 
-                    <div className="mt-4 pt-2 border-t border-outline-variant">
+                    <div className="mt-auto pt-2 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0">
                         <button onClick={handleSave} disabled={!isFormValid} className="w-full py-4 rounded-full bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant">Save</button>
                     </div>
                 </div>

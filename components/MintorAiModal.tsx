@@ -102,8 +102,11 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo }: MintorAiM
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-0 md:p-4 animate-backdropFadeIn">
-            <div className="bg-surface rounded-3xl w-full h-full md:max-w-2xl md:h-[80vh] flex flex-col shadow-2xl animate-modalSlideUp">
-                <header className="flex items-center justify-between p-4 border-b border-outline-variant">
+            <div className="bg-surface rounded-none md:rounded-3xl w-full h-full md:max-w-2xl md:h-[calc(100%-2rem)] flex flex-col shadow-2xl animate-modalSlideUp">
+                <header 
+                    className="flex items-center justify-between p-4 border-b border-outline-variant"
+                    style={{ paddingTop: `calc(1rem + env(safe-area-inset-top))` }}
+                >
                     <h2 className="text-title-m font-medium">{MINTOR_AI_ASSISTANT.name}</h2>
                     <button onClick={() => { hapticClick(); onClose(); }} className="text-on-surface-variant p-1" aria-label="Close Mintor AI modal">
                         <CloseIcon />
@@ -124,7 +127,10 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo }: MintorAiM
                     )}
                     <div ref={chatEndRef} />
                 </main>
-                <footer className="p-4 border-t border-outline-variant">
+                <footer 
+                    className="p-4 border-t border-outline-variant"
+                    style={{ paddingBottom: `calc(1rem + env(safe-area-inset-bottom))` }}
+                >
                     <div className="flex items-center gap-2">
                         <input
                             type="text"

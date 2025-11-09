@@ -72,6 +72,7 @@ export default function App() {
     const [isBulkMode, setIsBulkMode] = useState(false);
     const [fabConfig, setFabConfig] = useState<FabConfig | null>(null);
 
+    const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen, [isAddTxModalOpen, isMintorModalOpen]);
 
     const recalculateGoals = useCallback(async () => {
         const allGoals = dbService.getGoals();
@@ -118,13 +119,33 @@ export default function App() {
         root.classList.add(theme);
     }, [theme]);
     
-    const isModalOpen = isAddTxModalOpen || isMintorModalOpen;
     useEffect(() => {
-        document.body.style.overflow = isModalOpen ? 'hidden' : 'auto';
+        document.body.style.overflow = isAModalOpen ? 'hidden' : 'auto';
         return () => {
             document.body.style.overflow = 'auto';
         };
-    }, [isModalOpen]);
+    }, [isAModalOpen]);
+
+    // System Back Button / Gesture handling for modals
+    useEffect(() => {
+        const handlePopState = () => {
+            if (isAddTxModalOpen) setAddTxModalOpen(false);
+            if (isMintorModalOpen) setMintorModalOpen(false);
+        };
+    
+        if (isAModalOpen) {
+            // Push a state only if one isn't already there. This prevents multiple history entries
+            // if one modal opens another.
+            if (!window.history.state?.modal) {
+                window.history.pushState({ modal: true }, '');
+            }
+            window.addEventListener('popstate', handlePopState);
+        }
+    
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen]);
 
 
     const setTheme = (newTheme: Theme) => {
@@ -210,12 +231,25 @@ export default function App() {
         setEditingTx(tx);
         setAddTxModalOpen(true);
     };
+
+    const createModalCloser = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
+        // If the history state was pushed by a modal, go back to pop it.
+        // This will trigger the popstate listener which then sets the state to false.
+        if (window.history.state?.modal) {
+            window.history.back();
+        } else {
+            // Otherwise, just set the state directly (e.g., if history API is not supported)
+            setter(false);
+        }
+    };
     
     const handleCloseAddTxModal = () => {
         setEditingTx(null);
-        setAddTxModalOpen(false);
+        createModalCloser(setAddTxModalOpen)();
     };
     
+    const handleCloseMintorModal = createModalCloser(setMintorModalOpen);
+
     const handleSetScreen = (newScreen: Screen) => {
         setIsBulkMode(false); // Reset bulk mode on screen change.
         setScreen(newScreen);
@@ -291,7 +325,7 @@ export default function App() {
             <div className={`font-sans bg-background text-on-surface transition-colors duration-300`}>
                 <div 
                     className="flex flex-col h-screen"
-                    aria-hidden={isModalOpen}
+                    aria-hidden={isAModalOpen}
                 >
                     <TopAppBar onMintorClick={() => setMintorModalOpen(true)} />
                     <main className="flex-grow overflow-y-auto pb-24">
@@ -302,7 +336,7 @@ export default function App() {
                     <BottomNav activeScreen={screen} setScreen={handleSetScreen} />
                 </div>
                 
-                {fabDetails.show && !isModalOpen && !isBulkMode && (
+                {fabDetails.show && !isAModalOpen && !isBulkMode && (
                      <button
                         onClick={fabDetails.onClick}
                         className="fixed bottom-24 right-6 bg-primary-container text-on-primary-container rounded-2xl shadow-lg w-14 h-14 flex items-center justify-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-modalSlideUp z-10"
@@ -322,7 +356,7 @@ export default function App() {
                 {isMintorModalOpen && (
                     <MintorAiModal 
                         isOpen={isMintorModalOpen} 
-                        onClose={() => setMintorModalOpen(false)}
+                        onClose={handleCloseMintorModal}
                         navigateTo={handleSetScreen}
                     />
                 )}

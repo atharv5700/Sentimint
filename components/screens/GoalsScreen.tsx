@@ -35,10 +35,10 @@ const GoalCard: React.FC<{ goal: Goal, onEdit: (goal: Goal) => void }> = ({ goal
                     <ProgressRing progress={progress} />
                     <div className="absolute inset-0 flex items-center justify-center text-3xl">{goal.emoji}</div>
                 </div>
-                <div className="flex-1 ml-4">
+                <div className="flex-1 ml-4 min-w-0">
                     <div className="flex justify-between items-start">
-                        <span className="text-title-m font-medium text-on-surface-variant break-all">{goal.title}</span>
-                         <div className="flex items-center">
+                        <span className="text-title-m font-medium text-on-surface-variant break-words">{goal.title}</span>
+                         <div className="flex items-center flex-shrink-0">
                              <button onClick={() => { hapticClick(); onEdit(goal); }} className="text-on-surface-variant/50 hover:text-primary p-1"><PencilIcon className="w-5 h-5" /></button>
                              <button onClick={() => { hapticClick(); deleteGoal(goal.id); }} className="text-on-surface-variant/50 hover:text-error p-1"><TrashIcon className="w-5 h-5" /></button>
                          </div>
@@ -128,14 +128,14 @@ const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null }> = ({
     
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-backdropFadeIn">
-            <div className="relative bg-surface rounded-3xl p-6 w-full max-w-sm animate-modalSlideUp overflow-hidden">
+            <div className="relative bg-surface rounded-3xl p-4 sm:p-6 w-full max-w-sm animate-modalSlideUp overflow-hidden">
                 <h2 className="text-headline-m mb-4">{goalToEdit ? 'Edit' : 'New'} Goal</h2>
                 <div className="space-y-4">
-                     <div className="flex gap-2">
-                        <button type="button" onClick={() => { hapticClick(); setIsPickerOpen(true); }} className="w-16 h-14 text-center text-3xl bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary">
+                     <div className="flex flex-col sm:flex-row gap-2">
+                        <button type="button" onClick={() => { hapticClick(); setIsPickerOpen(true); }} className="sm:flex-shrink-0 h-14 text-center text-3xl bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary">
                             {emoji}
                         </button>
-                        <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Goal Title" className="flex-1 w-full bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary" />
+                        <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Goal Title" className="flex-1 w-full bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary min-w-0" />
                      </div>
                      <input type="text" inputMode="numeric" value={targetAmount ? new Intl.NumberFormat('en-IN').format(parseFloat(targetAmount)) : ''} onChange={e => setTargetAmount(e.target.value.replace(/[^0-9]/g, ''))} placeholder="Target Amount (₹)" className="w-full bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary" />
                     <div className="relative">
@@ -225,7 +225,7 @@ const BudgetModal: React.FC<{ onClose: () => void, budgetToEdit: Budget | null }
 
     return (
         <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 animate-backdropFadeIn">
-            <div className="bg-surface rounded-3xl p-6 w-full max-w-sm animate-modalSlideUp">
+            <div className="bg-surface rounded-3xl p-4 sm:p-6 w-full max-w-sm animate-modalSlideUp">
                 <h2 className="text-headline-m mb-4">{budgetToEdit ? 'Edit' : 'New'} Budget</h2>
                 <div className="space-y-4">
                     <CustomSelect 
