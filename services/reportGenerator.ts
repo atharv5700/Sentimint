@@ -91,6 +91,7 @@ const generateReport = (transactions: Transaction[], period: Period, theme: Them
 
     const moodChartSVG = getChartSVG('mood-chart-widget');
     const categoryChartSVG = getChartSVG('category-chart-widget');
+    const trendChartSVG = getChartSVG('spending-comparison-chart-widget');
 
     const transactionsHtml = filteredTxs.map(tx => `
         <tr>
@@ -146,6 +147,11 @@ const generateReport = (transactions: Transaction[], period: Period, theme: Them
                      <div class="chart-container">
                         <h2>Top 5 Categories</h2>
                         ${categoryChartSVG}
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h2>Spending Trend</h2>
+                        ${trendChartSVG}
                     </div>
 
                     <div class="table-container">

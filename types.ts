@@ -81,7 +81,7 @@ export type Quote = {
 };
 
 
-export type ChallengeType = 'noSpendOnCategory' | 'spendLimitOnCategory' | 'saveAmount';
+export type ChallengeType = 'noSpendOnCategory' | 'spendLimitOnCategory';
 export type ChallengeStatus = 'active' | 'completed' | 'failed';
 
 export type Challenge = {
@@ -101,6 +101,13 @@ export type UserChallenge = {
     status: ChallengeStatus;
     progress: number;
     endDate?: number;
+};
+
+export type KnowledgeBase = {
+    financeGeneral: Record<string, string>;
+    howToApp: Record<string, string>;
+    appAbout: Record<string, string>;
+    savingTips: { general: string[] };
 };
 
 

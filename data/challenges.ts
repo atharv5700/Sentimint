@@ -22,15 +22,6 @@ export const ALL_CHALLENGES: Challenge[] = [
         badgeIcon: 'coffee-off'
     },
     {
-        id: 'save-1000-week',
-        title: 'Super Saver',
-        description: 'Link transactions totaling at least ₹1,000 to your savings goals within 7 days.',
-        type: 'saveAmount',
-        durationDays: 7,
-        targetValue: 1000,
-        badgeIcon: 'piggy-bank'
-    },
-    {
         id: 'limit-food-delivery',
         title: 'Cut Down on Delivery',
         description: 'Spend less than ₹1,500 on merchants like "Swiggy" or "Zomato" this week.',

@@ -26,6 +26,9 @@ export default function ManageCategoriesScreen({ setScreen }: ManageCategoriesSc
             setNewCategory('');
         } else {
             hapticError();
+            if (trimmed) {
+                alert(`Category "${trimmed}" already exists.`);
+            }
         }
     };
     
@@ -34,7 +37,7 @@ export default function ManageCategoriesScreen({ setScreen }: ManageCategoriesSc
             deleteCustomCategory(category); // This already provides success haptic
         } else {
             hapticError();
-            alert("Cannot delete a category that is currently in use.");
+            alert("Cannot delete a category that is currently in use by one or more transactions.");
         }
     };
 
@@ -47,7 +50,7 @@ export default function ManageCategoriesScreen({ setScreen }: ManageCategoriesSc
                 </button>
             </header>
             
-            <section className="mb-6">
+            <section className="mb-6 bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl">
                 <h2 className="text-title-m font-medium mb-2 text-on-surface-variant">Add New Category</h2>
                 <div className="flex gap-2">
                     <input 
@@ -56,11 +59,12 @@ export default function ManageCategoriesScreen({ setScreen }: ManageCategoriesSc
                         onChange={(e) => setNewCategory(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
                         placeholder="e.g. Education, Pets"
-                        className="flex-grow bg-surface-variant p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="flex-grow bg-surface p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-on-surface"
                     />
                     <button 
                         onClick={() => { hapticClick(); handleAddCategory(); }}
                         className="bg-primary-container text-on-primary-container p-3 rounded-xl"
+                        aria-label="Add new category"
                     >
                         <PlusIcon />
                     </button>
@@ -72,7 +76,7 @@ export default function ManageCategoriesScreen({ setScreen }: ManageCategoriesSc
                  <div className="flex flex-col gap-2 stagger-children">
                     {customCategories.length > 0 ? customCategories.map((cat, i) => (
                          <div key={cat} className="flex justify-between items-center bg-surface p-3 rounded-xl" style={{'--stagger-delay': i} as React.CSSProperties}>
-                            <span>{cat}</span>
+                            <span className="text-on-surface">{cat}</span>
                             <button 
                                 onClick={() => handleDeleteCategory(cat)}
                                 disabled={!!categoryUsage[cat]}
@@ -82,7 +86,7 @@ export default function ManageCategoriesScreen({ setScreen }: ManageCategoriesSc
                                 <TrashIcon className="w-5 h-5" />
                             </button>
                         </div>
-                    )) : <p className="text-sm text-on-surface-variant p-2">You haven't added any custom categories yet.</p>}
+                    )) : <p className="text-sm text-center text-on-surface-variant p-4">You haven't added any custom categories yet.</p>}
                  </div>
             </section>
 
@@ -90,7 +94,7 @@ export default function ManageCategoriesScreen({ setScreen }: ManageCategoriesSc
                  <h2 className="text-title-m font-medium mb-2 text-on-surface-variant">Default Categories</h2>
                  <div className="flex flex-wrap gap-2">
                     {DEFAULT_CATEGORIES.map(cat => (
-                         <div key={cat} className="bg-surface p-3 rounded-xl text-sm">
+                         <div key={cat} className="bg-surface/80 p-3 rounded-xl text-sm text-on-surface">
                             {cat}
                         </div>
                     ))}

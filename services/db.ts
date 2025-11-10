@@ -83,7 +83,8 @@ class DbService {
             }
         } catch (e) {
             console.error("Failed to save data to localStorage:", e);
-            // Optionally, inform the user that data could not be saved.
+            // Inform the user that data could not be saved.
+            alert('Critical Error: Could not save data. Your latest changes might be lost. Please check your browser storage permissions and try to free up some space.');
         }
     }
 

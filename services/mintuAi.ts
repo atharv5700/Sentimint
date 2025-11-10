@@ -1,16 +1,16 @@
 import { GoogleGenAI, FunctionDeclaration, Type } from '@google/genai';
-import type { Transaction, MintorAiMessage, MintorAction, CoachingTip, AppContextType, Screen } from '../types';
+import type { Transaction, MintorAiMessage, MintorAction, CoachingTip, AppContextType, Screen, KnowledgeBase } from '../types';
 import { dbService } from './db';
 import { ChartBarIcon, LightbulbIcon, TrendingUpIcon, TrophyIcon } from '../constants';
 
-let kbData: any = null;
-const getKbData = async () => {
+let kbData: KnowledgeBase | null = null;
+const getKbData = async (): Promise<KnowledgeBase> => {
     if (kbData) return kbData;
     try {
         const response = await fetch('/assets/kb/mintu_kb.json');
         if (!response.ok) throw new Error('Failed to fetch knowledge base');
         kbData = await response.json();
-        return kbData;
+        return kbData as KnowledgeBase;
     } catch (e) {
         console.error("Could not load Mintor AI knowledge base.", e);
         return {
@@ -188,7 +188,9 @@ const getPeriodData = (period: 'month' | 'week' | 'day', transactions: Transacti
     if (period === 'month') {
         startOfPeriod.setMonth(now.getMonth() - offset, 1);
     } else if (period === 'week') {
-        startOfPeriod.setDate(now.getDate() - now.getDay() - (offset * 7));
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
+        startOfPeriod.setDate(diff - (offset * 7));
     } else { // day
         startOfPeriod.setDate(now.getDate() - offset);
     }
@@ -283,7 +285,7 @@ const getBiggestCategory = (period: 'month' | 'week' | 'day', data: MintorData):
     return `Your biggest category this ${period} was **${topCategory[0]}**, with a total of **${formatCurrency(topCategory[1])}**.`;
 };
 
-const getSavingTips = (data: MintorData, kb: any): string => {
+const getSavingTips = (data: MintorData, kb: KnowledgeBase): string => {
     if (!kb?.savingTips?.general) return "Sorry, I can't access my saving tips right now.";
     const tips = [...kb.savingTips.general];
     // Personalize one tip
@@ -314,7 +316,7 @@ const calculateSIP = (monthlyInvestment: number, rate: number, years: number): s
     return `A monthly SIP of ${formatCurrency(monthlyInvestment)} at an expected ${rate}% return for ${years} years could grow to approximately **${formatCurrency(futureValue)}**.`;
 };
 
-const getKBAnswer = (topic: string, kb: any): string => {
+const getKBAnswer = (topic: string, kb: KnowledgeBase): string => {
     if (!kb) return "Sorry, my knowledge base is currently unavailable.";
     const lowerTopic = topic.toLowerCase();
     
@@ -347,7 +349,6 @@ const getContextualStartingPrompts = (screen: Screen): MintorAction[] => {
                 { label: 'Give me saving tips', type: 'query', payload: 'Give me saving tips' },
                 { label: 'What is an emergency fund?', type: 'query', payload: 'What is an emergency fund?' },
             ];
-        // Fix: 'Transactions' is not a valid Screen type. Changed to 'Ledger'.
         case 'Ledger':
              return [
                 { label: 'Compare spending: this month vs last', type: 'query', payload: 'Compare my total spending this month vs last month' },

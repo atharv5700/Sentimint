@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { Period } from '../../types';
 import InsightsDashboard from '../InsightsDashboard';
 import { hapticClick } from '../../services/haptics';
+import { useAppContext } from '../../App';
 
 const SegmentedControl: React.FC<{ options: {label: string, value: Period}[], selected: Period, onSelect: (value: Period) => void }> = ({ options, selected, onSelect }) => {
     const containerRef = useRef<HTMLDivElement>(null);

@@ -125,12 +125,8 @@ export default function App() {
             }
             
             const relevantTxs = txs.filter(tx => tx.ts >= userChallenge.startDate && tx.ts <= challengeEndDate);
-
-            if (challengeDef.type === 'saveAmount') {
-                // This challenge type is now inert as goal_id is removed.
-                // It will just stay at 0 progress until it fails.
-                // Could be updated to track positive-mood transactions later.
-            } else if (challengeDef.type === 'spendLimitOnCategory') {
+            
+            if (challengeDef.type === 'spendLimitOnCategory') {
                 const categories = challengeDef.category?.split(';') || [];
                 const newProgress = relevantTxs
                     .filter(tx => categories.includes(tx.category))
