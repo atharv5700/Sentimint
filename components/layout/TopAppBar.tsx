@@ -16,10 +16,10 @@ export default function TopAppBar({ onMintorClick, onSearchClick }: TopAppBarPro
                 background: 'var(--top-app-bar-bg)'
             }}
         >
-            <h1 className="text-headline-m font-bold tracking-tight relative top-0.5">
-                <span className="text-primary">Senti</span>
+            <div className="text-headline-m font-bold tracking-tight relative top-px">
+                <span className="bg-gradient-to-br from-primary to-primary-container bg-clip-text text-transparent">Senti</span>
                 <span className="text-on-surface-variant">mint</span>
-            </h1>
+            </div>
             
             <div className="flex items-center gap-2">
                 <button

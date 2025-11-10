@@ -90,7 +90,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 animate-backdropFadeIn" onClick={onClose}>
             <div 
-                className="bg-surface w-full shadow-2xl animate-searchModalSlideDown max-h-[85vh] flex flex-col rounded-b-3xl"
+                className="bg-surface/90 dark:bg-background/85 backdrop-blur-lg border-b border-x border-outline-variant/30 w-full shadow-2xl animate-searchModalSlideDown max-h-[85vh] flex flex-col rounded-b-3xl"
                 onClick={e => e.stopPropagation()}
             >
                 <header 
