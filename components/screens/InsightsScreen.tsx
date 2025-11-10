@@ -8,19 +8,32 @@ const SegmentedControl: React.FC<{ options: {label: string, value: Period}[], se
     const [pillStyle, setPillStyle] = useState({});
 
     useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-        
-        const selectedIndex = options.findIndex(opt => opt.value === selected);
-        if (selectedIndex === -1) return;
+        const updatePillStyle = () => {
+            const container = containerRef.current;
+            if (!container) return;
+            
+            const selectedIndex = options.findIndex(opt => opt.value === selected);
+            if (selectedIndex === -1) return;
 
-        const selectedButton = container.children[selectedIndex + 1] as HTMLElement; // +1 for pill
-        if (selectedButton) {
-            setPillStyle({
-                left: `${selectedButton.offsetLeft}px`,
-                width: `${selectedButton.offsetWidth}px`,
-            });
-        }
+            const selectedButton = container.children[selectedIndex + 1] as HTMLElement; // +1 for pill
+            if (selectedButton && selectedButton.offsetWidth > 0) {
+                setPillStyle({
+                    left: `${selectedButton.offsetLeft}px`,
+                    width: `${selectedButton.offsetWidth}px`,
+                });
+            }
+        };
+        
+        // Defer the style calculation until after the browser has painted, ensuring dimensions are available.
+        const animationFrameId = requestAnimationFrame(updatePillStyle);
+        
+        // Also update on resize for responsiveness.
+        window.addEventListener('resize', updatePillStyle);
+
+        return () => {
+            cancelAnimationFrame(animationFrameId);
+            window.removeEventListener('resize', updatePillStyle);
+        };
     }, [selected, options]);
 
     return (

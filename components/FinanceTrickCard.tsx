@@ -12,7 +12,7 @@ export default function FinanceTrickCard({ trick }: FinanceTrickCardProps) {
     }
     
     return (
-        <div className="bg-gradient-to-br from-secondary-container/50 to-tertiary-container/50 p-4 rounded-3xl shadow-md relative">
+        <div className="bg-gradient-to-br from-secondary-container/50 to-tertiary-container/50 p-4 rounded-3xl shadow-md relative transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
             <div className="flex items-start gap-4">
                 <div className="bg-surface/50 rounded-full p-2">
                     <trick.icon className="w-6 h-6 text-on-surface-variant" />

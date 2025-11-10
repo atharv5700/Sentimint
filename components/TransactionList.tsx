@@ -100,7 +100,7 @@ const TransactionCard: React.FC<{
             onMouseUp={handlePressEnd}
             onMouseLeave={handlePressEnd}
             onContextMenu={(e) => e.preventDefault()}
-            className={`flex items-center p-3 my-2 rounded-2xl shadow-sm transition-all duration-200 cursor-pointer ${isSelected ? 'bg-secondary-container transform scale-[1.02]' : 'bg-surface'}`}
+            className={`flex items-center p-3 my-2 rounded-2xl shadow-sm transition-all duration-200 cursor-pointer ${isSelected ? 'bg-secondary-container transform scale-[1.02]' : 'bg-surface hover:bg-surface-variant/60'}`}
         >
             {isBulkMode && (
                 <div className="mr-3 self-center">

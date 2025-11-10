@@ -123,7 +123,7 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
         <div className="relative">
             <div className="px-4 pb-4 space-y-4">
                 <div className="animate-screenFadeIn" style={{ animationDelay: '50ms' }}>
-                    <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl space-y-4">
+                    <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl space-y-4 transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
                         <div className="text-center">
                             <p className="text-body-m text-on-surface">Total Spending</p>
                             <p className="text-display-m font-bold text-on-surface">{formatCurrency(animatedTotalSpent)}</p>
@@ -169,7 +169,7 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                             <h3 className="text-title-m font-medium text-on-surface">Monthly Budgets</h3>
                             <button onClick={() => { hapticClick(); setScreen('Budgets'); }} className="text-primary font-medium text-sm">Manage</button>
                         </div>
-                        <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl space-y-4">
+                        <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl space-y-4 transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
                             {budgetStatus.slice(0, 3).map(budget => (
                                 <div key={budget.id}>
                                     <div className="flex justify-between items-center mb-1 text-sm">

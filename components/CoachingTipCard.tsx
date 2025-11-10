@@ -21,7 +21,7 @@ export default function CoachingTipCard({ tip, setScreen }: CoachingTipCardProps
     };
     
     return (
-        <div className="bg-gradient-to-br from-tertiary-container/60 to-primary-container/60 p-4 rounded-3xl shadow-md relative">
+        <div className="bg-gradient-to-br from-tertiary-container/60 to-primary-container/60 p-4 rounded-3xl shadow-md relative transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
             <div className="flex items-start gap-4">
                 <div className="bg-surface/50 rounded-full p-2">
                     <tip.icon className="w-6 h-6 text-on-surface-variant" />

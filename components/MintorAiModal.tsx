@@ -15,7 +15,7 @@ const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: Mintor
     const isUser = message.sender === 'user';
     return (
         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-screenFadeIn`}>
-            <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${isUser ? 'bg-primary-container text-on-primary-container rounded-br-none' : 'bg-surface-variant text-on-surface-variant rounded-bl-none'}`}>
+            <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${isUser ? 'bg-primary-container text-on-primary-container rounded-br-none' : 'bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 text-on-surface-variant rounded-bl-none'}`}>
                 <p className="text-body-m whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: message.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}></p>
                  {message.actions && message.actions.length > 0 && (
                     <div className="flex flex-col items-start gap-2 mt-3">
@@ -26,7 +26,7 @@ const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: Mintor
                                     hapticClick();
                                     onAction(action);
                                 }}
-                                className="text-sm bg-primary-container text-on-primary-container px-3 py-1.5 rounded-full text-left w-full"
+                                className="text-sm bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 text-on-surface-variant px-4 py-2 rounded-2xl text-left w-full hover:bg-surface-variant/80 transition-colors"
                             >
                                 {action.label}
                             </button>
@@ -138,10 +138,10 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScree
                             onChange={(e) => setInput(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                             placeholder="Ask me anything..."
-                            className="flex-1 bg-surface-variant text-on-surface-variant rounded-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="flex-1 bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 text-on-surface-variant rounded-2xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary"
                             disabled={isThinking}
                         />
-                         <button onClick={() => handleSend()} disabled={!input.trim() || isThinking} className="bg-primary text-on-primary p-3 rounded-full shadow hover:bg-primary/90 disabled:bg-outline disabled:opacity-50 transition-all">
+                         <button onClick={() => handleSend()} disabled={!input.trim() || isThinking} className="bg-primary text-on-primary p-3 rounded-2xl shadow hover:bg-primary/90 disabled:bg-outline disabled:opacity-50 transition-all">
                             <SendIcon />
                         </button>
                     </div>

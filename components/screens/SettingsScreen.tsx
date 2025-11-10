@@ -9,19 +9,32 @@ const SegmentedControl: React.FC<{ options: {label: string, value: Theme}[], sel
     const [pillStyle, setPillStyle] = useState({});
 
     useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-        
-        const selectedIndex = options.findIndex(opt => opt.value === selected);
-        if (selectedIndex === -1) return;
+        const updatePillStyle = () => {
+            const container = containerRef.current;
+            if (!container) return;
+            
+            const selectedIndex = options.findIndex(opt => opt.value === selected);
+            if (selectedIndex === -1) return;
 
-        const selectedButton = container.children[selectedIndex + 1] as HTMLElement; // +1 for pill
-        if (selectedButton) {
-            setPillStyle({
-                left: `${selectedButton.offsetLeft}px`,
-                width: `${selectedButton.offsetWidth}px`,
-            });
-        }
+            const selectedButton = container.children[selectedIndex + 1] as HTMLElement; // +1 for pill
+            if (selectedButton && selectedButton.offsetWidth > 0) {
+                setPillStyle({
+                    left: `${selectedButton.offsetLeft}px`,
+                    width: `${selectedButton.offsetWidth}px`,
+                });
+            }
+        };
+        
+        // Defer the style calculation until after the browser has painted, ensuring dimensions are available.
+        const animationFrameId = requestAnimationFrame(updatePillStyle);
+        
+        // Also update on resize for responsiveness.
+        window.addEventListener('resize', updatePillStyle);
+
+        return () => {
+            cancelAnimationFrame(animationFrameId);
+            window.removeEventListener('resize', updatePillStyle);
+        };
     }, [selected, options]);
     
     return (
@@ -133,8 +146,8 @@ export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
             <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl" style={{'--stagger-delay': 3} as React.CSSProperties}>
                  <h2 className="text-title-m font-medium mb-4 text-on-surface-variant">Data Management</h2>
                  <div className="flex flex-col gap-2">
-                     <button onClick={openExportModal} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface hover:bg-surface/80 transition-colors">Export Data to CSV</button>
-                     <button onClick={() => { hapticClick(); openImportModal(); }} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface hover:bg-surface/80 transition-colors">Import Data from CSV</button>
+                     <button onClick={openExportModal} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md">Export Data to CSV</button>
+                     <button onClick={() => { hapticClick(); openImportModal(); }} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md">Import Data from CSV</button>
                  </div>
             </div>
             

@@ -14,7 +14,7 @@ export default function WeeklyDigest({ digest }: WeeklyDigestProps) {
     }
 
     return (
-        <div className="bg-gradient-to-br from-tertiary-container/50 to-primary-container/50 text-on-surface-variant p-4 rounded-3xl shadow-md border border-outline-variant/20">
+        <div className="bg-gradient-to-br from-tertiary-container/50 to-primary-container/50 text-on-surface-variant p-4 rounded-3xl shadow-md border border-outline-variant/20 transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
             <div className="flex items-start gap-4">
                  <div className="bg-surface/50 rounded-full p-2">
                     <CalendarCheckIcon className="w-6 h-6 text-on-surface-variant" />

@@ -201,7 +201,7 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                     <ChartCard title="Spending by Mood" aria-label="Pie chart showing spending distribution by mood." id="mood-chart-widget">
                         <ResponsiveContainer>
                             <PieChart>
-                                <Pie data={moodDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={false} labelLine={false} activeIndex={-1} activeShape={{}}>
+                                <Pie data={moodDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={false} labelLine={false} activeIndex={-1} activeShape={{}} animationDuration={800}>
                                     {moodDistribution.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={MOOD_COLORS_CSS[entry.name.split(" ")[0] as keyof typeof MOOD_COLORS_CSS]} />
                                     ))}
@@ -217,7 +217,7 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                             <BarChart data={spendingByCategory} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                 <XAxis type="number" hide />
                                 <YAxis type="category" dataKey="name" width={80} tick={{ fill: tickColor, fontSize: 12 }} axisLine={false} tickLine={false} />
-                                <Bar dataKey="value" fill={primaryColor} radius={[0, 8, 8, 0]} barSize={20} activeBar={{}} />
+                                <Bar dataKey="value" fill={primaryColor} radius={[0, 8, 8, 0]} barSize={20} activeBar={{}} animationDuration={800} />
                             </BarChart>
                         </ResponsiveContainer>
                     </ChartCard>
@@ -235,10 +235,10 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                                 <XAxis dataKey="name" tick={{ fill: tickColor, fontSize: 12 }} />
                                 <YAxis tick={{ fill: tickColor, fontSize: 12 }} tickFormatter={(val) => compactCurrency(val)}/>
                                 <Legend wrapperStyle={{fontSize: '0.875rem', paddingTop: '16px'}} />
-                                <Line type="monotone" dataKey="Current Period" stroke={primaryColor} strokeWidth={2} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{}} />
-                                <Line type="monotone" dataKey="Previous Period" stroke={tertiaryColor} strokeWidth={2} strokeDasharray="5 5" dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{}} />
-                                <Line type="monotone" dataKey="Positive" name="Positive Mood" stroke={MOOD_COLORS_CSS['Happy']} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{}} />
-                                <Line type="monotone" dataKey="Negative" name="Negative Mood" stroke={MOOD_COLORS_CSS['Regret']} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{}} />
+                                <Line type="monotone" dataKey="Current Period" stroke={primaryColor} strokeWidth={2} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{}} animationDuration={800} />
+                                <Line type="monotone" dataKey="Previous Period" stroke={tertiaryColor} strokeWidth={2} strokeDasharray="5 5" dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{}} animationDuration={800} />
+                                <Line type="monotone" dataKey="Positive" name="Positive Mood" stroke={MOOD_COLORS_CSS['Happy']} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{}} animationDuration={800} />
+                                <Line type="monotone" dataKey="Negative" name="Negative Mood" stroke={MOOD_COLORS_CSS['Regret']} dot={{r: 4, strokeWidth: 2, fill: 'rgb(var(--color-surface))'}} activeDot={{}} animationDuration={800} />
                             </LineChart>
                         </ResponsiveContainer>
                     </ChartCard>

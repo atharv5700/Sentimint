@@ -16,16 +16,28 @@ const SegmentedControl: React.FC<{
     const [pillStyle, setPillStyle] = useState({});
 
     useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-        const selectedIndex = options.findIndex(opt => opt.value === selected);
-        const selectedButton = container.children[selectedIndex + 1] as HTMLElement;
-        if (selectedButton) {
-            setPillStyle({
-                left: `${selectedButton.offsetLeft}px`,
-                width: `${selectedButton.offsetWidth}px`,
-            });
-        }
+        const updatePillStyle = () => {
+            const container = containerRef.current;
+            if (!container) return;
+            const selectedIndex = options.findIndex(opt => opt.value === selected);
+            if (selectedIndex === -1) return;
+
+            const selectedButton = container.children[selectedIndex + 1] as HTMLElement;
+            if (selectedButton && selectedButton.offsetWidth > 0) {
+                setPillStyle({
+                    left: `${selectedButton.offsetLeft}px`,
+                    width: `${selectedButton.offsetWidth}px`,
+                });
+            }
+        };
+
+        const animationFrameId = requestAnimationFrame(updatePillStyle);
+        window.addEventListener('resize', updatePillStyle);
+
+        return () => {
+            cancelAnimationFrame(animationFrameId);
+            window.removeEventListener('resize', updatePillStyle);
+        };
     }, [selected, options]);
 
     return (
@@ -59,7 +71,7 @@ const BudgetListItem: React.FC<{ budget: Budget, spent: number, onEdit: (budget:
     const remaining = budget.amount - spent;
     
     return (
-        <div onClick={() => { hapticClick(); onEdit(budget); }} className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl cursor-pointer hover:bg-surface-variant/80 transition-colors">
+        <div onClick={() => { hapticClick(); onEdit(budget); }} className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl cursor-pointer hover:bg-surface-variant/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
             <div className="flex justify-between items-center mb-2">
                 <span className="font-medium text-on-surface-variant">{budget.category}</span>
                 <button onClick={(e) => { e.stopPropagation(); hapticClick(); deleteBudget(budget.id); }} className="text-on-surface-variant/50 hover:text-error p-1"><TrashIcon className="w-5 h-5"/></button>
@@ -270,12 +282,12 @@ export default function GoalsScreen() {
                         <button 
                             onClick={handleStart} 
                             disabled={isStarted}
-                            className={`w-full mt-4 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all duration-300 ${isStarted ? 'bg-primary/20 text-primary' : 'bg-primary/20 dark:bg-primary/30 backdrop-blur-lg border border-primary/40 dark:border-primary/60 text-primary'}`}
+                            className={`w-full mt-4 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all duration-300 transform active:scale-95 ${isStarted ? 'bg-primary/20 text-primary' : 'bg-primary/20 dark:bg-primary/30 backdrop-blur-lg border border-primary/40 dark:border-primary/60 text-primary'}`}
                         >
                             {isStarted ? (
-                                <>
-                                    <CheckIcon className="w-5 h-5" /> Challenge Accepted!
-                                </>
+                                <div className="flex items-center justify-center gap-2 animate-screenFadeIn">
+                                    <CheckIcon className="w-5 h-5 animate-check-pop" /> Challenge Accepted!
+                                </div>
                             ) : (
                                 'Start Challenge'
                             )}
