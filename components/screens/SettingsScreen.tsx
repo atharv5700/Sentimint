@@ -141,7 +141,7 @@ export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
             <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 4} as React.CSSProperties}>
                 <h2 className="text-title-m font-medium mb-2">About Sentimint</h2>
                 <p className="text-body-m mb-4">Our mission is to help you build a healthier relationship with your finances by understanding the emotions behind your spending.</p>
-                <h3 className="text-title-s font-medium mb-1 text-on-surface-variant/90">Privacy Commitment</h3>
+                <h2 className="text-title-m font-medium mb-2">Privacy Commitment</h2>
                 <p className="text-body-m">Your privacy is paramount. All data processing runs entirely on-device; your data never leaves your phone.</p>
             </div>
             
