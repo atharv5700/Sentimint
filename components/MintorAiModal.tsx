@@ -105,7 +105,7 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScree
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-0 md:p-4 animate-backdropFadeIn">
             <div className="bg-surface rounded-none md:rounded-3xl w-full h-full md:max-w-2xl md:h-[calc(100%-2rem)] flex flex-col shadow-2xl animate-modalSlideUp">
                 <header 
-                    className="flex items-center justify-between p-4 border-b border-outline-variant"
+                    className="flex items-center justify-between p-4 border-b border-outline-variant bg-surface/80 backdrop-blur-lg z-10"
                     style={{ paddingTop: `calc(1rem + env(safe-area-inset-top))` }}
                 >
                     <h2 className="text-title-m font-medium">{MINTOR_AI_ASSISTANT.name}</h2>
@@ -129,7 +129,7 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScree
                     <div ref={chatEndRef} />
                 </main>
                 <footer 
-                    className="p-4 border-t border-outline-variant pb-safe"
+                    className="p-4 border-t border-outline-variant bg-surface/80 backdrop-blur-lg z-10 pb-safe"
                 >
                     <div className="flex items-center gap-2">
                         <input

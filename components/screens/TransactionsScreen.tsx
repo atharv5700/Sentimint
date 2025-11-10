@@ -55,7 +55,7 @@ const Dropdown: React.FC<{
             </button>
 
             {isOpen && (
-                <div className="absolute top-full mt-2 w-full bg-black/60 backdrop-blur-lg rounded-2xl shadow-lg z-30 p-2 animate-screenFadeIn">
+                <div className="absolute top-full mt-2 w-full bg-surface rounded-2xl shadow-lg z-30 p-2 animate-screenFadeIn">
                     <ul className="max-h-48 overflow-y-auto">
                         {options.map(opt => (
                             <li key={opt.value}>
@@ -65,7 +65,7 @@ const Dropdown: React.FC<{
                                         onSelect(opt.value);
                                         setIsOpen(false);
                                     }}
-                                    className={`w-full text-left p-3 rounded-lg text-sm transition-colors text-white/90 ${selectedValue === opt.value ? 'bg-mint/20 text-mint font-medium' : 'hover:bg-white/10'}`}
+                                    className={`w-full text-left p-3 rounded-lg text-sm transition-colors text-on-surface ${selectedValue === opt.value ? 'bg-primary-container text-on-primary-container font-medium' : 'hover:bg-surface-variant'}`}
                                 >
                                     {opt.label}
                                 </button>
@@ -74,6 +74,46 @@ const Dropdown: React.FC<{
                     </ul>
                 </div>
             )}
+        </div>
+    );
+};
+
+const SegmentedControl: React.FC<{
+    options: { label: string; value: string }[];
+    selected: string;
+    onSelect: (value: string) => void;
+}> = ({ options, selected, onSelect }) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [pillStyle, setPillStyle] = useState({});
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+        const selectedIndex = options.findIndex(opt => opt.value === selected);
+        const selectedButton = container.children[selectedIndex + 1] as HTMLElement;
+        if (selectedButton) {
+            setPillStyle({
+                left: `${selectedButton.offsetLeft}px`,
+                width: `${selectedButton.offsetWidth}px`,
+            });
+        }
+    }, [selected, options]);
+
+    return (
+        <div ref={containerRef} className="relative flex justify-center p-1 bg-surface-variant/50 rounded-full mx-auto max-w-sm">
+            <div 
+                className="absolute top-1 bottom-1 bg-primary-container rounded-full shadow transition-all duration-300 ease-out"
+                style={pillStyle}
+            />
+            {options.map(({ label, value }) => (
+                <button 
+                    key={value} 
+                    onClick={() => { hapticClick(); onSelect(value); }} 
+                    className={`relative z-10 w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${selected === value ? 'text-on-primary-container' : 'text-on-surface-variant'}`}
+                >
+                    {label}
+                </button>
+            ))}
         </div>
     );
 };
@@ -90,7 +130,7 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
     const [searchTerm, setSearchTerm] = useState('');
     const [filters, setFilters] = useState<{ category: string; mood: string }>({ category: '', mood: '' });
     const [sortOrder, setSortOrder] = useState<SortOrder>('date-desc');
-    
+
     const categoryOptions = [{ value: '', label: 'All Categories' }, ...[...DEFAULT_CATEGORIES, ...customCategories].map(c => ({ value: c, label: c }))];
     const moodOptions = [{value: '', label: 'All Moods'}, ...Object.entries(MOOD_MAP).map(([level, {label}]) => ({value: level, label}))];
     const sortOptions = [
@@ -148,55 +188,50 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
 
     return (
         <div className="relative">
-            <div className="p-4">
-                <div className="flex justify-center p-1 bg-surface-variant/50 rounded-full mx-auto max-w-sm">
-                    {(['transactions', 'recurring'] as const).map(tab => (
-                        <button key={tab} onClick={() => { hapticClick(); setActiveTab(tab); }} className={`w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${activeTab === tab ? 'bg-primary-container text-on-primary-container shadow' : 'text-on-surface-variant'}`}>
-                            {tab}
-                        </button>
-                    ))}
-                </div>
+             <div className="px-4">
+                <SegmentedControl
+                    options={[
+                        { label: 'Transactions', value: 'transactions' },
+                        { label: 'Recurring', value: 'recurring' }
+                    ]}
+                    selected={activeTab}
+                    onSelect={(val) => setActiveTab(val as 'transactions' | 'recurring')}
+                />
 
                 <div key={activeTab} className="animate-screenFadeIn">
                     {activeTab === 'transactions' ? (
                         <>
-                            <div className="sticky top-0 bg-background/60 backdrop-blur-lg z-20 pt-4 pb-2 -mx-4 px-4">
-                                <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl space-y-3">
-                                    <div className="relative">
+                            <div className="pt-4 pb-2">
+                                <div className="space-y-3">
+                                     <div className="relative">
                                         <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant h-6 w-6" />
                                         <input
                                             type="text"
                                             placeholder="Search transactions..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full bg-surface text-on-surface rounded-full py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-on-surface-variant/70"
+                                            className="w-full bg-surface text-on-surface rounded-full py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-on-surface-variant/70 shadow-sm"
                                         />
                                     </div>
-                                    <div className="flex flex-col sm:flex-row items-center gap-2">
-                                        <div className="w-full sm:flex-1">
-                                            <Dropdown
-                                                placeholder="Category"
-                                                options={categoryOptions}
-                                                selectedValue={filters.category}
-                                                onSelect={(value) => setFilters(f => ({...f, category: value}))}
-                                            />
-                                        </div>
-                                        <div className="w-full sm:flex-1">
-                                            <Dropdown
-                                                placeholder="Mood"
-                                                options={moodOptions}
-                                                selectedValue={filters.mood}
-                                                onSelect={(value) => setFilters(f => ({...f, mood: value}))}
-                                            />
-                                        </div>
-                                        <div className="w-full sm:flex-1">
-                                            <Dropdown
-                                                placeholder="Sort"
-                                                options={sortOptions}
-                                                selectedValue={sortOrder}
-                                                onSelect={(value) => setSortOrder(value as SortOrder)}
-                                            />
-                                        </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                        <Dropdown
+                                            placeholder="Category"
+                                            options={categoryOptions}
+                                            selectedValue={filters.category}
+                                            onSelect={(value) => setFilters(f => ({...f, category: value}))}
+                                        />
+                                        <Dropdown
+                                            placeholder="Mood"
+                                            options={moodOptions}
+                                            selectedValue={filters.mood}
+                                            onSelect={(value) => setFilters(f => ({...f, mood: value}))}
+                                        />
+                                        <Dropdown
+                                            placeholder="Sort"
+                                            options={sortOptions}
+                                            selectedValue={sortOrder}
+                                            onSelect={(value) => setSortOrder(value as SortOrder)}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -208,6 +243,7 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
                                     sortOrder={sortOrder}
                                     isBulkSelectEnabled={true}
                                     onBulkModeChange={setIsBulkMode}
+                                    stickyHeaderOffsetClass="top-[68px]"
                                 />
                             ) : (
                                 <div className="pt-8">
@@ -225,7 +261,7 @@ export default function TransactionsScreen({ onEditTransaction }: TransactionsSc
                         </>
                     ) : (
                         <>
-                            <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-10 py-4 text-center text-body-m text-on-surface-variant">
+                            <div className="py-4 text-center text-body-m text-on-surface-variant">
                                 Manage automated bills and subscriptions.
                             </div>
                             {recurringTransactions.length > 0 ? (

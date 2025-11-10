@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, createContext, useContext, useMemo } from 'react';
 import type { Screen, Theme, Transaction, Goal, Budget, RecurringTransaction, UserChallenge, Challenge } from './types';
 import { dbService } from './services/db';
@@ -552,7 +553,7 @@ export default function App() {
                         onMintorClick={() => setMintorModalOpen(true)} 
                         onSearchClick={() => setSearchModalOpen(true)}
                     />
-                    <main className="flex-grow overflow-y-auto pb-24">
+                    <main className="flex-grow overflow-y-auto pb-24 pt-3">
                         <div key={screen} className="animate-screenFadeIn">
                             {renderScreen()}
                         </div>
@@ -563,10 +564,10 @@ export default function App() {
                 {fabDetails.show && !isAModalOpen && !isBulkMode && (
                      <button
                         onClick={fabDetails.onClick}
-                        className="fixed bottom-24 right-6 bg-primary-container text-on-primary-container rounded-2xl shadow-lg w-14 h-14 flex items-center justify-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-fabPopIn z-10"
+                        className="fixed bottom-24 right-6 bg-primary-container/95 dark:bg-primary-container/90 backdrop-blur-sm border border-primary/20 text-on-primary-container rounded-2xl shadow-lg w-[3.75rem] h-[3.75rem] flex items-center justify-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-fabPopIn z-10"
                         aria-label={fabDetails['aria-label']}
                     >
-                        <PlusIcon className="w-7 h-7" />
+                        <PlusIcon className="w-8 h-8" />
                     </button>
                 )}
 

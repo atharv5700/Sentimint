@@ -5,6 +5,15 @@ import { MOOD_MAP, TrashIcon, TagIcon, LinkIcon, CloseIcon, DEFAULT_TAGS } from 
 import { hapticClick, hapticSuccess } from '../services/haptics';
 import CustomSelect from './CustomSelect';
 
+interface TransactionListProps {
+    transactions: Transaction[];
+    onEditTransaction: (tx: Transaction) => void;
+    sortOrder?: SortOrder;
+    isBulkSelectEnabled?: boolean;
+    onBulkModeChange?: (isActive: boolean) => void;
+    stickyHeaderOffsetClass?: string;
+}
+
 const TransactionCard: React.FC<{ 
     tx: Transaction, 
     onEdit: (tx: Transaction) => void,
@@ -225,13 +234,14 @@ const LinkGoalModal: React.FC<{goals: Goal[], onLink: (goalId: string | null) =>
 
 type SortOrder = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
 
-export default function TransactionList({ transactions, onEditTransaction, sortOrder = 'date-desc', isBulkSelectEnabled, onBulkModeChange }: {
-    transactions: Transaction[],
-    onEditTransaction: (tx: Transaction) => void,
-    sortOrder?: SortOrder,
-    isBulkSelectEnabled?: boolean,
-    onBulkModeChange?: (isActive: boolean) => void
-}) {
+export default function TransactionList({ 
+    transactions, 
+    onEditTransaction, 
+    sortOrder = 'date-desc', 
+    isBulkSelectEnabled, 
+    onBulkModeChange,
+    stickyHeaderOffsetClass = 'top-[76px]'
+}: TransactionListProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const isBulkMode = selectedIds.length > 0;
 
@@ -260,15 +270,23 @@ export default function TransactionList({ transactions, onEditTransaction, sortO
 
     const transactionsByMonth = useMemo(() => {
         if (isAmountSort) return [];
-        const monthMap = new Map<string, Transaction[]>();
+
+        const monthMap = new Map<string, { label: string; txs: Transaction[] }>();
+        
         transactions.forEach(tx => {
-            const month = new Date(tx.ts).toLocaleString('default', { month: 'long', year: 'numeric' });
-            if (!monthMap.has(month)) {
-                monthMap.set(month, []);
+            const date = new Date(tx.ts);
+            const key = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, '0')}`;
+            
+            if (!monthMap.has(key)) {
+                monthMap.set(key, { 
+                    label: date.toLocaleString('default', { month: 'long', year: 'numeric' }),
+                    txs: [] 
+                });
             }
-            monthMap.get(month)?.push(tx);
+            monthMap.get(key)!.txs.push(tx);
         });
-        return Array.from(monthMap.entries());
+        
+        return Array.from(monthMap.entries()).sort((a, b) => b[0].localeCompare(a[0]));
     }, [transactions, isAmountSort]);
     
     if (transactions.length === 0) {
@@ -278,7 +296,7 @@ export default function TransactionList({ transactions, onEditTransaction, sortO
     return (
         <div>
             {isAmountSort ? (
-                 <div className="stagger-children">
+                 <div className="stagger-children pt-2">
                     {transactions.map((tx, index) => (
                         <TransactionCard 
                             key={tx.id} 
@@ -292,9 +310,9 @@ export default function TransactionList({ transactions, onEditTransaction, sortO
                     ))}
                 </div>
             ) : (
-                transactionsByMonth.map(([month, txs]) => (
-                    <div key={month} className="mb-4">
-                        <h3 className="sticky top-[164px] sm:top-[116px] bg-background/80 backdrop-blur-sm z-10 py-2 text-title-m font-medium text-on-surface-variant border-b border-outline-variant -mx-4 px-4">{month}</h3>
+                transactionsByMonth.map(([key, { label, txs }]) => (
+                    <div key={key}>
+                        <h3 className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 rounded-2xl py-2 px-4 my-2 text-title-m font-medium text-on-surface-variant">{label}</h3>
                         <div className="stagger-children">
                             {Array.isArray(txs) && txs.map((tx, index) => (
                                 <TransactionCard 

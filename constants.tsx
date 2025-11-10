@@ -185,7 +185,7 @@ export const MintorAiIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => 
         <circle cx="12" cy="12" r="11.5" stroke="rgb(var(--color-primary-container))" strokeWidth="1" />
         <text 
             x="12" 
-            y="12" 
+            y="13" 
             textAnchor="middle" 
             dominantBaseline="central" 
             fontSize="9" 

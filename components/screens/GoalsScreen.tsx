@@ -7,6 +7,46 @@ import { hapticClick, hapticError, hapticSuccess } from '../../services/haptics'
 import ProgressBar from '../ProgressBar';
 import { EmptyState } from '../EmptyState';
 
+const SegmentedControl: React.FC<{
+    options: { label: string; value: string }[];
+    selected: string;
+    onSelect: (value: string) => void;
+}> = ({ options, selected, onSelect }) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [pillStyle, setPillStyle] = useState({});
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+        const selectedIndex = options.findIndex(opt => opt.value === selected);
+        const selectedButton = container.children[selectedIndex + 1] as HTMLElement;
+        if (selectedButton) {
+            setPillStyle({
+                left: `${selectedButton.offsetLeft}px`,
+                width: `${selectedButton.offsetWidth}px`,
+            });
+        }
+    }, [selected, options]);
+
+    return (
+        <div ref={containerRef} className="relative flex justify-center p-1 bg-surface-variant/50 rounded-full mx-auto max-w-sm">
+            <div 
+                className="absolute top-1 bottom-1 bg-primary-container rounded-full shadow transition-all duration-300 ease-out"
+                style={pillStyle}
+            />
+            {options.map(({ label, value }) => (
+                <button 
+                    key={value} 
+                    onClick={() => { hapticClick(); onSelect(value); }} 
+                    className={`relative z-10 w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${selected === value ? 'text-on-primary-container' : 'text-on-surface-variant'}`}
+                >
+                    {label}
+                </button>
+            ))}
+        </div>
+    );
+};
+
 
 const ProgressRing: React.FC<{ progress: number }> = ({ progress }) => {
     const stroke = 4;
@@ -131,7 +171,7 @@ export const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null 
                             value={title} 
                             onChange={e => setTitle(e.target.value)} 
                             placeholder="e.g. New Laptop" 
-                            className="w-full bg-surface-variant p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary" 
+                            className="w-full bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary" 
                         />
                     </div>
                      <div>
@@ -140,14 +180,14 @@ export const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null 
                             type="date"
                             value={deadline} 
                             onChange={e => setDeadline(e.target.value)}
-                            className="w-full bg-surface-variant p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary"
                             style={{colorScheme: theme}}
                         />
                     </div>
                 </div>
                 
                 <div className="pt-4 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0 pb-safe">
-                     <button onClick={handleSave} disabled={!isFormValid} className="w-full py-4 rounded-full bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant">Save</button>
+                     <button onClick={handleSave} disabled={!isFormValid} className="w-full py-4 rounded-2xl bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant">Save</button>
                 </div>
             </div>
         </div>
@@ -266,7 +306,7 @@ export const BudgetModal: React.FC<{ onClose: () => void, budgetToEdit: Budget |
                 </div>
                 
                 <div className="pt-4 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0 pb-safe">
-                    <button onClick={handleSave} disabled={!isFormValid} className="w-full py-4 rounded-full bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant">Save</button>
+                    <button onClick={handleSave} disabled={!isFormValid} className="w-full py-4 rounded-2xl bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant">Save</button>
                 </div>
             </div>
         </div>
@@ -307,7 +347,7 @@ export default function GoalsScreen() {
     const [activeTab, setActiveTab] = useState<'goals' | 'budgets' | 'challenges'>('goals');
     const [celebratingGoalId, setCelebratingGoalId] = useState<string | null>(null);
     const prevGoals = usePrevious(goals);
-
+    
     useEffect(() => {
         if (prevGoals && prevGoals.length > 0 && goals.length > 0) {
             const justCompletedGoal = goals.find(
@@ -467,13 +507,17 @@ export default function GoalsScreen() {
     return (
         <div className="relative min-h-full">
             {celebratingGoalId && <Confetti />}
-            <div className="p-4">
-                <div className="flex justify-center p-1 bg-surface-variant/50 rounded-full mx-auto max-w-md mb-6">
-                    {(['goals', 'budgets', 'challenges'] as const).map(tab => (
-                        <button key={tab} onClick={() => { hapticClick(); setActiveTab(tab); }} className={`w-full capitalize px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${activeTab === tab ? 'bg-primary-container text-on-primary-container shadow' : 'text-on-surface-variant'}`}>
-                            {tab}
-                        </button>
-                    ))}
+            <div className="px-4">
+                 <div className="mb-4">
+                    <SegmentedControl
+                        options={[
+                            { label: 'Goals', value: 'goals' },
+                            { label: 'Budgets', value: 'budgets' },
+                            { label: 'Challenges', value: 'challenges' }
+                        ]}
+                        selected={activeTab}
+                        onSelect={(val) => setActiveTab(val as 'goals' | 'budgets' | 'challenges')}
+                    />
                 </div>
 
                 <div key={activeTab} className="animate-screenFadeIn">

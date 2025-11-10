@@ -88,25 +88,23 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-surface z-50 flex flex-col animate-modalSlideUp">
+        <div className="fixed inset-0 bg-surface z-50 flex flex-col animate-screenFadeIn">
             <header 
-                className="flex items-center gap-2 p-4 border-b border-outline-variant"
+                className="flex items-center gap-4 p-4"
                 style={{ paddingTop: `calc(1rem + env(safe-area-inset-top))` }}
             >
-                <div className="flex items-center flex-grow h-12 bg-surface-variant rounded-full focus-within:ring-2 focus-within:ring-primary transition-shadow">
-                    <div className="pl-4 pointer-events-none">
-                        <SearchIcon className="text-on-surface-variant w-6 h-6" />
-                    </div>
+                 <div className="flex items-center flex-grow h-12 px-4 bg-transparent border-2 border-primary rounded-full">
+                    <SearchIcon className="text-on-surface-variant w-5 h-5 mr-2 flex-shrink-0" />
                     <input
                         ref={inputRef}
                         type="text"
                         placeholder="Search..."
                         value={query}
                         onChange={e => setQuery(e.target.value)}
-                        className="w-full h-full bg-transparent text-on-surface-variant pl-2 pr-4 focus:outline-none placeholder:text-on-surface-variant/70 text-base"
+                        className="w-full h-full bg-transparent text-on-surface focus:outline-none placeholder:text-on-surface-variant/80 text-base"
                     />
                 </div>
-                <button onClick={onClose} className="text-primary font-medium px-3 h-12 flex items-center flex-shrink-0">Cancel</button>
+                <button onClick={onClose} className="text-primary font-medium text-base flex items-center flex-shrink-0">Cancel</button>
             </header>
             
             <main className="flex-1 overflow-y-auto p-4">

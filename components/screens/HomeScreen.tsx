@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import type { Transaction, Period, Screen, CoachingTip } from '../../types';
 import { useAppContext } from '../../App';
 import { MOOD_MAP } from '../../constants';
@@ -26,46 +26,41 @@ const getWeekKey = (d: Date) => {
 };
 
 const PeriodSelector: React.FC<{ selected: Period, onSelect: (value: Period) => void }> = ({ selected, onSelect }) => {
-    const [isCompact, setIsCompact] = useState(window.innerWidth < 360);
-
-    useEffect(() => {
-        const handleResize = () => setIsCompact(window.innerWidth < 360);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [pillStyle, setPillStyle] = useState({});
 
     const options: {label: string, value: Period}[] = [
         {label: 'Day', value: 'D'}, {label: 'Week', value: 'W'},
         {label: 'Month', value: 'M'}, {label: 'Year', value: 'Y'}
     ];
-    
-    const baseClasses = "transition-colors duration-200 rounded-full font-medium";
-    const selectedClasses = "bg-secondary-container text-on-secondary-container";
-    const unselectedClasses = "text-on-surface-variant";
 
-    if (isCompact) {
-        return (
-            <div className="flex justify-center gap-2">
-                {options.map(({ value }) => (
-                     <button
-                        key={value}
-                        onClick={() => { hapticClick(); onSelect(value); }}
-                        className={`${baseClasses} w-10 h-10 text-sm ${selected === value ? selectedClasses : 'bg-surface-variant/50'}`}
-                    >
-                        {value}
-                    </button>
-                ))}
-            </div>
-        );
-    }
-    
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+        
+        const selectedIndex = options.findIndex(opt => opt.value === selected);
+        if (selectedIndex === -1) return;
+
+        const selectedButton = container.children[selectedIndex + 1] as HTMLElement; // +1 for pill
+        if (selectedButton) {
+            setPillStyle({
+                left: `${selectedButton.offsetLeft}px`,
+                width: `${selectedButton.offsetWidth}px`,
+            });
+        }
+    }, [selected, options]);
+
     return (
-        <div className="flex justify-center p-1 bg-surface rounded-full">
+        <div ref={containerRef} className="relative flex justify-center p-1 bg-surface-variant/50 rounded-full">
+            <div 
+                className="absolute top-1 bottom-1 bg-primary-container rounded-full shadow transition-all duration-300 ease-out"
+                style={pillStyle}
+            />
             {options.map(({label, value}) => (
                 <button
                     key={value}
                     onClick={() => { hapticClick(); onSelect(value); }}
-                    className={`${baseClasses} px-4 py-1.5 text-sm ${selected === value ? selectedClasses : unselectedClasses}`}
+                    className={`relative z-10 w-full px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${selected === value ? 'text-on-primary-container' : 'text-on-surface-variant'}`}
                 >
                     {label}
                 </button>
@@ -91,7 +86,6 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
         const todayKey = getWeekKey(today);
         const lastDigestKey = localStorage.getItem('sentimint_last_digest_week');
         
-        // Show digest on Mondays if it hasn't been shown for the current week
         if (today.getDay() === 1 && todayKey !== lastDigestKey) {
             const summary = mintorAiService.generateWeeklyDigest(transactions);
             if (summary) {
@@ -160,22 +154,17 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
 
     return (
         <div className="relative h-full">
-            <div className="pb-6">
-                <div className="px-4 pt-4">
-                     <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl space-y-4 animate-screenFadeIn" style={{ animationDelay: '50ms' }}>
-                        <div className="bg-surface/80 p-1 rounded-full">
-                            <PeriodSelector selected={period} onSelect={setPeriod} />
-                        </div>
+            <div className="px-4 pb-4 space-y-4">
+                <div className="animate-screenFadeIn" style={{ animationDelay: '50ms' }}>
+                    <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl space-y-4">
+                        <PeriodSelector selected={period} onSelect={setPeriod} />
                         <div className="text-center">
                             <p className="text-body-m text-on-surface">Total Spent</p>
-                            <p className="text-headline-m font-bold text-on-surface">{formatCurrency(animatedTotalSpent)}</p>
+                            <p className="text-display-l font-bold text-on-surface">{formatCurrency(animatedTotalSpent)}</p>
                             <div className="flex justify-center items-center gap-2 mt-2">
                                 {avgMood && (
-                                    <div className="flex items-center justify-center bg-surface/80 text-on-surface px-3 py-1.5 rounded-full text-sm">
-                                        <span>
-                                            <span className="text-on-surface-variant mr-1">Avg. Mood:</span>
-                                            <span className="font-medium">{avgMood.label}</span>
-                                        </span>
+                                    <div className="bg-surface-variant/50 text-on-surface-variant px-3 py-1.5 rounded-full text-sm font-medium">
+                                        <span>Avg. Mood: {avgMood.label}</span>
                                     </div>
                                 )}
                                 <StreakCounter streak={streak} />
@@ -185,20 +174,19 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                 </div>
 
                 {digest && (
-                     <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '100ms' }}>
+                     <div className="animate-screenFadeIn" style={{ animationDelay: '100ms' }}>
                         <WeeklyDigest digest={digest} />
                      </div>
                 )}
                 
                 {tip && (
-                    <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '150ms' }}>
-                        <h3 className="text-title-m font-medium text-on-surface mb-2">Mintor Coach</h3>
+                    <div className="animate-screenFadeIn" style={{ animationDelay: '150ms' }}>
                         <CoachingTipCard tip={tip} setScreen={setScreen} />
                     </div>
                 )}
 
                 {budgetStatus.length > 0 && (
-                    <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '200ms' }}>
+                    <div className="animate-screenFadeIn" style={{ animationDelay: '200ms' }}>
                         <div className="flex justify-between items-center mb-2">
                             <h3 className="text-title-m font-medium text-on-surface">Monthly Budgets</h3>
                             <button onClick={() => { hapticClick(); setScreen('Goals'); }} className="text-primary font-medium text-sm">Manage</button>
@@ -217,11 +205,7 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                     </div>
                 )}
 
-                <div className="px-4 mt-6 animate-screenFadeIn" style={{ animationDelay: '250ms' }}>
-                    <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-title-m font-medium text-on-surface">Recent Expenses</h3>
-                        <button onClick={() => { hapticClick(); setScreen('Transactions'); }} className="text-primary font-medium text-sm">View All</button>
-                    </div>
+                <div className="animate-screenFadeIn" style={{ animationDelay: '250ms' }}>
                     {filteredTransactions.length > 0 ? (
                         <TransactionList 
                             transactions={filteredTransactions.slice(0, 10)} 

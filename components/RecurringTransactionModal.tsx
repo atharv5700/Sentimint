@@ -96,7 +96,7 @@ export default function RecurringTransactionModal({ isOpen, onClose, rTxToEdit }
                     </div>
                     <div>
                         <label className="text-label-s text-on-surface-variant">Title</label>
-                        <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Rent, Netflix" className="w-full bg-surface-variant p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary" />
+                        <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Rent, Netflix" className="w-full bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary" />
                     </div>
                     <div>
                         <label className="text-label-s text-on-surface-variant mb-1 block">Frequency</label>
@@ -114,7 +114,7 @@ export default function RecurringTransactionModal({ isOpen, onClose, rTxToEdit }
                             type="date"
                             value={startDate} 
                             onChange={e => setStartDate(e.target.value)}
-                            className="w-full bg-surface-variant p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary"
                             style={{colorScheme: theme}}
                         />
                     </div>
@@ -131,7 +131,7 @@ export default function RecurringTransactionModal({ isOpen, onClose, rTxToEdit }
                         <div className="grid grid-cols-5 gap-1 sm:gap-2">
                             {Object.entries(MOOD_MAP).map(([level, { label, icon: Icon }]) => (
                                 <button key={level} onClick={() => { hapticClick(); setMood(parseInt(level) as Mood); }} className={`flex flex-col items-center gap-1 p-1 sm:p-2 rounded-lg transition-colors duration-200 ${mood === parseInt(level) ? 'bg-secondary-container' : 'hover:bg-surface-variant'}`}>
-                                    <Icon className={`w-7 h-7 sm:w-8 sm:h-8 ${mood === parseInt(level) ? 'text-on-secondary-container' : 'text-on-surface-variant'}`} />
+                                    <Icon className={`w-8 h-8 sm:w-10 sm:h-10 ${mood === parseInt(level) ? 'text-on-secondary-container' : 'text-on-surface-variant'}`} />
                                     <span className={`text-[10px] sm:text-label-s text-center ${mood === parseInt(level) ? 'text-on-secondary-container font-medium' : 'text-on-surface-variant'}`}>{label}</span>
                                 </button>
                             ))}
@@ -140,7 +140,7 @@ export default function RecurringTransactionModal({ isOpen, onClose, rTxToEdit }
                 </div>
 
                 <div className="pt-4 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0 pb-safe">
-                    <button onClick={handleSave} disabled={!isFormValid} className="w-full py-4 rounded-full bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant">Save</button>
+                    <button onClick={handleSave} disabled={!isFormValid} className="w-full py-4 rounded-2xl bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant">Save</button>
                 </div>
             </div>
         </div>
