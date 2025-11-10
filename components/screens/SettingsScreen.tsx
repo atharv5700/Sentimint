@@ -103,7 +103,7 @@ export const ExportDataModal: React.FC<{ csvData: string; onClose: () => void }>
                 </div>
                 
                 <div className="pt-4 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0 pb-safe">
-                     <button onClick={handleCopy} className="w-full py-4 rounded-full bg-primary text-on-primary font-bold">
+                     <button onClick={handleCopy} className="w-full py-4 rounded-2xl bg-primary text-on-primary font-bold">
                         {copied ? 'Copied!' : 'Copy to Clipboard'}
                     </button>
                 </div>

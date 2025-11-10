@@ -1,4 +1,4 @@
-import React, { useRef, useState, useLayoutEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import type { Screen } from '../../types';
 import { HomeIcon, TransactionsIcon, InsightsIcon, GoalsIcon, SettingsIcon } from '../../constants';
 import { hapticClick } from '../../services/haptics';
@@ -27,7 +27,7 @@ export default function BottomNav({ activeScreen, setScreen, isBulkMode }: Botto
     const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
     const [pillStyle, setPillStyle] = useState({});
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         const activeIndex = navItems.findIndex(item => item.id === activeScreen);
         const activeButton = buttonRefs.current[activeIndex];
 

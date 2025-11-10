@@ -1,22 +1,17 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import type { Period, Transaction } from '../types';
 import { useAppContext } from '../App';
-import { MOOD_MAP, DownloadIcon } from '../constants';
+import { MOOD_MAP } from '../constants';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid } from 'recharts';
-import { ExportDataModal } from './screens/SettingsScreen';
-import { hapticClick } from '../services/haptics';
 import { EmptyState } from './EmptyState';
 
-const ChartCard: React.FC<{ title: string, subtitle?: string, children: React.ReactNode, onExport: () => void, 'aria-label': string, id?: string }> = ({ title, subtitle, children, onExport, 'aria-label': ariaLabel, id }) => (
+const ChartCard: React.FC<{ title: string, subtitle?: string, children: React.ReactNode, 'aria-label': string, id?: string }> = ({ title, subtitle, children, 'aria-label': ariaLabel, id }) => (
     <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl" aria-label={ariaLabel} id={id}>
         <div className="flex justify-between items-start mb-4">
             <div>
                  <h3 className="text-title-l font-medium text-on-surface-variant">{title}</h3>
                  {subtitle && <p className="text-body-m text-on-surface-variant/70">{subtitle}</p>}
             </div>
-            <button onClick={() => { hapticClick(); onExport(); }} className="p-2 rounded-full text-on-surface-variant hover:bg-black/10 transition-colors" aria-label={`Export ${title} data`}>
-                <DownloadIcon className="w-5 h-5" />
-            </button>
         </div>
         <div className="h-72 w-full">
             {children}
@@ -32,16 +27,8 @@ const MOOD_COLORS_CSS: Record<string, string> = {
     'Happy': '#22c55e',
 };
 
-const dataToCsv = (data: any[]): string => {
-    if (data.length === 0) return '';
-    const headers = Object.keys(data[0]);
-    const rows = data.map(obj => headers.map(header => JSON.stringify(obj[header])).join(','));
-    return [headers.join(','), ...rows].join('\n');
-}
-
 export default function InsightsDashboard({ period }: { period: Period }) {
     const { transactions, formatCurrency } = useAppContext();
-    const [exportModal, setExportModal] = useState<{isOpen: boolean, data: string}>({ isOpen: false, data: ''});
 
     const { currentPeriodTxs, previousPeriodTxs } = useMemo(() => {
         const now = new Date();
@@ -75,13 +62,6 @@ export default function InsightsDashboard({ period }: { period: Period }) {
         
         return { currentPeriodTxs: currentTxs, previousPeriodTxs: previousTxs };
     }, [transactions, period]);
-
-    const handleExport = (data: any[]) => {
-        const csv = dataToCsv(data);
-        if (csv) {
-            setExportModal({ isOpen: true, data: csv });
-        }
-    }
 
     const moodDistribution = useMemo(() => {
         const counts: Record<string, number> = currentPeriodTxs.reduce((acc: Record<string, number>, tx: Transaction) => {
@@ -218,7 +198,7 @@ export default function InsightsDashboard({ period }: { period: Period }) {
         <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
                 <div style={{'--stagger-delay': 1} as React.CSSProperties}>
-                    <ChartCard title="Spending by Mood" onExport={() => handleExport(moodDistribution)} aria-label="Pie chart showing spending distribution by mood." id="mood-chart-widget">
+                    <ChartCard title="Spending by Mood" aria-label="Pie chart showing spending distribution by mood." id="mood-chart-widget">
                         <ResponsiveContainer>
                             <PieChart>
                                 <Pie data={moodDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={false} labelLine={false} activeIndex={-1} activeShape={{}}>
@@ -232,7 +212,7 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                     </ChartCard>
                 </div>
                 <div style={{'--stagger-delay': 2} as React.CSSProperties}>
-                    <ChartCard title="Top Categories" onExport={() => handleExport(spendingByCategory)} aria-label="Vertical bar chart showing the top 5 spending categories." id="category-chart-widget">
+                    <ChartCard title="Top Categories" aria-label="Vertical bar chart showing the top 5 spending categories." id="category-chart-widget">
                         <ResponsiveContainer>
                             <BarChart data={spendingByCategory} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                 <XAxis type="number" hide />
@@ -246,7 +226,6 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                     <ChartCard 
                         title="Spending Trend" 
                         subtitle="Current vs. Previous Period"
-                        onExport={() => handleExport(spendingOverTime)} 
                         aria-label="Line chart showing total, positive mood, and negative mood spending over the selected period, compared to the previous period."
                         id="spending-comparison-chart-widget"
                     >
@@ -268,9 +247,6 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                     <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-title-l font-medium text-on-surface-variant">Top Merchants</h3>
-                             <button onClick={() => handleExport(topMerchants.map(m=>({name: m.name, total: m.total, avg_mood: m.avgMood.label})))} className="p-2 rounded-full text-on-surface-variant hover:bg-black/10 transition-colors" aria-label="Export Top Merchants data">
-                                <DownloadIcon className="w-5 h-5" />
-                            </button>
                         </div>
                         <div className="space-y-3">
                             {topMerchants.map(({name, total, avgMood}) => (
@@ -293,7 +269,6 @@ export default function InsightsDashboard({ period }: { period: Period }) {
                     More insights are coming soon.
                 </p>
             </div>
-            {exportModal.isOpen && <ExportDataModal csvData={exportModal.data} onClose={() => setExportModal({isOpen: false, data: ''})} />}
         </>
     );
 }
