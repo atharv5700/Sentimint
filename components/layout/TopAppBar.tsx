@@ -10,7 +10,7 @@ interface TopAppBarProps {
 export default function TopAppBar({ onMintorClick, onSearchClick }: TopAppBarProps) {
     return (
         <header 
-            className="flex items-center justify-between px-4 pb-3 bg-surface shadow-md sticky top-0 z-20"
+            className="flex items-center justify-between px-4 pb-3 bg-surface/80 backdrop-blur-lg shadow-sm sticky top-0 z-20 border-b border-outline-variant/30"
             style={{ paddingTop: `calc(1rem + env(safe-area-inset-top))` }}
         >
             <SentimintLogo className="h-8 text-on-surface"/>

@@ -107,7 +107,7 @@ export const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null 
     }, [targetAmount]);
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center p-0 animate-backdropFadeIn" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center p-0 animate-backdropFadeIn" onClick={onClose}>
             <div className="relative bg-surface rounded-t-[28px] p-2 sm:p-4 w-full max-w-2xl flex flex-col max-h-[90vh] animate-modalSlideUp" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-center mb-2 flex-shrink-0">
                     <div className="w-8 h-1 bg-outline rounded-full"></div>
@@ -177,14 +177,14 @@ const BudgetListItem: React.FC<{ budget: Budget, spent: number, onEdit: (budget:
 };
 
 export const BudgetModal: React.FC<{ onClose: () => void, budgetToEdit: Budget | null }> = ({ onClose, budgetToEdit }) => {
-    const { addBudget, updateBudget, budgets } = useAppContext();
+    const { addBudget, updateBudget, budgets, customCategories } = useAppContext();
     
     const [category, setCategory] = useState('');
     const [amount, setAmount] = useState('');
 
-    const availableCategories = useMemo(() => DEFAULT_CATEGORIES.filter(cat => 
+    const availableCategories = useMemo(() => [...DEFAULT_CATEGORIES, ...customCategories].filter(cat => 
         !budgets.some(b => b.category === cat) || (budgetToEdit && budgetToEdit.category === cat)
-    ), [budgets, budgetToEdit]);
+    ), [budgets, budgetToEdit, customCategories]);
     
     useEffect(() => {
         if (budgetToEdit) {
@@ -218,7 +218,7 @@ export const BudgetModal: React.FC<{ onClose: () => void, budgetToEdit: Budget |
     }, [amount]);
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-[60] flex items-end justify-center p-0 animate-backdropFadeIn" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-end justify-center p-0 animate-backdropFadeIn" onClick={onClose}>
             <div className="bg-surface rounded-t-[28px] p-2 sm:p-4 w-full max-w-2xl flex flex-col max-h-[90vh] animate-modalSlideUp" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-center mb-2 flex-shrink-0">
                     <div className="w-8 h-1 bg-outline rounded-full"></div>
@@ -393,7 +393,7 @@ export default function GoalsScreen() {
         }
 
         return (
-            <div className="bg-surface-variant p-4 rounded-3xl">
+            <div className="bg-gradient-to-br from-secondary-container/50 to-primary-container/50 p-4 rounded-3xl">
                 <div className="flex items-start gap-4">
                     <div className="bg-surface/50 rounded-full p-3 mt-1">
                         <BadgeIcon className="w-6 h-6 text-on-surface-variant" />
@@ -411,13 +411,44 @@ export default function GoalsScreen() {
         );
     };
 
-    const AvailableChallengeCard: React.FC<{ challenge: Challenge }> = ({ challenge }) => (
-        <div className="bg-surface p-4 rounded-3xl border border-outline-variant">
-            <h4 className="text-title-m font-medium text-on-surface">{challenge.title}</h4>
-            <p className="text-body-m text-on-surface-variant mt-1">{challenge.description}</p>
-            <button onClick={() => startChallenge(challenge.id)} className="w-full mt-4 py-2 bg-primary text-on-primary rounded-full font-medium">Start Challenge</button>
-        </div>
-    );
+    const AvailableChallengeCard: React.FC<{ challenge: Challenge }> = ({ challenge }) => {
+        const { startChallenge } = useAppContext();
+        const [isStarted, setIsStarted] = useState(false);
+        const BadgeIcon = CHALLENGE_BADGE_MAP[challenge.badgeIcon] || CHALLENGE_BADGE_MAP['default'];
+    
+        const handleStart = () => {
+            if (isStarted) return;
+            startChallenge(challenge.id);
+            setIsStarted(true);
+        };
+    
+        return (
+            <div className={`bg-surface-variant p-4 rounded-3xl transition-all duration-300 border-2 ${isStarted ? 'border-primary' : 'border-transparent'}`}>
+                <div className="flex items-start gap-4">
+                    <div className="bg-surface/50 rounded-full p-3 mt-1 flex-shrink-0">
+                        <BadgeIcon className="w-6 h-6 text-on-surface-variant" />
+                    </div>
+                    <div className="flex-1">
+                        <h4 className="text-title-m font-medium text-on-surface-variant">{challenge.title}</h4>
+                        <p className="text-body-m text-on-surface-variant/80 mt-1">{challenge.description}</p>
+                        <button 
+                            onClick={handleStart} 
+                            disabled={isStarted}
+                            className={`w-full mt-4 py-2.5 rounded-full font-medium flex items-center justify-center gap-2 transition-all duration-300 transform ${isStarted ? 'bg-primary/20 text-primary' : 'bg-primary text-on-primary hover:scale-105'}`}
+                        >
+                            {isStarted ? (
+                                <>
+                                    <CheckIcon className="w-5 h-5" /> Challenge Accepted!
+                                </>
+                            ) : (
+                                'Start Challenge'
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
     
     const AchievementBadge: React.FC<{ challenge: UserChallenge & Challenge }> = ({ challenge }) => {
         const BadgeIcon = CHALLENGE_BADGE_MAP[challenge.badgeIcon] || CHALLENGE_BADGE_MAP['default'];

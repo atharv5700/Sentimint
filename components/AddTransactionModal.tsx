@@ -12,7 +12,7 @@ interface AddTransactionModalProps {
 }
 
 const ImpulseNudgeModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-backdropFadeIn">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-backdropFadeIn">
         <div className="bg-surface rounded-3xl p-6 w-full max-w-sm text-center animate-modalSlideUp">
             <h2 className="text-headline-m mb-2">Mindful Moment</h2>
             <p className="text-body-m text-on-surface-variant mb-4">
@@ -136,7 +136,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
     
     return (
         <>
-            <div className="fixed inset-0 bg-black/50 z-40 flex items-end justify-center transition-opacity duration-300 animate-backdropFadeIn">
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-end justify-center transition-opacity duration-300 animate-backdropFadeIn">
                 <div className="bg-surface rounded-t-[28px] p-2 sm:p-4 w-full max-w-2xl flex flex-col max-h-[90vh] animate-modalSlideUp">
                     <div className="flex justify-center mb-2 flex-shrink-0">
                         <div className="w-8 h-1 bg-outline rounded-full"></div>

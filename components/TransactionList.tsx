@@ -179,7 +179,7 @@ const TagModal: React.FC<{onApply: (tags: string[]) => void, onClose: () => void
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-backdropFadeIn">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-backdropFadeIn">
             <div className="bg-surface rounded-3xl p-6 w-full max-w-sm animate-modalSlideUp">
                 <h3 className="text-headline-m mb-4">Add Tags</h3>
                 <div className="flex flex-wrap gap-2">
@@ -206,7 +206,7 @@ const LinkGoalModal: React.FC<{goals: Goal[], onLink: (goalId: string | null) =>
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-backdropFadeIn">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-backdropFadeIn">
             <div className="bg-surface rounded-3xl p-6 w-full max-w-sm animate-modalSlideUp">
                 <h3 className="text-headline-m mb-4">Link to Goal</h3>
                 <CustomSelect
@@ -223,10 +223,12 @@ const LinkGoalModal: React.FC<{goals: Goal[], onLink: (goalId: string | null) =>
     )
 }
 
-export default function TransactionList({ transactions, onEditTransaction, showDate, isBulkSelectEnabled, onBulkModeChange }: {
+type SortOrder = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
+
+export default function TransactionList({ transactions, onEditTransaction, sortOrder = 'date-desc', isBulkSelectEnabled, onBulkModeChange }: {
     transactions: Transaction[],
     onEditTransaction: (tx: Transaction) => void,
-    showDate?: boolean,
+    sortOrder?: SortOrder,
     isBulkSelectEnabled?: boolean,
     onBulkModeChange?: (isActive: boolean) => void
 }) {
@@ -254,17 +256,20 @@ export default function TransactionList({ transactions, onEditTransaction, showD
         });
     };
     
+    const isAmountSort = sortOrder.startsWith('amount');
+
     const transactionsByMonth = useMemo(() => {
-        const acc: Record<string, Transaction[]> = {};
-        return transactions.reduce((acc, tx) => {
+        if (isAmountSort) return [];
+        const monthMap = new Map<string, Transaction[]>();
+        transactions.forEach(tx => {
             const month = new Date(tx.ts).toLocaleString('default', { month: 'long', year: 'numeric' });
-            if (!acc[month]) {
-                acc[month] = [];
+            if (!monthMap.has(month)) {
+                monthMap.set(month, []);
             }
-            acc[month].push(tx);
-            return acc;
-        }, acc);
-    }, [transactions]);
+            monthMap.get(month)?.push(tx);
+        });
+        return Array.from(monthMap.entries());
+    }, [transactions, isAmountSort]);
     
     if (transactions.length === 0) {
         return <div className="text-center p-8 text-on-surface-variant">No transactions found.</div>;
@@ -272,24 +277,40 @@ export default function TransactionList({ transactions, onEditTransaction, showD
 
     return (
         <div>
-            {Object.entries(transactionsByMonth).map(([month, txs]) => (
-                <div key={month} className="mb-4">
-                    <h3 className="sticky top-16 bg-background/80 backdrop-blur-sm z-10 py-2 text-title-m font-medium text-on-surface-variant">{month}</h3>
-                    <div className="stagger-children">
-                        {Array.isArray(txs) && txs.map((tx, index) => (
-                            <TransactionCard 
-                                key={tx.id} 
-                                tx={tx} 
-                                onEdit={onEditTransaction}
-                                onSelect={toggleSelection}
-                                isSelected={selectedIds.includes(tx.id)}
-                                isBulkMode={isBulkSelectEnabled ? isBulkMode : false}
-                                style={{'--stagger-delay': index} as React.CSSProperties}
-                            />
-                        ))}
-                    </div>
+            {isAmountSort ? (
+                 <div className="stagger-children">
+                    {transactions.map((tx, index) => (
+                        <TransactionCard 
+                            key={tx.id} 
+                            tx={tx} 
+                            onEdit={onEditTransaction}
+                            onSelect={toggleSelection}
+                            isSelected={selectedIds.includes(tx.id)}
+                            isBulkMode={isBulkSelectEnabled ? isBulkMode : false}
+                            style={{'--stagger-delay': index} as React.CSSProperties}
+                        />
+                    ))}
                 </div>
-            ))}
+            ) : (
+                transactionsByMonth.map(([month, txs]) => (
+                    <div key={month} className="mb-4">
+                        <h3 className="sticky top-[164px] sm:top-[116px] bg-background/80 backdrop-blur-sm z-10 py-2 text-title-m font-medium text-on-surface-variant border-b border-outline-variant -mx-4 px-4">{month}</h3>
+                        <div className="stagger-children">
+                            {Array.isArray(txs) && txs.map((tx, index) => (
+                                <TransactionCard 
+                                    key={tx.id} 
+                                    tx={tx} 
+                                    onEdit={onEditTransaction}
+                                    onSelect={toggleSelection}
+                                    isSelected={selectedIds.includes(tx.id)}
+                                    isBulkMode={isBulkSelectEnabled ? isBulkMode : false}
+                                    style={{'--stagger-delay': index} as React.CSSProperties}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                ))
+            )}
             {isBulkSelectEnabled && <BulkActionToolbar selectedIds={selectedIds} onClear={() => setSelectedIds([])} transactions={transactions}/>}
         </div>
     );

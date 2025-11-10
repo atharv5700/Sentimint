@@ -6,6 +6,7 @@ import { hapticClick } from '../../services/haptics';
 interface BottomNavProps {
     activeScreen: Screen;
     setScreen: (screen: Screen) => void;
+    isBulkMode: boolean;
 }
 
 interface NavItem {
@@ -22,10 +23,10 @@ const navItems: NavItem[] = [
     { id: 'Settings', label: 'Settings', icon: SettingsIcon },
 ];
 
-export default function BottomNav({ activeScreen, setScreen }: BottomNavProps) {
+export default function BottomNav({ activeScreen, setScreen, isBulkMode }: BottomNavProps) {
     return (
         <footer 
-            className="fixed bottom-0 left-0 right-0 h-20 bg-surface/95 backdrop-blur-lg border-t border-outline-variant z-30"
+            className={`fixed bottom-0 left-0 right-0 h-20 bg-surface/80 backdrop-blur-lg border-t border-outline-variant/50 z-30 transition-transform duration-300 ease-in-out ${isBulkMode ? 'translate-y-full' : 'translate-y-0'}`}
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
             <nav className="flex justify-around items-center h-full">

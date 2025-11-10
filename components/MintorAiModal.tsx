@@ -102,7 +102,7 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScree
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-0 md:p-4 animate-backdropFadeIn">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-0 md:p-4 animate-backdropFadeIn">
             <div className="bg-surface rounded-none md:rounded-3xl w-full h-full md:max-w-2xl md:h-[calc(100%-2rem)] flex flex-col shadow-2xl animate-modalSlideUp">
                 <header 
                     className="flex items-center justify-between p-4 border-b border-outline-variant"

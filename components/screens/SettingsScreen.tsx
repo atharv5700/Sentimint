@@ -54,7 +54,7 @@ export const ExportDataModal: React.FC<{ csvData: string; onClose: () => void }>
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center p-0 animate-backdropFadeIn" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center p-0 animate-backdropFadeIn" onClick={onClose}>
             <div className="bg-surface rounded-t-[28px] p-2 sm:p-4 w-full max-w-2xl flex flex-col max-h-[90vh] animate-modalSlideUp" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-center mb-2 flex-shrink-0">
                     <div className="w-8 h-1 bg-outline rounded-full"></div>
@@ -103,13 +103,6 @@ export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
                     selected={theme}
                     onSelect={setTheme}
                 />
-            </div>
-            
-             <div className="bg-surface-variant p-4 rounded-3xl" style={{'--stagger-delay': 2} as React.CSSProperties}>
-                 <h2 className="text-title-m font-medium mb-4 text-on-surface-variant">Personalization</h2>
-                 <div className="flex flex-col gap-2">
-                     <button onClick={() => { hapticClick(); setScreen('ManageCategories'); }} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface hover:bg-surface/80 transition-colors">Manage Categories</button>
-                 </div>
             </div>
 
             <div className="bg-surface-variant p-4 rounded-3xl" style={{'--stagger-delay': 3} as React.CSSProperties}>

@@ -162,16 +162,16 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
         <div className="relative h-full">
             <div className="pb-6">
                 <div className="px-4 pt-4">
-                     <div className="bg-surface-variant text-on-surface-variant p-4 rounded-3xl space-y-4 animate-screenFadeIn" style={{ animationDelay: '50ms' }}>
-                        <div className="bg-surface p-1 rounded-full">
+                     <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl space-y-4 animate-screenFadeIn" style={{ animationDelay: '50ms' }}>
+                        <div className="bg-surface/80 p-1 rounded-full">
                             <PeriodSelector selected={period} onSelect={setPeriod} />
                         </div>
                         <div className="text-center">
-                            <p className="text-body-m text-on-surface-variant">Total Spent</p>
-                            <p className="text-headline-m font-bold text-on-surface-variant">{formatCurrency(animatedTotalSpent)}</p>
+                            <p className="text-body-m text-on-surface">Total Spent</p>
+                            <p className="text-headline-m font-bold text-on-surface">{formatCurrency(animatedTotalSpent)}</p>
                             <div className="flex justify-center items-center gap-2 mt-2">
                                 {avgMood && (
-                                    <div className="flex items-center justify-center bg-surface text-on-surface px-3 py-1.5 rounded-full text-sm">
+                                    <div className="flex items-center justify-center bg-surface/80 text-on-surface px-3 py-1.5 rounded-full text-sm">
                                         <span>
                                             <span className="text-on-surface-variant mr-1">Avg. Mood:</span>
                                             <span className="font-medium">{avgMood.label}</span>
@@ -203,7 +203,7 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                             <h3 className="text-title-m font-medium text-on-surface">Monthly Budgets</h3>
                             <button onClick={() => { hapticClick(); setScreen('Goals'); }} className="text-primary font-medium text-sm">Manage</button>
                         </div>
-                        <div className="bg-surface-variant p-4 rounded-3xl space-y-4">
+                        <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl space-y-4">
                             {budgetStatus.slice(0, 3).map(budget => (
                                 <div key={budget.id}>
                                     <div className="flex justify-between items-center mb-1 text-sm">
@@ -226,7 +226,6 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                         <TransactionList 
                             transactions={filteredTransactions.slice(0, 10)} 
                             onEditTransaction={onEditTransaction} 
-                            showDate={true}
                             isBulkSelectEnabled={true}
                             onBulkModeChange={setIsBulkMode}
                         />

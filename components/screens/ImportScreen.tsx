@@ -99,7 +99,7 @@ export default function ImportDataModal({ isOpen, onClose }: ImportDataModalProp
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center p-0 animate-backdropFadeIn" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center p-0 animate-backdropFadeIn" onClick={onClose}>
             <div className="bg-surface rounded-t-[28px] p-2 sm:p-4 w-full max-w-2xl flex flex-col max-h-[90vh] animate-modalSlideUp" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-center mb-2 flex-shrink-0">
                     <div className="w-8 h-1 bg-outline rounded-full"></div>
