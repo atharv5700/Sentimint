@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, createContext, useContext, useMemo } from 'react';
 import type { Screen, Theme, Transaction, Budget, RecurringTransaction, UserChallenge, Challenge } from './types';
 import { dbService } from './services/db';
@@ -317,10 +316,10 @@ export default function App() {
         hapticSuccess();
     };
 
-    const openTransactionModal = (tx: Transaction | null = null) => {
+    const openTransactionModal = useCallback((tx: Transaction | null = null) => {
         setEditingTx(tx);
         setAddTxModalOpen(true);
-    };
+    }, []);
 
     const createModalCloser = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
         if (window.history.state?.modal) {
@@ -401,7 +400,7 @@ export default function App() {
     };
 
     const fabDetails = useMemo(() => {
-        if (screen === 'Home') {
+        if (screen === 'Home' || screen === 'Ledger') {
             return {
                 onClick: () => {
                     hapticClick();
@@ -411,11 +410,11 @@ export default function App() {
                 show: true,
             };
         }
-        if ((screen === 'Budgets' || screen === 'Ledger') && fabConfig) {
+        if (screen === 'Budgets' && fabConfig) {
             return { ...fabConfig, show: true };
         }
         return { show: false, onClick: () => {}, 'aria-label': '' };
-    }, [screen, fabConfig]);
+    }, [screen, fabConfig, openTransactionModal]);
 
     if (!isDataReady) {
         return (
