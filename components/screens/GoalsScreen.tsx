@@ -224,7 +224,7 @@ export default function GoalsScreen() {
         return { activeChallenges: active, completedChallenges: completed, availableChallenges: available };
     }, [userChallenges]);
 
-    const ActiveChallengeCard: React.FC<{ challenge: UserChallenge & Challenge }> = ({ challenge }) => {
+    const ActiveChallengeCard: React.FC<{ challenge: UserChallenge & Challenge, style?: React.CSSProperties }> = ({ challenge, style }) => {
         const BadgeIcon = CHALLENGE_BADGE_MAP[challenge.badgeIcon] || CHALLENGE_BADGE_MAP['default'];
         let progress = 0;
         let progressText = "Keep going!";
@@ -241,7 +241,7 @@ export default function GoalsScreen() {
         }
 
         return (
-            <div className="bg-gradient-to-br from-secondary-container/50 to-primary-container/50 p-4 rounded-3xl">
+            <div style={style} className="bg-gradient-to-br from-secondary-container/50 to-primary-container/50 p-4 rounded-3xl">
                 <div className="flex items-start gap-4">
                     <div className="bg-surface/50 rounded-full p-3 mt-1">
                         <BadgeIcon className="w-6 h-6 text-on-surface-variant" />
@@ -259,19 +259,24 @@ export default function GoalsScreen() {
         );
     };
 
-    const AvailableChallengeCard: React.FC<{ challenge: Challenge }> = ({ challenge }) => {
+    const AvailableChallengeCard: React.FC<{ challenge: Challenge, style?: React.CSSProperties }> = ({ challenge, style }) => {
         const { startChallenge } = useAppContext();
         const [isStarted, setIsStarted] = useState(false);
         const BadgeIcon = CHALLENGE_BADGE_MAP[challenge.badgeIcon] || CHALLENGE_BADGE_MAP['default'];
     
         const handleStart = () => {
             if (isStarted) return;
-            startChallenge(challenge.id);
             setIsStarted(true);
+            // Delay the actual state update to allow for animation
+            setTimeout(() => {
+                startChallenge(challenge.id);
+            }, 350);
         };
     
         return (
-            <div className={`bg-surface-variant p-4 rounded-3xl transition-all duration-300 border-2 ${isStarted ? 'border-primary' : 'border-transparent'}`}>
+            <div 
+                style={style}
+                className={`bg-surface-variant p-4 rounded-3xl transition-all duration-300 ${isStarted ? 'opacity-0 scale-95' : ''}`}>
                 <div className="flex items-start gap-4">
                     <div className="bg-surface/50 rounded-full p-3 mt-1 flex-shrink-0">
                         <BadgeIcon className="w-6 h-6 text-on-surface-variant" />
@@ -345,15 +350,15 @@ export default function GoalsScreen() {
                             {activeChallenges.length > 0 && (
                                 <div>
                                     <h2 className="text-title-m font-medium mb-2">Active Challenge</h2>
-                                    <div className="space-y-4">
-                                        {activeChallenges.map(c => <ActiveChallengeCard key={c.challengeId} challenge={c} />)}
+                                    <div className="space-y-4 stagger-children">
+                                        {activeChallenges.map((c, i) => <ActiveChallengeCard key={c.challengeId} challenge={c} style={{'--stagger-delay': i} as React.CSSProperties} />)}
                                     </div>
                                 </div>
                             )}
                              <div>
                                 <h2 className="text-title-m font-medium mb-2">Available Challenges</h2>
-                                <div className="space-y-4">
-                                    {availableChallenges.length > 0 ? availableChallenges.map(c => <AvailableChallengeCard key={c.id} challenge={c} />)
+                                <div className="space-y-4 stagger-children">
+                                    {availableChallenges.length > 0 ? availableChallenges.map((c, i) => <AvailableChallengeCard key={c.id} challenge={c} style={{'--stagger-delay': i} as React.CSSProperties}/>)
                                     : <p className="text-body-m text-on-surface-variant text-center py-4">You've attempted all available challenges. Check back later for more!</p>}
                                 </div>
                             </div>

@@ -41,8 +41,11 @@ export default function BottomNav({ activeScreen, setScreen, isBulkMode }: Botto
 
     return (
         <footer
-            className={`fixed bottom-0 left-0 right-0 z-30 bg-surface/80 dark:bg-surface/60 backdrop-blur-lg border-t border-outline-variant/30 transition-transform duration-300 ease-in-out ${isBulkMode ? 'translate-y-full' : 'translate-y-0'}`}
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            className={`fixed bottom-0 left-0 right-0 z-30 backdrop-blur-lg border-t border-outline-variant/30 transition-transform duration-300 ease-in-out ${isBulkMode ? 'translate-y-full' : 'translate-y-0'}`}
+            style={{ 
+                background: 'var(--bottom-nav-bg)',
+                paddingBottom: 'env(safe-area-inset-bottom)' 
+            }}
         >
             <nav
                 className="grid grid-cols-5 items-stretch h-20 relative px-4"
