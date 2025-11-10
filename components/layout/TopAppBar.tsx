@@ -18,7 +18,7 @@ export default function TopAppBar({ onMintorClick, onSearchClick }: TopAppBarPro
         >
             <div className="text-headline-m font-bold tracking-tight relative top-px">
                 <span className="bg-gradient-to-br from-primary to-primary-container bg-clip-text text-transparent">Senti</span>
-                <span className="text-on-surface-variant">mint</span>
+                <span className="text-on-surface-variant [text-shadow:_0_0_10px_rgb(var(--color-surface-variant)/0.3)] [-webkit-text-stroke:_0.5px_rgb(var(--color-outline-variant)/0.5)]">mint</span>
             </div>
             
             <div className="flex items-center gap-2">

@@ -143,7 +143,14 @@ export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
                 />
             </div>
 
-            <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl" style={{'--stagger-delay': 2} as React.CSSProperties}>
+             <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl" style={{'--stagger-delay': 2} as React.CSSProperties}>
+                 <h2 className="text-title-m font-medium mb-4 text-on-surface-variant">Personalization</h2>
+                 <div className="flex flex-col gap-2">
+                     <button onClick={() => { hapticClick(); setScreen('Manage Categories'); }} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md">Manage Categories</button>
+                 </div>
+            </div>
+
+            <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl" style={{'--stagger-delay': 3} as React.CSSProperties}>
                  <h2 className="text-title-m font-medium mb-4 text-on-surface-variant">Data Management</h2>
                  <div className="flex flex-col gap-2">
                      <button onClick={openExportModal} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md">Export Data to CSV</button>
@@ -151,14 +158,14 @@ export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
                  </div>
             </div>
             
-            <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 3} as React.CSSProperties}>
+            <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 4} as React.CSSProperties}>
                 <h2 className="text-title-m font-medium mb-2">About Sentimint</h2>
                 <p className="text-body-m mb-4">Our mission is to help you build a healthier relationship with your finances by understanding the emotions behind your spending.</p>
                 <h2 className="text-title-m font-medium mb-2">Privacy Commitment</h2>
                 <p className="text-body-m">Your privacy is paramount. All data processing runs entirely on-device; your data never leaves your phone.</p>
             </div>
             
-            <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 4} as React.CSSProperties}>
+            <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 5} as React.CSSProperties}>
                  <h2 className="text-title-m font-medium mb-3">App Information</h2>
                  <div className="space-y-2 text-body-m">
                     <div className="flex justify-between">

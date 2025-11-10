@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { MintorAiMessage, MintorAction, Screen } from '../types';
-import { mintorAiService } from '../services/mintorAi';
+import { mintorAiService } from '../services/mintuAi';
 import { MINTOR_AI_ASSISTANT, SendIcon, CloseIcon } from '../constants';
 import { hapticClick } from '../services/haptics';
 
@@ -18,15 +18,16 @@ const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: Mintor
             <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${isUser ? 'bg-primary-container text-on-primary-container rounded-br-none' : 'bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 text-on-surface-variant rounded-bl-none'}`}>
                 <p className="text-body-m whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: message.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}></p>
                  {message.actions && message.actions.length > 0 && (
-                    <div className="flex flex-col items-start gap-2 mt-3">
+                    <div className="flex flex-wrap gap-2 mt-3 stagger-dropdown">
                         {message.actions.map((action, index) => (
                             <button 
-                                key={index} 
+                                key={index}
+                                style={{ '--stagger-index': index } as React.CSSProperties}
                                 onClick={() => {
                                     hapticClick();
                                     onAction(action);
                                 }}
-                                className="text-sm bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 text-on-surface-variant px-4 py-2 rounded-2xl text-left w-full hover:bg-surface-variant/80 transition-colors"
+                                className="text-sm bg-surface/80 backdrop-blur-sm border border-outline/20 text-on-surface-variant px-4 py-2 rounded-2xl text-left hover:bg-surface-variant/80 transition-colors"
                             >
                                 {action.label}
                             </button>

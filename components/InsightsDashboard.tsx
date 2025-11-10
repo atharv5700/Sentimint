@@ -36,7 +36,9 @@ export default function InsightsDashboard({ period }: { period: Period }) {
         const currentStart = new Date(now);
         if (period === 'D') currentStart.setHours(0, 0, 0, 0);
         else if (period === 'W') {
-            currentStart.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)); // Monday start
+            const day = currentStart.getDay();
+            const diff = currentStart.getDate() - day + (day === 0 ? -6 : 1); // Set to Monday
+            currentStart.setDate(diff);
             currentStart.setHours(0, 0, 0, 0);
         }
         else if (period === 'M') {
@@ -138,7 +140,7 @@ export default function InsightsDashboard({ period }: { period: Period }) {
 
         let sortedKeys: string[];
         if (period === 'W') {
-            const dayOrder = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const dayOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
             sortedKeys = allKeys.sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
         } else if (period === 'M') {
             sortedKeys = allKeys.sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));

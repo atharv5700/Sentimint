@@ -9,6 +9,7 @@ import InsightsScreen from './components/screens/InsightsScreen';
 import GoalsScreen, { BudgetModal } from './components/screens/GoalsScreen';
 import SettingsScreen, { ExportDataModal } from './components/screens/SettingsScreen';
 import ImportDataModal from './components/screens/ImportScreen';
+import ManageCategoriesScreen from './components/screens/ManageCategoriesScreen';
 import BottomNav from './components/layout/BottomNav';
 import TopAppBar from './components/layout/TopAppBar';
 import AddTransactionModal from './components/AddTransactionModal';
@@ -390,6 +391,8 @@ export default function App() {
                 return <GoalsScreen />;
             case 'Settings':
                 return <SettingsScreen setScreen={handleSetScreen} />;
+            case 'Manage Categories':
+                return <ManageCategoriesScreen setScreen={handleSetScreen} />;
             default:
                 return <HomeScreen onEditTransaction={openTransactionModal} setScreen={handleSetScreen} />;
         }

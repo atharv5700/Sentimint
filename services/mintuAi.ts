@@ -199,12 +199,12 @@ const getPeriodData = (period: 'month' | 'week' | 'day', transactions: Transacti
     const endOfPeriod = new Date(startOfPeriod);
      if (period === 'month') {
         endOfPeriod.setMonth(endOfPeriod.getMonth() + 1);
+        endOfPeriod.setDate(0); // Last day of previous month
     } else if (period === 'week') {
-        endOfPeriod.setDate(endOfPeriod.getDate() + 7);
-    } else { // day
-        endOfPeriod.setDate(endOfPeriod.getDate() + 1);
+        endOfPeriod.setDate(startOfPeriod.getDate() + 6);
     }
-    endOfPeriod.setMilliseconds(-1);
+    // For 'day', start and end are the same day.
+    endOfPeriod.setHours(23, 59, 59, 999);
 
     return transactions.filter(t => t.ts >= startOfPeriod.getTime() && t.ts <= endOfPeriod.getTime());
 };
@@ -354,7 +354,6 @@ const getContextualStartingPrompts = (screen: Screen): MintorAction[] => {
                 { label: 'Compare spending: this month vs last', type: 'query', payload: 'Compare my total spending this month vs last month' },
                 { label: 'How do I edit a transaction?', type: 'query', payload: 'How do I edit a transaction?' },
                 { label: 'Export my data', type: 'query', payload: 'How do I export my data?' },
-                { label: 'Show me my impulse buys', type: 'query', payload: 'Show impulse buys' },
             ];
         case 'Insights':
             return [
