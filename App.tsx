@@ -9,7 +9,7 @@ import InsightsScreen from './components/screens/InsightsScreen';
 import GoalsScreen, { BudgetModal } from './components/screens/GoalsScreen';
 import SettingsScreen, { ExportDataModal } from './components/screens/SettingsScreen';
 import ImportDataModal from './components/screens/ImportScreen';
-import ManageCategoriesScreen from './components/screens/ManageCategoriesScreen';
+import ManageCategoriesModal from './components/screens/ManageCategoriesScreen';
 import BottomNav from './components/layout/BottomNav';
 import TopAppBar from './components/layout/TopAppBar';
 import AddTransactionModal from './components/AddTransactionModal';
@@ -55,6 +55,7 @@ export interface AppContextType {
   openRecurringTransactionModal: (rTx?: RecurringTransaction | null) => void;
   openImportModal: () => void;
   openExportModal: () => void;
+  openManageCategoriesModal: () => void;
   refreshData: () => Promise<void>;
 }
 
@@ -96,12 +97,13 @@ export default function App() {
     const [editingRecurringTx, setEditingRecurringTx] = useState<RecurringTransaction | null>(null);
     const [isImportModalOpen, setImportModalOpen] = useState(false);
     const [isExportModalOpen, setExportModalOpen] = useState(false);
+    const [isManageCategoriesModalOpen, setManageCategoriesModalOpen] = useState(false);
     const [csvData, setCsvData] = useState('');
 
     const [isBulkMode, setIsBulkMode] = useState(false);
     const [fabConfig, setFabConfig] = useState<FabConfig | null>(null);
 
-    const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen || isBudgetModalOpen || isRecurringTxModalOpen || isSearchModalOpen || isImportModalOpen || isExportModalOpen, [isAddTxModalOpen, isMintorModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isSearchModalOpen, isImportModalOpen, isExportModalOpen]);
+    const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen || isBudgetModalOpen || isRecurringTxModalOpen || isSearchModalOpen || isImportModalOpen || isExportModalOpen || isManageCategoriesModalOpen, [isAddTxModalOpen, isMintorModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isSearchModalOpen, isImportModalOpen, isExportModalOpen, isManageCategoriesModalOpen]);
 
     const processChallenges = useCallback(async (txs: Transaction[]) => {
         const challenges = dbService.getUserChallenges();
@@ -207,6 +209,7 @@ export default function App() {
             if (isRecurringTxModalOpen) setRecurringTxModalOpen(false);
             if (isImportModalOpen) setImportModalOpen(false);
             if (isExportModalOpen) setExportModalOpen(false);
+            if (isManageCategoriesModalOpen) setManageCategoriesModalOpen(false);
         };
     
         if (isAModalOpen) {
@@ -219,7 +222,7 @@ export default function App() {
         return () => {
             window.removeEventListener('popstate', handlePopState);
         };
-    }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen, isSearchModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isImportModalOpen, isExportModalOpen]);
+    }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen, isSearchModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isImportModalOpen, isExportModalOpen, isManageCategoriesModalOpen]);
 
 
     const setTheme = (newTheme: Theme) => {
@@ -346,6 +349,7 @@ export default function App() {
     
     const handleCloseImportModal = createModalCloser(setImportModalOpen);
     const handleCloseExportModal = createModalCloser(setExportModalOpen);
+    const handleCloseManageCategoriesModal = createModalCloser(setManageCategoriesModalOpen);
 
     const openBudgetModal = (budget: Budget | null = null) => {
         setEditingBudget(budget);
@@ -359,6 +363,10 @@ export default function App() {
 
     const openImportModal = () => {
         setImportModalOpen(true);
+    };
+    
+    const openManageCategoriesModal = () => {
+        setManageCategoriesModalOpen(true);
     };
 
     const openExportModal = () => {
@@ -390,9 +398,7 @@ export default function App() {
             case 'Budgets':
                 return <GoalsScreen />;
             case 'Settings':
-                return <SettingsScreen setScreen={handleSetScreen} />;
-            case 'Manage Categories':
-                return <ManageCategoriesScreen setScreen={handleSetScreen} />;
+                return <SettingsScreen />;
             default:
                 return <HomeScreen onEditTransaction={openTransactionModal} setScreen={handleSetScreen} />;
         }
@@ -455,6 +461,7 @@ export default function App() {
         openRecurringTransactionModal,
         openImportModal,
         openExportModal,
+        openManageCategoriesModal,
         refreshData,
     };
 
@@ -531,6 +538,12 @@ export default function App() {
                     <ExportDataModal
                         csvData={csvData}
                         onClose={handleCloseExportModal}
+                    />
+                )}
+                {isManageCategoriesModalOpen && (
+                    <ManageCategoriesModal
+                        isOpen={isManageCategoriesModalOpen}
+                        onClose={handleCloseManageCategoriesModal}
                     />
                 )}
             </div>

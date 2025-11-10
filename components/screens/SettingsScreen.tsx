@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppContext } from '../../App';
-import type { Theme, Screen } from '../../types';
+import type { Theme } from '../../types';
 import { hapticClick, hapticSuccess, hapticError } from '../../services/haptics';
 import { CloseIcon } from '../../constants';
 
@@ -125,12 +125,8 @@ export const ExportDataModal: React.FC<{ csvData: string; onClose: () => void }>
     );
 };
 
-interface SettingsScreenProps {
-    setScreen: (screen: Screen) => void;
-}
-
-export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
-    const { theme, setTheme, openImportModal, openExportModal } = useAppContext();
+export default function SettingsScreen() {
+    const { theme, setTheme, openImportModal, openExportModal, openManageCategoriesModal } = useAppContext();
     
     return (
         <div className="px-4 space-y-4 stagger-children">
@@ -146,7 +142,7 @@ export default function SettingsScreen({ setScreen }: SettingsScreenProps) {
              <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl" style={{'--stagger-delay': 2} as React.CSSProperties}>
                  <h2 className="text-title-m font-medium mb-4 text-on-surface-variant">Personalization</h2>
                  <div className="flex flex-col gap-2">
-                     <button onClick={() => { hapticClick(); setScreen('Manage Categories'); }} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md">Manage Categories</button>
+                     <button onClick={() => { hapticClick(); openManageCategoriesModal(); }} className="w-full text-left p-3 rounded-xl bg-surface text-on-surface transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md">Manage Categories</button>
                  </div>
             </div>
 
