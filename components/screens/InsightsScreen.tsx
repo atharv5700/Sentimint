@@ -24,16 +24,16 @@ const SegmentedControl: React.FC<{ options: {label: string, value: Period}[], se
     }, [selected, options]);
 
     return (
-        <div ref={containerRef} className="relative flex justify-center p-1 bg-surface-variant/50 rounded-full mx-auto max-w-sm">
+        <div ref={containerRef} className="relative flex justify-center p-1 bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 rounded-2xl mx-auto max-w-sm">
             <div 
-                className="absolute top-1 bottom-1 bg-primary-container rounded-full shadow transition-all duration-300 ease-out"
+                className="absolute top-1 bottom-1 bg-primary-container rounded-2xl shadow transition-all duration-300 ease-out"
                 style={pillStyle}
             />
             {options.map(({label, value}) => (
                 <button
                     key={value}
                     onClick={() => { hapticClick(); onSelect(value); }}
-                    className={`relative z-10 w-full px-4 sm:px-6 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${
+                    className={`relative z-10 w-full px-4 sm:px-6 py-2 text-sm font-medium rounded-2xl transition-colors duration-200 ${
                         selected === value ? 'text-on-primary-container' : 'text-on-surface-variant'
                     }`}
                 >

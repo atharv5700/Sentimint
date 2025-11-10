@@ -1,5 +1,4 @@
 import { GoogleGenAI, FunctionDeclaration, Type } from '@google/genai';
-// Fix: Removed 'Goal' as it is not an exported member of '../types'. The feature was likely replaced by Budgets/Challenges.
 import type { Transaction, MintorAiMessage, MintorAction, CoachingTip, AppContextType, Screen } from '../types';
 import { dbService } from './db';
 import { ChartBarIcon, LightbulbIcon, TrendingUpIcon, TrophyIcon } from '../constants';
@@ -27,7 +26,6 @@ const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { styl
 
 // --- Coaching Tip Generators ---
 
-// Fix: Removed 'goals' from AppData as it's not in AppContextType.
 type AppData = Pick<AppContextType, 'transactions'>;
 
 const analyzeTopCategory = (data: AppData): CoachingTip | null => {
@@ -54,8 +52,6 @@ const analyzeTopCategory = (data: AppData): CoachingTip | null => {
         action: { label: 'See Insights', type: 'navigate', payload: 'Insights' }
     };
 };
-
-// Fix: Removed analyzeGoalProgress function as the 'Goal' feature is deprecated and 'data.goals' does not exist.
 
 const analyzeFrequentSpending = (data: AppData): CoachingTip | null => {
     const last7DaysTxs = data.transactions.filter(tx => tx.ts >= Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -107,12 +103,10 @@ const analyzeWeekdaySpending = (data: AppData): CoachingTip | null => {
 };
 
 const getCoachingTip = (): CoachingTip | null => {
-    // Fix: Removed 'goals' as dbService.getGoals() does not exist.
     const data: AppData = {
         transactions: dbService.getTransactions(),
     };
     
-    // Fix: Removed analyzeGoalProgress as it was based on the deprecated 'Goal' feature.
     const tipFunctions = [
         analyzeTopCategory,
         analyzeFrequentSpending,
@@ -183,7 +177,6 @@ const generateWeeklyDigest = (transactions: Transaction[]): string | null => {
 
 // --- Mintor AI Chat Logic ---
 
-// Fix: Removed 'goals' from MintorData as the 'Goal' feature is deprecated.
 interface MintorData {
     transactions: Transaction[];
 }
@@ -354,7 +347,8 @@ const getContextualStartingPrompts = (screen: Screen): MintorAction[] => {
                 { label: 'Give me saving tips', type: 'query', payload: 'Give me saving tips' },
                 { label: 'What is an emergency fund?', type: 'query', payload: 'What is an emergency fund?' },
             ];
-        case 'Transactions':
+        // Fix: 'Transactions' is not a valid Screen type. Changed to 'Ledger'.
+        case 'Ledger':
              return [
                 { label: 'Compare spending: this month vs last', type: 'query', payload: 'Compare my total spending this month vs last month' },
                 { label: 'How do I edit a transaction?', type: 'query', payload: 'How do I edit a transaction?' },
@@ -368,13 +362,11 @@ const getContextualStartingPrompts = (screen: Screen): MintorAction[] => {
                  { label: 'What is a credit score?', type: 'query', payload: 'What is a credit score?' },
                  ...defaults,
             ];
-        // Fix: Changed 'Goals' to 'Budgets' to match the updated Screen type and app structure.
         case 'Budgets':
             return [
                 { label: 'How can I save faster?', type: 'query', payload: 'How can I save money faster?' },
                 { label: 'What is a good savings rate?', type: 'query', payload: 'What is a good savings rate?' },
                 { label: 'What is an SIP?', type: 'query', payload: 'What is SIP?' },
-                // Fix: Updated obsolete prompt about linking goals to a more relevant one about budgets.
                 { label: 'How can I improve my budget?', type: 'query', payload: 'How can I improve my budget?' },
             ];
         default:
@@ -454,7 +446,7 @@ const functionDeclarations: FunctionDeclaration[] = [
     },
     {
         name: 'getKBAnswer',
-        description: 'Retrieves information about financial topics (like SIP, PPF, credit score) or how to use the Sentimint app (like editing a transaction, setting a goal). Use this for "what is" or "how to" questions.',
+        description: 'Retrieves information about financial topics (like SIP, PPF, credit score) or how to use the Sentimint app (like editing a transaction, setting a budget). Use this for "what is" or "how to" questions.',
         parameters: {
             type: Type.OBJECT,
             properties: {
@@ -472,7 +464,6 @@ export const mintorAiService = {
     getResponse: async (query: string): Promise<Omit<MintorAiMessage, 'id'>> => {
         try {
             const kb = await getKbData();
-            // Fix: Removed 'goals' initialization as the feature is deprecated.
             const data: MintorData = {
                 transactions: dbService.getTransactions(),
             };
@@ -490,8 +481,8 @@ export const mintorAiService = {
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: query,
-                systemInstruction,
                 config: {
+                    systemInstruction,
                     tools: [{ functionDeclarations }],
                 },
             });

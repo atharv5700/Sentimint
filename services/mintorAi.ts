@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, FunctionDeclaration, Type } from '@google/genai';
 import type { Transaction, MintorAiMessage, MintorAction, CoachingTip, AppContextType, Screen } from '../types';
 import { dbService } from './db';
@@ -347,7 +348,8 @@ const getContextualStartingPrompts = (screen: Screen): MintorAction[] => {
                 { label: 'Give me saving tips', type: 'query', payload: 'Give me saving tips' },
                 { label: 'What is an emergency fund?', type: 'query', payload: 'What is an emergency fund?' },
             ];
-        case 'Transactions':
+        // FIX: The screen type 'Transactions' is not valid. It should be 'Ledger'.
+        case 'Ledger':
              return [
                 { label: 'Compare spending: this month vs last', type: 'query', payload: 'Compare my total spending this month vs last month' },
                 { label: 'How do I edit a transaction?', type: 'query', payload: 'How do I edit a transaction?' },
@@ -477,11 +479,12 @@ export const mintorAiService = {
 - Format currency using the Indian Rupee symbol (₹) and comma separators (e.g., ₹1,23,456).
 - Use markdown for formatting, especially bolding for emphasis on key terms and numbers.`;
 
+            // FIX: Moved systemInstruction into the config object as per Gemini API guidelines.
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: query,
-                systemInstruction,
                 config: {
+                    systemInstruction,
                     tools: [{ functionDeclarations }],
                 },
             });

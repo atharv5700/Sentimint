@@ -387,7 +387,7 @@ export default function App() {
         switch (screen) {
             case 'Home':
                 return <HomeScreen onEditTransaction={openTransactionModal} setScreen={handleSetScreen} />;
-            case 'Transactions':
+            case 'Ledger':
                 return <TransactionsScreen onEditTransaction={openTransactionModal} />;
             case 'Insights':
                 return <InsightsScreen />;
@@ -411,7 +411,7 @@ export default function App() {
                 show: true,
             };
         }
-        if ((screen === 'Budgets' || screen === 'Transactions') && fabConfig) {
+        if ((screen === 'Budgets' || screen === 'Ledger') && fabConfig) {
             return { ...fabConfig, show: true };
         }
         return { show: false, onClick: () => {}, 'aria-label': '' };

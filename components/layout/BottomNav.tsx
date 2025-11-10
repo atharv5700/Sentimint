@@ -17,7 +17,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
     { id: 'Home', label: 'Home', icon: HomeIcon },
-    { id: 'Transactions', label: 'Transactions', icon: TransactionsIcon },
+    { id: 'Ledger', label: 'Ledger', icon: TransactionsIcon },
     { id: 'Insights', label: 'Insights', icon: InsightsIcon },
     { id: 'Budgets', label: 'Budgets', icon: GoalsIcon },
     { id: 'Settings', label: 'Settings', icon: SettingsIcon },
@@ -41,12 +41,14 @@ export default function BottomNav({ activeScreen, setScreen, isBulkMode }: Botto
 
     return (
         <footer
-            className={`fixed bottom-0 left-0 right-0 h-20 bg-surface/80 dark:bg-surface/60 backdrop-blur-lg border-t border-outline-variant/30 z-30 transition-transform duration-300 ease-in-out ${isBulkMode ? 'translate-y-full' : 'translate-y-0'}`}
+            className={`fixed bottom-0 left-0 right-0 z-30 bg-surface/80 dark:bg-surface/60 backdrop-blur-lg border-t border-outline-variant/30 transition-transform duration-300 ease-in-out ${isBulkMode ? 'translate-y-full' : 'translate-y-0'}`}
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
-            <nav className="grid grid-cols-5 items-center h-full relative px-2">
+            <nav
+                className="grid grid-cols-5 items-stretch h-20 relative px-4"
+            >
                 <div
-                    className="absolute top-1/2 -translate-y-1/2 h-10 bg-secondary-container rounded-full transition-all duration-300 ease-out"
+                    className="absolute top-3 h-14 bg-secondary-container rounded-2xl transition-all duration-300 ease-out"
                     style={pillStyle}
                 />
 
@@ -60,13 +62,13 @@ export default function BottomNav({ activeScreen, setScreen, isBulkMode }: Botto
                                 hapticClick();
                                 setScreen(item.id);
                             }}
-                            className={`relative z-10 flex items-center justify-center h-full rounded-full transition-all duration-300 ease-out mx-auto ${isActive ? 'flex-row gap-2 px-4' : 'flex-col'}`}
+                            className={`relative z-10 flex flex-col items-center justify-center h-full w-full`}
                             aria-label={item.label}
                             aria-current={isActive ? "page" : undefined}
                         >
                             <item.icon className={`w-6 h-6 transition-colors duration-200 ${isActive ? 'text-on-secondary-container' : 'text-on-surface-variant'}`} />
                             <span 
-                                className={`font-medium text-label-s transition-all duration-200 ${isActive ? 'text-on-secondary-container' : 'text-on-surface-variant mt-0.5'}`}
+                                className={`font-medium text-label-s mt-0.5 transition-colors duration-200 ${isActive ? 'text-on-secondary-container' : 'text-on-surface-variant'}`}
                             >
                                 {item.label}
                             </span>
