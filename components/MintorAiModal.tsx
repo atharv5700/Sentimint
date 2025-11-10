@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { MintorAiMessage, MintorAction, Screen } from '../types';
-import { mintorAiService } from '../services/mintuAi';
+import { mintorAiService } from '../services/mintorAi';
 import { MINTOR_AI_ASSISTANT, SendIcon, CloseIcon } from '../constants';
 import { hapticClick } from '../services/haptics';
 
@@ -27,7 +27,7 @@ const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: Mintor
                                     hapticClick();
                                     onAction(action);
                                 }}
-                                className="text-sm bg-surface/80 backdrop-blur-sm border border-outline/20 text-on-surface-variant px-4 py-2 rounded-2xl text-left hover:bg-surface-variant/80 transition-colors"
+                                className="text-sm bg-surface text-on-surface px-4 py-2 rounded-2xl text-left border border-outline/20 hover:bg-surface-variant transition-colors"
                             >
                                 {action.label}
                             </button>

@@ -42,7 +42,7 @@ const generateCSS = (theme: Theme) => {
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .no-print { display: none; }
         }
-        body { font-family: 'Roboto', sans-serif; background-color: rgb(var(--color-background)); color: rgb(var(--color-on-background)); margin: 0; padding: 2rem; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; background-color: rgb(var(--color-background)); color: rgb(var(--color-on-background)); margin: 0; padding: 2rem; }
         .container { max-width: 800px; margin: auto; }
         .header { text-align: center; border-bottom: 1px solid rgb(var(--color-outline)); padding-bottom: 1rem; margin-bottom: 2rem; }
         .header h1 { font-size: 2.5rem; color: rgb(var(--color-primary)); margin: 0; }
@@ -110,9 +110,6 @@ const generateReport = (transactions: Transaction[], period: Period, theme: Them
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Sentimint Financial Report</title>
-            <link rel="preconnect" href="https://fonts.googleapis.com">
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
             <style>${generateCSS(theme)}</style>
         </head>
         <body>

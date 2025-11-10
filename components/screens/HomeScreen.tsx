@@ -59,14 +59,15 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
         const todayKey = getWeekKey(today);
         const lastDigestKey = localStorage.getItem('sentimint_last_digest_week');
         
-        if (today.getDay() === 1 && todayKey !== lastDigestKey) {
+        // Only generate if it's Monday and we haven't generated for this week yet.
+        if (digest?.weekKey !== todayKey && today.getDay() === 1 && todayKey !== lastDigestKey) {
             const summary = mintorAiService.generateWeeklyDigest(transactions);
             if (summary) {
                 setDigest({ summary, weekKey: todayKey });
                 localStorage.setItem('sentimint_last_digest_week', todayKey);
             }
         }
-    }, [transactions]);
+    }, [transactions, digest]);
 
     const transactionsForWidget = useMemo(() => {
         // Use all transactions to calculate the total spending.
