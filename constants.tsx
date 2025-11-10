@@ -20,6 +20,11 @@ export const ChartBarIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => 
 export const TrendingUpIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => ( <svg {...iconProps} {...props}><path d="M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z" /></svg>);
 export const TrophyIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => ( <svg {...iconProps} {...props}><path d="M20.5,2H19L15,8V12C15,13.1 14.1,14 13,14H9C7.9,14 7,13.1 7,12V8L3,2H1.5L2,2C3.1,2 4,2.9 4,4V12C4,14.21 5.79,16 8,16H9V20H13V16H14C16.21,16 18,14.21 18,12V4C18,2.9 18.9,2 20,2L20.5,2M4,18H8V22H4V18M14,18H18V22H14V18Z" /></svg>);
 export const LightbulbIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => ( <svg {...iconProps} {...props}><path d="M12,2C8.69,2 6,4.69 6,8C6,10.28 7.21,12.26 9,13.24V15C9,15.55 9.45,16 10,16H14C14.55,16 15,15.55 15,15V13.24C16.79,12.26 18,10.28 18,8C18,4.69 15.31,2 12,2M10,18C10,18.94 10.63,19.75 11.5,19.95V22H12.5V19.95C13.37,19.75 14,18.94 14,18H10Z" /></svg>);
+export const QuoteIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...iconProps} {...props}>
+        <path d="M14.017 18L14.017 14.609C14.017 13.166 15.171 12 16.615 12H18V6H12V12H13.385C12.551 12 12 12.551 12 13.385V18H14.017ZM6 18V14.609C6 13.166 7.154 12 8.598 12H10V6H4V12H5.385C4.551 12 4 12.551 4 13.385V18H6Z"></path>
+    </svg>
+);
 
 
 export const SentimintLogo: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

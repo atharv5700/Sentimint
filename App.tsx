@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect, useCallback, createContext, useContext, useMemo } from 'react';
-import type { Screen, Theme, Transaction, Goal, Budget, RecurringTransaction, UserChallenge, Challenge } from './types';
+import type { Screen, Theme, Transaction, Budget, RecurringTransaction, UserChallenge, Challenge } from './types';
 import { dbService } from './services/db';
 import { ALL_CHALLENGES } from './data/challenges';
 import { hapticClick, hapticSuccess, hapticError } from './services/haptics';
 import HomeScreen from './components/screens/HomeScreen';
 import TransactionsScreen from './components/screens/TransactionsScreen';
 import InsightsScreen from './components/screens/InsightsScreen';
-import GoalsScreen, { GoalModal, BudgetModal } from './components/screens/GoalsScreen';
+import GoalsScreen, { BudgetModal } from './components/screens/GoalsScreen';
 import SettingsScreen, { ExportDataModal } from './components/screens/SettingsScreen';
 import ImportDataModal from './components/screens/ImportScreen';
 import BottomNav from './components/layout/BottomNav';
@@ -25,7 +25,6 @@ interface FabConfig {
 
 export interface AppContextType {
   transactions: Transaction[];
-  goals: Goal[];
   budgets: Budget[];
   recurringTransactions: RecurringTransaction[];
   customCategories: string[];
@@ -38,9 +37,6 @@ export interface AppContextType {
   updateTransaction: (tx: Transaction) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   deleteTransactions: (ids: string[]) => Promise<void>;
-  addGoal: (goal: Omit<Goal, 'id' | 'created_at' | 'current_amount' | 'completed_bool'>) => Promise<void>;
-  updateGoal: (goal: Goal) => Promise<void>;
-  deleteGoal: (id: string) => Promise<void>;
   addBudget: (budget: Omit<Budget, 'id' | 'created_at'>) => Promise<void>;
   updateBudget: (budget: Budget) => Promise<void>;
   deleteBudget: (id: string) => Promise<void>;
@@ -49,14 +45,12 @@ export interface AppContextType {
   deleteRecurringTransaction: (id: string) => Promise<void>;
   addCustomCategory: (category: string) => Promise<void>;
   deleteCustomCategory: (category: string) => Promise<void>;
-  linkTransactionToGoal: (txId: string, goalId: string | null) => Promise<void>;
   startChallenge: (challengeId: string) => Promise<void>;
   formatCurrency: (amount: number) => string;
   isBulkMode: boolean;
   setIsBulkMode: (isBulk: boolean) => void;
   setFabConfig: (config: FabConfig | null) => void;
   openTransactionModal: (tx?: Transaction | null) => void;
-  openGoalModal: (goal?: Goal | null) => void;
   openBudgetModal: (budget?: Budget | null) => void;
   openRecurringTransactionModal: (rTx?: RecurringTransaction | null) => void;
   openImportModal: () => void;
@@ -84,7 +78,6 @@ const formatCurrency = (amount: number) => {
 export default function App() {
     const [screen, setScreen] = useState<Screen>('Home');
     const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [goals, setGoals] = useState<Goal[]>([]);
     const [budgets, setBudgets] = useState<Budget[]>([]);
     const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
     const [customCategories, setCustomCategories] = useState<string[]>([]);
@@ -97,8 +90,6 @@ export default function App() {
     const [editingTx, setEditingTx] = useState<Transaction | null>(null);
     const [isMintorModalOpen, setMintorModalOpen] = useState(false);
     const [isSearchModalOpen, setSearchModalOpen] = useState(false);
-    const [isGoalModalOpen, setGoalModalOpen] = useState(false);
-    const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
     const [isBudgetModalOpen, setBudgetModalOpen] = useState(false);
     const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
     const [isRecurringTxModalOpen, setRecurringTxModalOpen] = useState(false);
@@ -110,33 +101,7 @@ export default function App() {
     const [isBulkMode, setIsBulkMode] = useState(false);
     const [fabConfig, setFabConfig] = useState<FabConfig | null>(null);
 
-    const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen || isGoalModalOpen || isBudgetModalOpen || isRecurringTxModalOpen || isSearchModalOpen || isImportModalOpen || isExportModalOpen, [isAddTxModalOpen, isMintorModalOpen, isGoalModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isSearchModalOpen, isImportModalOpen, isExportModalOpen]);
-
-    const recalculateGoals = useCallback(async (txs: Transaction[]) => {
-        const allGoals = dbService.getGoals();
-        let goalsWereUpdated = false;
-
-        if (!Array.isArray(allGoals)) return;
-
-        for (const goal of allGoals) {
-            const linkedTxs = txs.filter(t => t.goal_id === goal.id);
-            const newCurrentAmount = linkedTxs.reduce((sum, currentTx) => sum + currentTx.amount, 0);
-            const newCompletedStatus = newCurrentAmount >= goal.target_amount;
-
-            if (goal.current_amount !== newCurrentAmount || goal.completed_bool !== newCompletedStatus) {
-                const updatedGoal = { ...goal, current_amount: newCurrentAmount, completed_bool: newCompletedStatus };
-                await dbService.updateGoal(updatedGoal);
-                goalsWereUpdated = true;
-            }
-        }
-        
-        if (goalsWereUpdated) {
-            const updatedGoalsFromDb = dbService.getGoals();
-            setGoals(updatedGoalsFromDb.sort((a, b) => a.completed_bool ? 1 : -1));
-        } else {
-             setGoals(allGoals.sort((a, b) => a.completed_bool ? 1 : -1));
-        }
-    }, []);
+    const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen || isBudgetModalOpen || isRecurringTxModalOpen || isSearchModalOpen || isImportModalOpen || isExportModalOpen, [isAddTxModalOpen, isMintorModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isSearchModalOpen, isImportModalOpen, isExportModalOpen]);
 
     const processChallenges = useCallback(async (txs: Transaction[]) => {
         const challenges = dbService.getUserChallenges();
@@ -163,13 +128,9 @@ export default function App() {
             const relevantTxs = txs.filter(tx => tx.ts >= userChallenge.startDate && tx.ts <= challengeEndDate);
 
             if (challengeDef.type === 'saveAmount') {
-                const newProgress = relevantTxs
-                    .filter(tx => tx.goal_id !== null)
-                    .reduce((sum, tx) => sum + tx.amount, 0);
-                if (newProgress !== userChallenge.progress) {
-                    userChallenge.progress = newProgress;
-                    challengesUpdated = true;
-                }
+                // This challenge type is now inert as goal_id is removed.
+                // It will just stay at 0 progress until it fails.
+                // Could be updated to track positive-mood transactions later.
             } else if (challengeDef.type === 'spendLimitOnCategory') {
                 const categories = challengeDef.category?.split(';') || [];
                 const newProgress = relevantTxs
@@ -210,9 +171,8 @@ export default function App() {
         setStreak(streakData.currentStreak);
         const challenges = dbService.getUserChallenges();
         setUserChallenges(challenges);
-        await recalculateGoals(freshTxs);
         await processChallenges(freshTxs);
-    }, [recalculateGoals, processChallenges]);
+    }, [processChallenges]);
 
     const loadData = useCallback(async () => {
         await dbService.init();
@@ -247,7 +207,6 @@ export default function App() {
             if (isAddTxModalOpen) setAddTxModalOpen(false);
             if (isMintorModalOpen) setMintorModalOpen(false);
             if (isSearchModalOpen) setSearchModalOpen(false);
-            if (isGoalModalOpen) setGoalModalOpen(false);
             if (isBudgetModalOpen) setBudgetModalOpen(false);
             if (isRecurringTxModalOpen) setRecurringTxModalOpen(false);
             if (isImportModalOpen) setImportModalOpen(false);
@@ -264,7 +223,7 @@ export default function App() {
         return () => {
             window.removeEventListener('popstate', handlePopState);
         };
-    }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen, isSearchModalOpen, isGoalModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isImportModalOpen, isExportModalOpen]);
+    }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen, isSearchModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isImportModalOpen, isExportModalOpen]);
 
 
     const setTheme = (newTheme: Theme) => {
@@ -296,24 +255,6 @@ export default function App() {
         hapticSuccess();
     };
     
-    const addGoal = async (goal: Omit<Goal, 'id' | 'created_at' | 'current_amount' | 'completed_bool'>) => {
-        await dbService.addGoal(goal);
-        await refreshData();
-        hapticSuccess();
-    };
-
-    const updateGoal = async (goal: Goal) => {
-        await dbService.updateGoal(goal);
-        await refreshData();
-        hapticSuccess();
-    };
-    
-    const deleteGoal = async (id: string) => {
-        await dbService.deleteGoal(id);
-        await refreshData();
-        hapticSuccess();
-    };
-
     const addBudget = async (budget: Omit<Budget, 'id' | 'created_at'>) => {
         await dbService.addBudget(budget);
         await refreshData();
@@ -362,13 +303,6 @@ export default function App() {
         hapticSuccess();
     };
 
-    const linkTransactionToGoal = async (txId: string, goalId: string | null) => {
-        const tx = transactions.find(t => t.id === txId);
-        if(!tx) return;
-        const updatedTx = { ...tx, goal_id: goalId };
-        await updateTransaction(updatedTx);
-    };
-
     const startChallenge = async (challengeId: string) => {
         const challenges = dbService.getUserChallenges();
         const newChallenge: UserChallenge = {
@@ -403,11 +337,6 @@ export default function App() {
     
     const handleCloseMintorModal = createModalCloser(setMintorModalOpen);
     const handleCloseSearchModal = createModalCloser(setSearchModalOpen);
-
-    const handleCloseGoalModal = () => {
-        setEditingGoal(null);
-        createModalCloser(setGoalModalOpen)();
-    };
     
     const handleCloseBudgetModal = () => {
         setEditingBudget(null);
@@ -421,11 +350,6 @@ export default function App() {
     
     const handleCloseImportModal = createModalCloser(setImportModalOpen);
     const handleCloseExportModal = createModalCloser(setExportModalOpen);
-    
-    const openGoalModal = (goal: Goal | null = null) => {
-        setEditingGoal(goal);
-        setGoalModalOpen(true);
-    };
 
     const openBudgetModal = (budget: Budget | null = null) => {
         setEditingBudget(budget);
@@ -467,7 +391,7 @@ export default function App() {
                 return <TransactionsScreen onEditTransaction={openTransactionModal} />;
             case 'Insights':
                 return <InsightsScreen />;
-            case 'Goals':
+            case 'Budgets':
                 return <GoalsScreen />;
             case 'Settings':
                 return <SettingsScreen setScreen={handleSetScreen} />;
@@ -487,7 +411,7 @@ export default function App() {
                 show: true,
             };
         }
-        if ((screen === 'Goals' || screen === 'Transactions') && fabConfig) {
+        if ((screen === 'Budgets' || screen === 'Transactions') && fabConfig) {
             return { ...fabConfig, show: true };
         }
         return { show: false, onClick: () => {}, 'aria-label': '' };
@@ -503,7 +427,6 @@ export default function App() {
     
     const appContextValue: AppContextType = {
         transactions,
-        goals,
         budgets,
         recurringTransactions,
         customCategories,
@@ -516,9 +439,6 @@ export default function App() {
         updateTransaction,
         deleteTransaction,
         deleteTransactions,
-        addGoal,
-        updateGoal,
-        deleteGoal,
         addBudget,
         updateBudget,
         deleteBudget,
@@ -527,14 +447,12 @@ export default function App() {
         deleteRecurringTransaction,
         addCustomCategory,
         deleteCustomCategory,
-        linkTransactionToGoal,
         startChallenge,
         formatCurrency,
         isBulkMode,
         setIsBulkMode,
         setFabConfig,
         openTransactionModal,
-        openGoalModal,
         openBudgetModal,
         openRecurringTransactionModal,
         openImportModal,
@@ -590,12 +508,6 @@ export default function App() {
                     <GlobalSearchModal 
                         isOpen={isSearchModalOpen}
                         onClose={handleCloseSearchModal}
-                    />
-                )}
-                 {isGoalModalOpen && (
-                    <GoalModal 
-                        onClose={handleCloseGoalModal} 
-                        goalToEdit={editingGoal}
                     />
                 )}
                 {isBudgetModalOpen && (

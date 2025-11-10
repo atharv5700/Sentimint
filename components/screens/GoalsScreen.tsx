@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import type { Goal, Budget, Challenge, UserChallenge } from '../../types';
+import type { Budget, Challenge, UserChallenge } from '../../types';
 import { useAppContext } from '../../App';
 import { ALL_CHALLENGES } from '../../data/challenges';
 import { PlusIcon, TrashIcon, CheckIcon, PencilIcon, DEFAULT_CATEGORIES, CloseIcon, CHALLENGE_BADGE_MAP } from '../../constants';
@@ -47,151 +47,10 @@ const SegmentedControl: React.FC<{
     );
 };
 
-
-const ProgressRing: React.FC<{ progress: number }> = ({ progress }) => {
-    const stroke = 4;
-    const radius = 30;
-    const normalizedRadius = radius - stroke;
-    const circumference = normalizedRadius * 2 * Math.PI;
-    const strokeDashoffset = circumference - (progress / 100) * circumference;
-
-    return (
-        <svg height={radius * 2} width={radius * 2} className="-rotate-90">
-            <circle stroke="rgb(var(--color-outline-variant))" fill="transparent" strokeWidth={stroke} r={normalizedRadius} cx={radius} cy={radius} />
-            <circle stroke="rgb(var(--color-primary))" fill="transparent" strokeWidth={stroke} strokeDasharray={`${circumference} ${circumference}`} style={{ strokeDashoffset }} strokeLinecap="round" r={normalizedRadius} cx={radius} cy={radius} className="transition-all duration-500" />
-        </svg>
-    );
-};
-
-const GoalCard: React.FC<{ goal: Goal, onEdit: (goal: Goal) => void }> = ({ goal, onEdit }) => {
-    const { formatCurrency, deleteGoal } = useAppContext();
-    const progress = Math.min((goal.current_amount / goal.target_amount) * 100, 100);
-    const remaining = Math.max(0, goal.target_amount - goal.current_amount);
-    const daysLeft = goal.deadline_ts ? Math.ceil((goal.deadline_ts - Date.now()) / (1000 * 60 * 60 * 24)) : null;
-
-    return (
-        <div className={`bg-surface-variant p-4 rounded-3xl shadow ${goal.completed_bool ? 'opacity-70' : ''}`}>
-            <div className="flex items-start">
-                <div className="relative w-[60px] h-[60px] flex-shrink-0">
-                    <ProgressRing progress={progress} />
-                    <div className="absolute inset-0 flex items-center justify-center text-on-surface-variant font-bold text-sm">
-                        {`${Math.round(progress)}%`}
-                    </div>
-                </div>
-                <div className="flex-1 ml-4 min-w-0">
-                    <div className="flex justify-between items-start">
-                        <span className="text-title-m font-medium text-on-surface-variant break-words">{goal.title}</span>
-                         <div className="flex items-center flex-shrink-0">
-                             <button onClick={() => { hapticClick(); onEdit(goal); }} className="text-on-surface-variant/50 hover:text-primary p-1"><PencilIcon className="w-5 h-5" /></button>
-                             <button onClick={() => { hapticClick(); deleteGoal(goal.id); }} className="text-on-surface-variant/50 hover:text-error p-1"><TrashIcon className="w-5 h-5" /></button>
-                         </div>
-                    </div>
-                    <div className="flex justify-between items-baseline mt-1">
-                        <span className="text-body-m text-on-surface font-bold">{formatCurrency(goal.current_amount)}</span>
-                        <span className="text-label-s text-on-surface-variant">of {formatCurrency(goal.target_amount)}</span>
-                    </div>
-                    <div className="mt-2">
-                        <ProgressBar progress={progress} />
-                    </div>
-                    <div className="flex justify-between text-label-s text-on-surface-variant mt-2">
-                        <span>{formatCurrency(remaining)} left</span>
-                        {daysLeft !== null && <span>{daysLeft >= 0 ? `${daysLeft} days left` : 'Deadline passed'}</span>}
-                    </div>
-                </div>
-            </div>
-             {goal.completed_bool && ( <div className="mt-2 flex items-center gap-1 text-primary"><CheckIcon className="w-4 h-4"/><span className="text-sm font-medium">Completed!</span></div> )}
-        </div>
-    );
-};
-
-export const GoalModal: React.FC<{ onClose: () => void, goalToEdit: Goal | null }> = ({ onClose, goalToEdit }) => {
-    const { addGoal, updateGoal, theme } = useAppContext();
-    const [title, setTitle] = useState('');
-    const [targetAmount, setTargetAmount] = useState('');
-    const [deadline, setDeadline] = useState('');
-
-     useEffect(() => {
-        if (goalToEdit) {
-            setTitle(goalToEdit.title);
-            setTargetAmount(String(goalToEdit.target_amount));
-            setDeadline(goalToEdit.deadline_ts ? new Date(goalToEdit.deadline_ts).toISOString().split('T')[0] : '');
-        } else {
-            setTitle('');
-            setTargetAmount('');
-            setDeadline('');
-        }
-    }, [goalToEdit]);
-
-    const isFormValid = title.trim().length > 0 && parseFloat(targetAmount.replace(/,/g, '')) > 0;
-
-    const handleSave = () => {
-        if (!isFormValid) { hapticError(); return; }
-        const amount = parseFloat(targetAmount.replace(/,/g, ''));
-        const deadline_ts = deadline ? new Date(deadline).getTime() : null;
-        
-        const goalData = { title: title.trim(), target_amount: amount, deadline_ts };
-
-        if(goalToEdit) {
-            updateGoal({ ...goalToEdit, ...goalData });
-        } else {
-            addGoal(goalData);
-        }
-        onClose();
-    };
-    
-    const formattedAmount = useMemo(() => {
-        if (!targetAmount) return '';
-        const numericAmount = parseFloat(targetAmount.replace(/,/g, ''));
-        if (isNaN(numericAmount)) return '';
-        return new Intl.NumberFormat('en-IN').format(numericAmount);
-    }, [targetAmount]);
-
-    return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center p-0 animate-backdropFadeIn" onClick={onClose}>
-            <div className="relative bg-surface rounded-t-[28px] p-2 sm:p-4 w-full max-w-2xl flex flex-col max-h-[90vh] animate-modalSlideUp" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-center mb-2 flex-shrink-0">
-                    <div className="w-8 h-1 bg-outline rounded-full"></div>
-                </div>
-                <div className="flex justify-between items-center mb-4 flex-shrink-0 px-2 sm:px-0">
-                    <h2 className="text-headline-m">{goalToEdit ? 'Edit' : 'New'} Goal</h2>
-                    <button onClick={() => { hapticClick(); onClose(); }} className="text-on-surface-variant p-2" aria-label="Close add goal modal">
-                        <CloseIcon />
-                    </button>
-                </div>
-                
-                <div className="overflow-y-auto px-2 sm:px-0 pb-4 space-y-4">
-                    <div>
-                        <label className="text-label-s text-on-surface-variant">Target Amount</label>
-                        <input type="text" inputMode="decimal" placeholder="₹0" value={targetAmount ? `₹${formattedAmount}` : ''} onChange={(e) => setTargetAmount(e.target.value.replace(/[^0-9.]/g, ''))} className="w-full text-4xl sm:text-display-l bg-transparent focus:outline-none p-0 border-0"/>
-                    </div>
-                    <div>
-                        <label className="text-label-s text-on-surface-variant">Goal Title</label>
-                         <input 
-                            type="text" 
-                            value={title} 
-                            onChange={e => setTitle(e.target.value)} 
-                            placeholder="e.g. New Laptop" 
-                            className="w-full bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary" 
-                        />
-                    </div>
-                     <div>
-                         <label className="text-label-s text-on-surface-variant">Deadline (Optional)</label>
-                         <input 
-                            type="date"
-                            value={deadline} 
-                            onChange={e => setDeadline(e.target.value)}
-                            className="w-full bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-3 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-primary"
-                            style={{colorScheme: theme}}
-                        />
-                    </div>
-                </div>
-                
-                <div className="pt-4 border-t border-outline-variant flex-shrink-0 px-2 sm:px-0 pb-safe">
-                     <button onClick={handleSave} disabled={!isFormValid} className="w-full py-4 rounded-2xl bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant">Save</button>
-                </div>
-            </div>
-        </div>
-    );
+export const GoalModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+    // This component is no longer used but kept in the file to avoid breaking the export.
+    // It will be removed in a future cleanup.
+    return null;
 }
 
 const BudgetListItem: React.FC<{ budget: Budget, spent: number, onEdit: (budget: Budget) => void }> = ({ budget, spent, onEdit }) => {
@@ -200,7 +59,7 @@ const BudgetListItem: React.FC<{ budget: Budget, spent: number, onEdit: (budget:
     const remaining = budget.amount - spent;
     
     return (
-        <div onClick={() => { hapticClick(); onEdit(budget); }} className="bg-surface-variant p-4 rounded-3xl cursor-pointer hover:bg-surface-variant/80 transition-colors">
+        <div onClick={() => { hapticClick(); onEdit(budget); }} className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl cursor-pointer hover:bg-surface-variant/80 transition-colors">
             <div className="flex justify-between items-center mb-2">
                 <span className="font-medium text-on-surface-variant">{budget.category}</span>
                 <button onClick={(e) => { e.stopPropagation(); hapticClick(); deleteBudget(budget.id); }} className="text-on-surface-variant/50 hover:text-error p-1"><TrashIcon className="w-5 h-5"/></button>
@@ -313,58 +172,9 @@ export const BudgetModal: React.FC<{ onClose: () => void, budgetToEdit: Budget |
     );
 };
 
-const Confetti: React.FC = () => {
-    const confettiCount = 150;
-    const colors = ['#1FC7A6', '#FF7043', '#44637D', '#FFB49E', '#65F7D6'];
-
-    const confetti = useMemo(() => Array.from({ length: confettiCount }).map((_, i) => {
-        const style: React.CSSProperties = {
-            left: `${Math.random() * 100}%`,
-            animation: `confetti-fall ${3 + Math.random() * 2}s ${Math.random() * 2}s linear forwards`,
-            backgroundColor: colors[Math.floor(Math.random() * colors.length)],
-        };
-        return <div key={i} className="confetti" style={style}></div>;
-    }), []);
-
-    return (
-        <div className="fixed inset-0 pointer-events-none z-[9999]" aria-hidden="true">
-            {confetti}
-        </div>
-    );
-};
-
-function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T>();
-  useEffect(() => {
-    ref.current = value;
-  });
-  return ref.current;
-}
-
-
 export default function GoalsScreen() {
-    const { goals, budgets, transactions, setFabConfig, openGoalModal, openBudgetModal, userChallenges, startChallenge, formatCurrency } = useAppContext();
-    const [activeTab, setActiveTab] = useState<'goals' | 'budgets' | 'challenges'>('goals');
-    const [celebratingGoalId, setCelebratingGoalId] = useState<string | null>(null);
-    const prevGoals = usePrevious(goals);
-    
-    useEffect(() => {
-        if (prevGoals && prevGoals.length > 0 && goals.length > 0) {
-            const justCompletedGoal = goals.find(
-                g => g.completed_bool && !prevGoals.find(pg => pg.id === g.id)?.completed_bool
-            );
-            if (justCompletedGoal) {
-                setCelebratingGoalId(justCompletedGoal.id);
-                hapticSuccess();
-                setTimeout(() => setCelebratingGoalId(null), 4000); // Animation duration
-            }
-        }
-    }, [goals, prevGoals]);
-
-    const { activeGoals, completedGoals } = useMemo(() => ({
-        activeGoals: goals.filter(g => !g.completed_bool),
-        completedGoals: goals.filter(g => g.completed_bool)
-    }), [goals]);
+    const { budgets, transactions, setFabConfig, openBudgetModal, userChallenges, startChallenge, formatCurrency } = useAppContext();
+    const [activeTab, setActiveTab] = useState<'budgets' | 'challenges'>('budgets');
 
     const monthlySpending = useMemo(() => {
         const startOfMonth = new Date();
@@ -377,25 +187,12 @@ export default function GoalsScreen() {
         }, {} as Record<string, number>);
     }, [transactions, budgets]);
 
-    const handleEditGoal = (goal: Goal) => openGoalModal(goal);
-    const handleAddNewGoal = useCallback(() => { hapticClick(); openGoalModal(null); }, [openGoalModal]);
     const handleEditBudget = (budget: Budget) => openBudgetModal(budget);
     const handleAddNewBudget = useCallback(() => { hapticClick(); openBudgetModal(null); }, [openBudgetModal]);
 
     useEffect(() => {
-        let fabAction = () => {};
-        let ariaLabel = '';
-
-        if (activeTab === 'goals') {
-            fabAction = handleAddNewGoal;
-            ariaLabel = 'Add new goal';
-        } else if (activeTab === 'budgets') {
-            fabAction = handleAddNewBudget;
-            ariaLabel = 'Add new budget';
-        }
-
-        if (fabAction && ariaLabel) {
-            setFabConfig({ onClick: fabAction, 'aria-label': ariaLabel });
+        if (activeTab === 'budgets') {
+            setFabConfig({ onClick: handleAddNewBudget, 'aria-label': 'Add new budget' });
         } else {
             setFabConfig(null);
         }
@@ -403,14 +200,13 @@ export default function GoalsScreen() {
         return () => {
             setFabConfig(null);
         };
-    }, [activeTab, setFabConfig, handleAddNewGoal, handleAddNewBudget]);
+    }, [activeTab, setFabConfig, handleAddNewBudget]);
     
     const { activeChallenges, completedChallenges, availableChallenges } = useMemo(() => {
         const active = userChallenges.filter(uc => uc.status === 'active').map(uc => ({...uc, ...ALL_CHALLENGES.find(c => c.id === uc.challengeId)!}));
         const completed = userChallenges.filter(uc => uc.status === 'completed').map(uc => ({...uc, ...ALL_CHALLENGES.find(c => c.id === uc.challengeId)!}));
         
         const activeChallengeIds = userChallenges.filter(uc => uc.status === 'active').map(uc => uc.challengeId);
-        // A challenge is available if it's not currently active. Allows re-trying completed/failed challenges.
         const available = ALL_CHALLENGES.filter(c => !activeChallengeIds.includes(c.id));
         
         return { activeChallenges: active, completedChallenges: completed, availableChallenges: available };
@@ -474,7 +270,7 @@ export default function GoalsScreen() {
                         <button 
                             onClick={handleStart} 
                             disabled={isStarted}
-                            className={`w-full mt-4 py-2.5 rounded-full font-medium flex items-center justify-center gap-2 transition-all duration-300 transform ${isStarted ? 'bg-primary/20 text-primary' : 'bg-primary text-on-primary hover:scale-105'}`}
+                            className={`w-full mt-4 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all duration-300 ${isStarted ? 'bg-primary/20 text-primary' : 'bg-primary/20 dark:bg-primary/30 backdrop-blur-lg border border-primary/40 dark:border-primary/60 text-primary'}`}
                         >
                             {isStarted ? (
                                 <>
@@ -506,44 +302,19 @@ export default function GoalsScreen() {
 
     return (
         <div className="relative min-h-full">
-            {celebratingGoalId && <Confetti />}
             <div className="px-4">
                  <div className="mb-4">
                     <SegmentedControl
                         options={[
-                            { label: 'Goals', value: 'goals' },
                             { label: 'Budgets', value: 'budgets' },
                             { label: 'Challenges', value: 'challenges' }
                         ]}
                         selected={activeTab}
-                        onSelect={(val) => setActiveTab(val as 'goals' | 'budgets' | 'challenges')}
+                        onSelect={(val) => setActiveTab(val as 'budgets' | 'challenges')}
                     />
                 </div>
 
                 <div key={activeTab} className="animate-screenFadeIn">
-                    {activeTab === 'goals' && (
-                        <div className="space-y-4">
-                            {activeGoals.length > 0 ? (
-                                <div className="space-y-4 stagger-children">
-                                    {activeGoals.map((goal, i) => <div key={goal.id} style={{ '--stagger-delay': i } as React.CSSProperties}><GoalCard goal={goal} onEdit={handleEditGoal} /></div>)}
-                                </div>
-                            ) : (
-                                <EmptyState
-                                    icon="goal"
-                                    title={completedGoals.length > 0 ? "All Goals Achieved!" : "Set Your First Goal"}
-                                    message={completedGoals.length > 0 ? "You've smashed all your previous goals. Ready for the next challenge?" : "Saving for something special? Create a goal to track your progress."}
-                                />
-                            )}
-                            {completedGoals.length > 0 && (
-                                <div className="pt-8">
-                                    <h2 className="text-title-m font-medium mb-2">Completed</h2>
-                                    <div className="space-y-4 stagger-children">
-                                        {completedGoals.map((goal, i) => <div key={goal.id} style={{ '--stagger-delay': i + activeGoals.length } as React.CSSProperties}><GoalCard goal={goal} onEdit={handleEditGoal} /></div>)}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
                     {activeTab === 'budgets' && (
                          <div className="space-y-4 stagger-children">
                             {budgets.length > 0 ? (

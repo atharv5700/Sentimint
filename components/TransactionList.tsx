@@ -1,9 +1,11 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import type { Transaction, Goal } from '../types';
+import type { Transaction } from '../types';
 import { useAppContext } from '../App';
 import { MOOD_MAP, TrashIcon, TagIcon, LinkIcon, CloseIcon, DEFAULT_TAGS } from '../constants';
 import { hapticClick, hapticSuccess } from '../services/haptics';
 import CustomSelect from './CustomSelect';
+
+type SortOrder = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
 
 interface TransactionListProps {
     transactions: Transaction[];
@@ -12,6 +14,7 @@ interface TransactionListProps {
     isBulkSelectEnabled?: boolean;
     onBulkModeChange?: (isActive: boolean) => void;
     stickyHeaderOffsetClass?: string;
+    showMonthHeaders?: boolean;
 }
 
 const TransactionCard: React.FC<{ 
@@ -122,9 +125,8 @@ const TransactionCard: React.FC<{
 };
 
 const BulkActionToolbar: React.FC<{ selectedIds: string[], onClear: () => void, transactions: Transaction[] }> = ({ selectedIds, onClear, transactions }) => {
-    const { deleteTransactions, updateTransaction, goals } = useAppContext();
+    const { deleteTransactions, updateTransaction } = useAppContext();
     const [showTagModal, setShowTagModal] = useState(false);
-    const [showLinkModal, setShowLinkModal] = useState(false);
 
     if (selectedIds.length === 0) return null;
     
@@ -141,17 +143,6 @@ const BulkActionToolbar: React.FC<{ selectedIds: string[], onClear: () => void, 
         onClear();
     };
     
-    const linkToGoal = (goalId: string | null) => {
-         selectedIds.forEach(id => {
-            const tx = transactions.find(t => t.id === id);
-            if (tx) {
-                updateTransaction({ ...tx, goal_id: goalId });
-            }
-        });
-        hapticSuccess();
-        onClear();
-    }
-
     const handleDelete = () => {
         hapticClick();
         deleteTransactions(selectedIds);
@@ -167,13 +158,11 @@ const BulkActionToolbar: React.FC<{ selectedIds: string[], onClear: () => void, 
                 <span className="font-medium ml-2 text-lg">{selectedIds.length} selected</span>
                 <div className="flex gap-1 items-center">
                     <button onClick={() => { hapticClick(); setShowTagModal(true); }} className="p-3 rounded-full hover:bg-black/10" aria-label="Tag selected"><TagIcon className="w-6 h-6" /></button>
-                    <button onClick={() => { hapticClick(); setShowLinkModal(true); }} className="p-3 rounded-full hover:bg-black/10" aria-label="Link selected"><LinkIcon className="w-6 h-6" /></button>
                     <button onClick={handleDelete} className="p-3 rounded-full hover:bg-black/10" aria-label="Delete selected"><TrashIcon className="w-6 h-6" /></button>
                     <button onClick={() => { hapticClick(); onClear(); }} className="p-3 rounded-full" aria-label="Close bulk actions"><CloseIcon className="w-6 h-6" /></button>
                 </div>
             </div>
             {showTagModal && <TagModal onApply={applyTags} onClose={() => setShowTagModal(false)} />}
-            {showLinkModal && <LinkGoalModal goals={goals} onLink={linkToGoal} onClose={() => setShowLinkModal(false)} />}
         </>
     );
 };
@@ -205,42 +194,14 @@ const TagModal: React.FC<{onApply: (tags: string[]) => void, onClose: () => void
     );
 }
 
-const LinkGoalModal: React.FC<{goals: Goal[], onLink: (goalId: string | null) => void, onClose: () => void}> = ({ goals, onLink, onClose }) => {
-    const [selectedGoal, setSelectedGoal] = useState<string|null>(null);
-    const goalOptions = [{value: '', label: 'None'}, ...(Array.isArray(goals) ? goals.filter(g => !g.completed_bool).map(g => ({value: g.id, label: g.title})) : [])];
-
-    const handleLink = () => {
-        hapticClick();
-        onLink(selectedGoal);
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-backdropFadeIn">
-            <div className="bg-surface rounded-3xl p-6 w-full max-w-sm animate-modalSlideUp">
-                <h3 className="text-headline-m mb-4">Link to Goal</h3>
-                <CustomSelect
-                    value={selectedGoal || ''}
-                    onChange={(val) => setSelectedGoal(val as string || null)}
-                    options={goalOptions}
-                />
-                <div className="flex justify-end gap-2 mt-6">
-                    <button onClick={() => { hapticClick(); onClose(); }} className="px-4 py-2 text-primary">Cancel</button>
-                    <button onClick={handleLink} className="px-6 py-2 bg-primary text-on-primary rounded-full">Link</button>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-type SortOrder = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
-
 export default function TransactionList({ 
     transactions, 
     onEditTransaction, 
     sortOrder = 'date-desc', 
     isBulkSelectEnabled, 
     onBulkModeChange,
-    stickyHeaderOffsetClass = 'top-[76px]'
+    stickyHeaderOffsetClass = 'top-[76px]',
+    showMonthHeaders = true
 }: TransactionListProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const isBulkMode = selectedIds.length > 0;
@@ -286,8 +247,16 @@ export default function TransactionList({
             monthMap.get(key)!.txs.push(tx);
         });
         
-        return Array.from(monthMap.entries()).sort((a, b) => b[0].localeCompare(a[0]));
-    }, [transactions, isAmountSort]);
+        const grouped = Array.from(monthMap.entries());
+
+        if (sortOrder === 'date-asc') {
+            grouped.sort((a, b) => a[0].localeCompare(b[0]));
+        } else { // 'date-desc'
+            grouped.sort((a, b) => b[0].localeCompare(a[0]));
+        }
+
+        return grouped;
+    }, [transactions, isAmountSort, sortOrder]);
     
     if (transactions.length === 0) {
         return <div className="text-center p-8 text-on-surface-variant">No transactions found.</div>;
@@ -295,8 +264,8 @@ export default function TransactionList({
 
     return (
         <div>
-            {isAmountSort ? (
-                 <div className="stagger-children pt-2">
+            {isAmountSort || !showMonthHeaders ? (
+                 <div className="stagger-children">
                     {transactions.map((tx, index) => (
                         <TransactionCard 
                             key={tx.id} 
@@ -310,9 +279,9 @@ export default function TransactionList({
                     ))}
                 </div>
             ) : (
-                transactionsByMonth.map(([key, { label, txs }]) => (
+                transactionsByMonth.map(([key, { label, txs }], index) => (
                     <div key={key}>
-                        <h3 className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 rounded-2xl py-2 px-4 my-2 text-title-m font-medium text-on-surface-variant">{label}</h3>
+                        <h3 className={`bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 rounded-2xl py-2 px-4 text-title-m font-medium text-on-surface-variant ${index === 0 ? 'mb-2' : 'my-2'}`}>{label}</h3>
                         <div className="stagger-children">
                             {Array.isArray(txs) && txs.map((tx, index) => (
                                 <TransactionCard 

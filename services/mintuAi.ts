@@ -1,5 +1,6 @@
 import { GoogleGenAI, FunctionDeclaration, Type } from '@google/genai';
-import type { Transaction, Goal, MintorAiMessage, MintorAction, CoachingTip, AppContextType, Screen } from '../types';
+// Fix: Removed 'Goal' as it is not an exported member of '../types'. The feature was likely replaced by Budgets/Challenges.
+import type { Transaction, MintorAiMessage, MintorAction, CoachingTip, AppContextType, Screen } from '../types';
 import { dbService } from './db';
 import { ChartBarIcon, LightbulbIcon, TrendingUpIcon, TrophyIcon } from '../constants';
 
@@ -26,7 +27,8 @@ const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { styl
 
 // --- Coaching Tip Generators ---
 
-type AppData = Pick<AppContextType, 'transactions' | 'goals'>;
+// Fix: Removed 'goals' from AppData as it's not in AppContextType.
+type AppData = Pick<AppContextType, 'transactions'>;
 
 const analyzeTopCategory = (data: AppData): CoachingTip | null => {
     const now = new Date();
@@ -53,23 +55,7 @@ const analyzeTopCategory = (data: AppData): CoachingTip | null => {
     };
 };
 
-const analyzeGoalProgress = (data: AppData): CoachingTip | null => {
-    const activeGoals = data.goals.filter(g => !g.completed_bool);
-    if (activeGoals.length === 0) return null;
-
-    const goal = activeGoals.sort((a, b) => (b.current_amount / b.target_amount) - (a.current_amount / a.target_amount))[0];
-    const progress = (goal.current_amount / goal.target_amount) * 100;
-
-    if (progress < 10) return null; // Only show for goals with some progress
-
-    return {
-        id: 'goal-progress',
-        icon: TrophyIcon,
-        title: 'Goal Progress',
-        text: `You're **${Math.floor(progress)}%** of the way to your "**${goal.title}**" goal. Keep up the great work!`,
-        action: { label: 'View Goals', type: 'navigate', payload: 'Goals' }
-    };
-};
+// Fix: Removed analyzeGoalProgress function as the 'Goal' feature is deprecated and 'data.goals' does not exist.
 
 const analyzeFrequentSpending = (data: AppData): CoachingTip | null => {
     const last7DaysTxs = data.transactions.filter(tx => tx.ts >= Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -121,14 +107,14 @@ const analyzeWeekdaySpending = (data: AppData): CoachingTip | null => {
 };
 
 const getCoachingTip = (): CoachingTip | null => {
+    // Fix: Removed 'goals' as dbService.getGoals() does not exist.
     const data: AppData = {
         transactions: dbService.getTransactions(),
-        goals: dbService.getGoals(),
     };
     
+    // Fix: Removed analyzeGoalProgress as it was based on the deprecated 'Goal' feature.
     const tipFunctions = [
         analyzeTopCategory,
-        analyzeGoalProgress,
         analyzeFrequentSpending,
         analyzeWeekdaySpending,
     ];
@@ -197,9 +183,9 @@ const generateWeeklyDigest = (transactions: Transaction[]): string | null => {
 
 // --- Mintor AI Chat Logic ---
 
+// Fix: Removed 'goals' from MintorData as the 'Goal' feature is deprecated.
 interface MintorData {
     transactions: Transaction[];
-    goals: Goal[];
 }
 
 const getPeriodData = (period: 'month' | 'week' | 'day', transactions: Transaction[], offset: number = 0) => {
@@ -382,12 +368,14 @@ const getContextualStartingPrompts = (screen: Screen): MintorAction[] => {
                  { label: 'What is a credit score?', type: 'query', payload: 'What is a credit score?' },
                  ...defaults,
             ];
-        case 'Goals':
+        // Fix: Changed 'Goals' to 'Budgets' to match the updated Screen type and app structure.
+        case 'Budgets':
             return [
                 { label: 'How can I save faster?', type: 'query', payload: 'How can I save money faster?' },
                 { label: 'What is a good savings rate?', type: 'query', payload: 'What is a good savings rate?' },
                 { label: 'What is an SIP?', type: 'query', payload: 'What is SIP?' },
-                { label: 'How do I link a transaction?', type: 'query', payload: 'How do I link a transaction to a goal?' },
+                // Fix: Updated obsolete prompt about linking goals to a more relevant one about budgets.
+                { label: 'How can I improve my budget?', type: 'query', payload: 'How can I improve my budget?' },
             ];
         default:
              return [
@@ -484,9 +472,9 @@ export const mintorAiService = {
     getResponse: async (query: string): Promise<Omit<MintorAiMessage, 'id'>> => {
         try {
             const kb = await getKbData();
+            // Fix: Removed 'goals' initialization as the feature is deprecated.
             const data: MintorData = {
                 transactions: dbService.getTransactions(),
-                goals: dbService.getGoals(),
             };
             
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });

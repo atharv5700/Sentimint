@@ -131,7 +131,7 @@ export default function RecurringTransactionModal({ isOpen, onClose, rTxToEdit }
                         <div className="grid grid-cols-5 gap-1 sm:gap-2">
                             {Object.entries(MOOD_MAP).map(([level, { label, icon: Icon }]) => (
                                 <button key={level} onClick={() => { hapticClick(); setMood(parseInt(level) as Mood); }} className={`flex flex-col items-center gap-1 p-1 sm:p-2 rounded-lg transition-colors duration-200 ${mood === parseInt(level) ? 'bg-secondary-container' : 'hover:bg-surface-variant'}`}>
-                                    <Icon className={`w-8 h-8 sm:w-10 sm:h-10 ${mood === parseInt(level) ? 'text-on-secondary-container' : 'text-on-surface-variant'}`} />
+                                    <Icon className={`w-7 h-7 sm:w-9 sm:h-9 ${mood === parseInt(level) ? 'text-on-secondary-container' : 'text-on-surface-variant'}`} />
                                     <span className={`text-[10px] sm:text-label-s text-center ${mood === parseInt(level) ? 'text-on-secondary-container font-medium' : 'text-on-surface-variant'}`}>{label}</span>
                                 </button>
                             ))}

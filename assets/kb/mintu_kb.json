@@ -17,8 +17,6 @@
   "howToApp": {
     "edit transaction": "To edit a transaction, go to the 'Home' or 'Transactions' screen and simply tap on the transaction you wish to change. The edit screen will pop up.",
     "delete transaction": "To delete a transaction, go to the 'Home' or 'Transactions' screen. Long-press on a transaction to enter bulk-edit mode, select the ones you want to delete, and tap the trash icon.",
-    "link transaction": "When you add or edit a transaction, you'll see a 'Link to Goal' dropdown. You can select any of your active goals from there to link the expense.",
-    "set a goal": "Go to the 'Goals' screen, select the 'Goals' tab, and tap the floating plus button to add a new goal. You'll be able to set a title, target amount, and an optional deadline.",
     "export csv": "You can export all your transaction data to a CSV file from the 'Settings' page under the Data Management section. You can also export from the 'Transactions' screen.",
     "import csv": "You can import transactions from a CSV file. Go to 'Settings', then 'Data Management', and tap 'Import Data from CSV'. Follow the on-screen instructions for the correct file format.",
     "generate report": "To get a printable report, go to the 'Insights' screen, select your desired time period, and tap the 'Generate Report' button at the top.",

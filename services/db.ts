@@ -1,4 +1,4 @@
-import type { Transaction, Goal, Theme, Mood, Budget, RecurringTransaction, UserChallenge } from '../types';
+import type { Transaction, Theme, Mood, Budget, RecurringTransaction, UserChallenge } from '../types';
 
 const DB_KEY = 'sentimint_db';
 const THEME_KEY = 'sentimint_theme';
@@ -38,7 +38,6 @@ const decrypt = <T,>(data: string | null): T | null => {
 
 interface Database {
     transactions: Transaction[];
-    goals: Goal[];
     budgets: Budget[];
     recurring_transactions: RecurringTransaction[];
     customCategories: string[];
@@ -49,7 +48,6 @@ interface Database {
 class DbService {
     private db: Database = {
         transactions: [],
-        goals: [],
         budgets: [],
         recurring_transactions: [],
         customCategories: [],
@@ -67,7 +65,6 @@ class DbService {
         if (data) {
             this.db = {
                 transactions: data.transactions || [],
-                goals: data.goals || [],
                 budgets: data.budgets || [],
                 recurring_transactions: data.recurring_transactions || [],
                 customCategories: data.customCategories || [],
@@ -103,18 +100,18 @@ class DbService {
         const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
         
         const demoTxs: Omit<Transaction, 'id' | 'ts'>[] = [
-            { amount: 350, currency: 'INR', category: 'Food', merchant: 'Swiggy', mood: 4, note: 'Dinner', tags_json: '[]', goal_id: null },
-            { amount: 80, currency: 'INR', category: 'Transport', merchant: 'Metro', mood: 3, note: 'Commute', tags_json: '[]', goal_id: null },
-            { amount: 1200, currency: 'INR', category: 'Shopping', merchant: 'Myntra', mood: 2, note: 'New Shirt', tags_json: '["impulse"]', goal_id: null },
-            { amount: 250, currency: 'INR', category: 'Food', merchant: 'Starbucks', mood: 5, note: 'Coffee meeting', tags_json: '["social"]', goal_id: null },
-            { amount: 1500, currency: 'INR', category: 'Groceries', merchant: 'BigBasket', mood: 3, note: 'Weekly stock-up', tags_json: '["planned"]', goal_id: null },
-            { amount: 3000, currency: 'INR', category: 'Bills', merchant: 'Airtel', mood: 2, note: 'Internet bill', tags_json: '["planned"]', goal_id: null },
-            { amount: 750, currency: 'INR', category: 'Entertainment', merchant: 'PVR Cinemas', mood: 5, note: 'Movie night', tags_json: '["social"]', goal_id: null },
-            { amount: 450, currency: 'INR', category: 'Health', merchant: 'Apollo Pharmacy', mood: 3, note: 'Medicines', tags_json: '[]', goal_id: null },
-            { amount: 500, currency: 'INR', category: 'Transport', merchant: 'Uber', mood: 3, note: 'Trip to office', tags_json: '[]', goal_id: null },
-            { amount: 2200, currency: 'INR', category: 'Shopping', merchant: 'Amazon', mood: 4, note: 'New gadget', tags_json: '["reward"]', goal_id: null },
-            { amount: 600, currency: 'INR', category: 'Food', merchant: 'Zomato', mood: 1, note: 'Late night order', tags_json: '["impulse"]', goal_id: null },
-            { amount: 950, currency: 'INR', category: 'Other', merchant: 'Gift Store', mood: 5, note: 'Birthday gift', tags_json: '["social"]', goal_id: null },
+            { amount: 350, currency: 'INR', category: 'Food', merchant: 'Swiggy', mood: 4, note: 'Dinner', tags_json: '[]' },
+            { amount: 80, currency: 'INR', category: 'Transport', merchant: 'Metro', mood: 3, note: 'Commute', tags_json: '[]' },
+            { amount: 1200, currency: 'INR', category: 'Shopping', merchant: 'Myntra', mood: 2, note: 'New Shirt', tags_json: '["impulse"]' },
+            { amount: 250, currency: 'INR', category: 'Food', merchant: 'Starbucks', mood: 5, note: 'Coffee meeting', tags_json: '["social"]' },
+            { amount: 1500, currency: 'INR', category: 'Groceries', merchant: 'BigBasket', mood: 3, note: 'Weekly stock-up', tags_json: '["planned"]' },
+            { amount: 3000, currency: 'INR', category: 'Bills', merchant: 'Airtel', mood: 2, note: 'Internet bill', tags_json: '["planned"]' },
+            { amount: 750, currency: 'INR', category: 'Entertainment', merchant: 'PVR Cinemas', mood: 5, note: 'Movie night', tags_json: '["social"]' },
+            { amount: 450, currency: 'INR', category: 'Health', merchant: 'Apollo Pharmacy', mood: 3, note: 'Medicines', tags_json: '[]' },
+            { amount: 500, currency: 'INR', category: 'Transport', merchant: 'Uber', mood: 3, note: 'Trip to office', tags_json: '[]' },
+            { amount: 2200, currency: 'INR', category: 'Shopping', merchant: 'Amazon', mood: 4, note: 'New gadget', tags_json: '["reward"]' },
+            { amount: 600, currency: 'INR', category: 'Food', merchant: 'Zomato', mood: 1, note: 'Late night order', tags_json: '["impulse"]' },
+            { amount: 950, currency: 'INR', category: 'Other', merchant: 'Gift Store', mood: 5, note: 'Birthday gift', tags_json: '["social"]' },
         ];
 
         this.db.transactions = []; // Clear any previous seed data
@@ -157,7 +154,6 @@ class DbService {
                         mood: rTx.mood,
                         note: rTx.note,
                         tags_json: rTx.tags_json,
-                        goal_id: null
                     };
                     const createdTx = {
                         ...newTx,
@@ -254,37 +250,6 @@ class DbService {
 
     public async deleteRecurringTransaction(id: string): Promise<void> {
         this.db.recurring_transactions = this.db.recurring_transactions.filter(t => t.id !== id);
-        this.save();
-    }
-
-    // Goals
-    public getGoals(): Goal[] {
-        return [...this.db.goals];
-    }
-    
-    public async addGoal(goal: Omit<Goal, 'id' | 'created_at' | 'current_amount' | 'completed_bool'>): Promise<Goal> {
-        const newGoal: Goal = {
-            ...goal,
-            id: `goal-${Date.now()}`,
-            created_at: Date.now(),
-            current_amount: 0,
-            completed_bool: false,
-        };
-        this.db.goals.push(newGoal);
-        this.save();
-        return newGoal;
-    }
-    
-    public async updateGoal(goal: Goal): Promise<void> {
-        const index = this.db.goals.findIndex(g => g.id === goal.id);
-        if (index > -1) {
-            this.db.goals[index] = goal;
-            this.save();
-        }
-    }
-    
-    public async deleteGoal(id: string): Promise<void> {
-        this.db.goals = this.db.goals.filter(g => g.id !== id);
         this.save();
     }
 
@@ -385,7 +350,7 @@ class DbService {
     
     // Data Management
     public exportToCsv(): string {
-        const headers = ['id', 'ts', 'amount', 'currency', 'category', 'merchant', 'mood', 'note', 'tags_json', 'goal_id'];
+        const headers = ['id', 'ts', 'amount', 'currency', 'category', 'merchant', 'mood', 'note', 'tags_json'];
         const rows = this.db.transactions.map(tx => headers.map(header => JSON.stringify(tx[header as keyof Transaction])).join(','));
         return [headers.join(','), ...rows].join('\n');
     }
@@ -393,7 +358,6 @@ class DbService {
     public async deleteAllData(): Promise<void> {
         this.db = {
             transactions: [],
-            goals: [],
             budgets: [],
             recurring_transactions: [],
             customCategories: [],

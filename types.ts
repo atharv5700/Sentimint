@@ -1,7 +1,7 @@
 import React from 'react';
 import type { AppContextType as AppContextTypeExtended } from './App';
 
-export type Screen = 'Home' | 'Transactions' | 'Insights' | 'Goals' | 'Settings';
+export type Screen = 'Home' | 'Transactions' | 'Insights' | 'Budgets' | 'Settings';
 
 export type Theme = 'light' | 'dark';
 
@@ -25,25 +25,14 @@ export type Transaction = {
     mood: Mood;
     note: string;
     tags_json: string; // JSON string of tags array
-    goal_id: string | null;
 };
 
-export type RecurringTransaction = Omit<Transaction, 'id' | 'ts' | 'goal_id'> & {
+export type RecurringTransaction = Omit<Transaction, 'id' | 'ts'> & {
     id: string;
     frequency: 'daily' | 'weekly' | 'monthly';
     start_date: number; // timestamp
     last_added_date: number | null; // timestamp
     title: string;
-};
-
-export type Goal = {
-    id: string;
-    title: string;
-    target_amount: number;
-    current_amount: number;
-    deadline_ts: number | null;
-    created_at: number;
-    completed_bool: boolean;
 };
 
 export type Budget = {
@@ -78,6 +67,19 @@ export type CoachingTip = {
     text: string;
     action?: MintorAction;
 };
+
+export type FinanceTrick = {
+    id: string;
+    icon: React.FC<React.SVGProps<SVGSVGElement>>;
+    title: string;
+    text: string;
+};
+
+export type Quote = {
+    text: string;
+    author: string;
+};
+
 
 export type ChallengeType = 'noSpendOnCategory' | 'spendLimitOnCategory' | 'saveAmount';
 export type ChallengeStatus = 'active' | 'completed' | 'failed';

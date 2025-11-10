@@ -19,7 +19,7 @@ const navItems: NavItem[] = [
     { id: 'Home', label: 'Home', icon: HomeIcon },
     { id: 'Transactions', label: 'Transactions', icon: TransactionsIcon },
     { id: 'Insights', label: 'Insights', icon: InsightsIcon },
-    { id: 'Goals', label: 'Goals', icon: GoalsIcon },
+    { id: 'Budgets', label: 'Budgets', icon: GoalsIcon },
     { id: 'Settings', label: 'Settings', icon: SettingsIcon },
 ];
 

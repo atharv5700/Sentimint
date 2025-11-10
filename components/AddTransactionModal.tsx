@@ -26,14 +26,13 @@ const ImpulseNudgeModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
 );
 
 export default function AddTransactionModal({ isOpen, onClose, transaction }: AddTransactionModalProps) {
-    const { addTransaction, updateTransaction, goals, customCategories } = useAppContext();
+    const { addTransaction, updateTransaction, customCategories } = useAppContext();
     
     const [amount, setAmount] = useState('');
     const [merchant, setMerchant] = useState('');
     const [category, setCategory] = useState(DEFAULT_CATEGORIES[0]);
     const [mood, setMood] = useState<Mood | null>(null);
     const [tags, setTags] = useState<string[]>([]);
-    const [goalId, setGoalId] = useState<string | null>(null);
     const [note, setNote] = useState('');
     const [showNudge, setShowNudge] = useState(false);
     const [customTagInput, setCustomTagInput] = useState('');
@@ -42,7 +41,6 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
     const customTagInputRef = useRef<HTMLInputElement>(null);
 
     const allCategories = useMemo(() => [...DEFAULT_CATEGORIES, ...customCategories], [customCategories]);
-    const goalOptions = [{value: '', label: 'None'}, ...goals.filter(g => !g.completed_bool).map(g => ({value: g.id, label: g.title}))]
 
     // Available tags are now default + any custom tags for THIS transaction
     const availableTags = [...new Set([...DEFAULT_TAGS, ...tags])];
@@ -60,7 +58,6 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
             setCategory(transaction.category);
             setMood(transaction.mood);
             setTags(JSON.parse(transaction.tags_json || '[]'));
-            setGoalId(transaction.goal_id);
             setNote(transaction.note);
         } else {
             // Reset form for new transaction
@@ -69,7 +66,6 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
             setCategory(allCategories[0]);
             setMood(null);
             setTags([]);
-            setGoalId(null);
             setNote('');
         }
         setIsAddingTag(false);
@@ -108,7 +104,6 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
             category,
             mood: mood!,
             tags_json: JSON.stringify(tags),
-            goal_id: goalId,
             note: note.trim(),
         };
 
@@ -174,7 +169,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
                             <div className="grid grid-cols-5 gap-1 sm:gap-2">
                             {Object.entries(MOOD_MAP).map(([level, { label, icon: Icon }]) => (
                                 <button key={level} onClick={() => { hapticClick(); setMood(parseInt(level) as Mood); }} className={`flex flex-col items-center gap-1 p-1 sm:p-2 rounded-lg transition-colors duration-200 ${mood === parseInt(level) ? 'bg-secondary-container' : 'hover:bg-surface-variant'}`}>
-                                    <Icon className={`w-8 h-8 sm:w-10 sm:h-10 ${mood === parseInt(level) ? 'text-on-secondary-container' : 'text-on-surface-variant'}`} />
+                                    <Icon className={`w-7 h-7 sm:w-9 sm:h-9 ${mood === parseInt(level) ? 'text-on-secondary-container' : 'text-on-surface-variant'}`} />
                                     <span className={`text-[10px] sm:text-label-s text-center ${mood === parseInt(level) ? 'text-on-secondary-container font-medium' : 'text-on-surface-variant'}`}>{label}</span>
                                 </button>
                             ))}
@@ -203,15 +198,6 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
                                     </button>
                                 )}
                             </div>
-                        </div>
-                        {/* Link to Goal */}
-                        <div>
-                            <label className="text-label-s text-on-surface-variant mb-1 block">Link to Goal</label>
-                            <CustomSelect 
-                                value={goalId || ''}
-                                onChange={value => setGoalId(value as string || null)}
-                                options={goalOptions}
-                            />
                         </div>
                         {/* Note */}
                         <div>
