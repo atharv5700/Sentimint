@@ -10,8 +10,11 @@ interface TopAppBarProps {
 export default function TopAppBar({ onMintorClick, onSearchClick }: TopAppBarProps) {
     return (
         <header 
-            className="flex items-center justify-between px-4 pb-3 bg-surface/80 dark:bg-surface/60 backdrop-blur-lg sticky top-0 z-20 border-b border-outline-variant/30"
-            style={{ paddingTop: `calc(0.75rem + env(safe-area-inset-top))` }}
+            className="flex items-center justify-between px-4 pb-3 backdrop-blur-lg sticky top-0 z-20 border-b border-outline-variant/30 will-change-transform"
+            style={{ 
+                paddingTop: `calc(0.75rem + env(safe-area-inset-top))`,
+                background: 'var(--top-app-bar-bg)'
+            }}
         >
             <h1 className="text-headline-m font-bold tracking-tight relative top-0.5">
                 <span className="text-primary">Senti</span>

@@ -129,7 +129,7 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
                             <p className="text-display-m font-bold text-on-surface">{formatCurrency(animatedTotalSpent)}</p>
                             <div className="flex justify-center items-center gap-2 mt-2">
                                 {avgMood && (
-                                    <div className="bg-surface-variant/50 text-on-surface-variant px-3 py-1.5 rounded-2xl text-sm font-medium">
+                                    <div className="bg-surface-variant/40 backdrop-blur-sm border border-outline/10 text-on-surface-variant px-3 py-1.5 rounded-2xl text-sm font-medium">
                                         <span>Avg. Mood: {avgMood.label}</span>
                                     </div>
                                 )}

@@ -463,15 +463,15 @@ export default function App() {
         <AppContext.Provider value={appContextValue}>
             <div className={`font-sans bg-background text-on-surface transition-colors duration-300`}>
                 <div 
-                    className="flex flex-col h-screen"
+                    className="h-screen relative"
                     aria-hidden={isAModalOpen}
                 >
                     <TopAppBar 
                         onMintorClick={() => setMintorModalOpen(true)} 
                         onSearchClick={() => setSearchModalOpen(true)}
                     />
-                    <main className="flex-grow overflow-y-auto pb-24 pt-3">
-                        <div key={screen} className="animate-screenFadeIn">
+                    <main className="absolute inset-0 overflow-y-auto">
+                        <div key={screen} className="animate-screenFadeIn pt-[76px] pb-24">
                             {renderScreen()}
                         </div>
                     </main>

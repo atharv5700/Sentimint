@@ -9,7 +9,7 @@ const StreakCounter: React.FC<StreakCounterProps> = ({ streak }) => {
     if (streak === 0) return null;
 
     return (
-        <div className="bg-surface-variant/50 text-on-surface-variant px-3 py-1.5 rounded-2xl text-sm font-medium animate-fabPopIn">
+        <div className="bg-surface-variant/40 backdrop-blur-sm border border-outline/10 text-on-surface-variant px-3 py-1.5 rounded-2xl text-sm font-medium animate-fabPopIn">
             <span>{streak} Day{streak !== 1 ? 's' : ''} Streak</span>
         </div>
     );
