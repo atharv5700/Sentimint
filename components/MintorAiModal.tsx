@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { MintorAiMessage } from '../types';
-import { mintorAiService } from '../services/mintorAi';
+import { mintorAiService } from '../services/mintuAi';
 import { MINTOR_AI_ASSISTANT, SendIcon, CloseIcon } from '../constants';
 import { hapticClick } from '../services/haptics';
 

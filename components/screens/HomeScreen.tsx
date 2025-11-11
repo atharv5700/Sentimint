@@ -4,7 +4,7 @@ import { useAppContext } from '../../App';
 import { MOOD_MAP } from '../../constants';
 import TransactionList from '../TransactionList';
 import ProgressBar from '../ProgressBar';
-import { mintorAiService } from '../../services/mintorAi';
+import { mintorAiService } from '../../services/mintuAi';
 import CoachingTipCard from '../CoachingTipCard';
 import WeeklyDigest from '../WeeklyDigest';
 import { useAnimatedCounter } from '../../hooks/useAnimatedCounter';
@@ -57,10 +57,15 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
     useEffect(() => {
         const today = new Date();
         const todayKey = getWeekKey(today);
+        
+        if (digest?.weekKey === todayKey) {
+            return;
+        }
+
         const lastDigestKey = localStorage.getItem('sentimint_last_digest_week');
         
         // Only generate if it's Monday and we haven't generated for this week yet.
-        if (digest?.weekKey !== todayKey && today.getDay() === 1 && todayKey !== lastDigestKey) {
+        if (today.getDay() === 1 && todayKey !== lastDigestKey) {
             const summary = mintorAiService.generateWeeklyDigest(transactions);
             if (summary) {
                 setDigest({ summary, weekKey: todayKey });
