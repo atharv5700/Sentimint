@@ -229,9 +229,9 @@ export default function GoalsScreen() {
         let progress = 0;
         let progressText = "Keep going!";
 
-        if (challenge.type === 'saveAmount' || challenge.type === 'spendLimitOnCategory') {
+        if (challenge.type === 'spendLimitOnCategory') {
             progress = (challenge.progress / challenge.targetValue) * 100;
-            const verb = challenge.type === 'saveAmount' ? 'Saved' : 'Spent';
+            const verb = 'Spent';
             progressText = `${verb} ${formatCurrency(challenge.progress)} / ${formatCurrency(challenge.targetValue)}`;
         } else if (challenge.type === 'noSpendOnCategory') {
             const daysPassed = Math.max(0, (Date.now() - challenge.startDate) / (1000 * 60 * 60 * 24));

@@ -1,7 +1,6 @@
-import { GoogleGenAI, FunctionDeclaration, Type } from '@google/genai';
 import type { Transaction, MintorAiMessage, MintorAction, CoachingTip, AppContextType, Screen, KnowledgeBase } from '../types';
 import { dbService } from './db';
-import { ChartBarIcon, LightbulbIcon, TrendingUpIcon, TrophyIcon } from '../constants';
+import { ChartBarIcon, LightbulbIcon, TrendingUpIcon, TrophyIcon, DEFAULT_CATEGORIES } from '../constants';
 
 let kbData: KnowledgeBase | null = null;
 const getKbData = async (): Promise<KnowledgeBase> => {
@@ -335,87 +334,52 @@ const getKBAnswer = (topic: string, kb: KnowledgeBase): string => {
     return `I'm not sure about "${topic}". Try asking 'help' to see what I can do.`;
 };
 
-const functionDeclarations: FunctionDeclaration[] = [
-    {
-        name: 'analyzeSpending',
-        description: 'Analyzes user spending for a given period (day, week, month). Provides a summary of total spending, top category, and spending associated with negative moods.',
-        parameters: {
-            type: Type.OBJECT,
-            properties: {
-                period: { type: Type.STRING, enum: ['day', 'week', 'month'], description: 'The time period to analyze.' }
-            },
-            required: ['period']
-        }
-    },
-    {
-        name: 'compareSpending',
-        description: 'Compares spending for a specific category or total spending between the current period and the previous one (e.g., this month vs. last month).',
-        parameters: {
-            type: Type.OBJECT,
-            properties: {
-                category: { type: Type.STRING, description: 'The spending category to compare. Use "all" for total spending.' },
-                period: { type: Type.STRING, enum: ['week', 'month'], description: 'The time period for comparison.' }
-            },
-            required: ['category', 'period']
-        }
-    },
-    {
-        name: 'getBiggestCategory',
-        description: 'Finds and returns the category with the highest spending for a given period.',
-        parameters: {
-            type: Type.OBJECT,
-            properties: {
-                period: { type: Type.STRING, enum: ['day', 'week', 'month'], description: 'The time period to analyze.' }
-            },
-            required: ['period']
-        }
-    },
-    {
-        name: 'getSavingTips',
-        description: 'Provides the user with a few personalized or general saving tips.',
-        parameters: { type: Type.OBJECT, properties: {} }
-    },
-    {
-        name: 'calculateEMI',
-        description: 'Calculates the Equated Monthly Installment (EMI) for a loan.',
-        parameters: {
-            type: Type.OBJECT,
-            properties: {
-                principal: { type: Type.NUMBER, description: 'The total loan amount.' },
-                rate: { type: Type.NUMBER, description: 'The annual interest rate in percent.' },
-                years: { type: Type.NUMBER, description: 'The loan tenure in years.' }
-            },
-            required: ['principal', 'rate', 'years']
-        }
-    },
-    {
-        name: 'calculateSIP',
-        description: 'Calculates the future value of a Systematic Investment Plan (SIP).',
-        parameters: {
-            type: Type.OBJECT,
-            properties: {
-                monthlyInvestment: { type: Type.NUMBER, description: 'The amount invested per month.' },
-                rate: { type: Type.NUMBER, description: 'The expected annual rate of return in percent.' },
-                years: { type: Type.NUMBER, description: 'The investment duration in years.' }
-            },
-            required: ['monthlyInvestment', 'rate', 'years']
-        }
-    },
-    {
-        name: 'getKBAnswer',
-        description: 'Retrieves information about financial topics (like SIP, PPF, credit score) or how to use the Sentimint app (like editing a transaction, setting a budget). Use this for "what is" or "how to" questions.',
-        parameters: {
-            type: Type.OBJECT,
-            properties: {
-                topic: { type: Type.STRING, description: 'The financial or app-related topic. E.g., "SIP", "edit transaction", "emergency fund", "help".' }
-            },
-            required: ['topic']
-        }
-    },
-];
+
+const getContextualStartingPrompts = (screen: Screen): MintorAction[] => {
+    const defaults: MintorAction[] = [
+        { label: 'Analyze my spending', type: 'query', payload: 'Analyze my spending this month' },
+        { label: 'Give me saving tips', type: 'query', payload: 'Give me saving tips' },
+    ];
+    switch(screen) {
+        case 'Home':
+            return [
+                { label: 'Biggest expense this week?', type: 'query', payload: 'What was my biggest expense this week?' },
+                { label: 'Food spending this month?', type: 'query', payload: 'How much did I spend on food this month?' },
+                { label: 'Give me saving tips', type: 'query', payload: 'Give me saving tips' },
+                { label: 'What is an emergency fund?', type: 'query', payload: 'What is an emergency fund?' },
+            ];
+        case 'Ledger':
+             return [
+                { label: 'Compare spending: this month vs last', type: 'query', payload: 'Compare my total spending this month vs last month' },
+                { label: 'How do I edit a transaction?', type: 'query', payload: 'How do I edit a transaction?' },
+                { label: 'Export my data', type: 'query', payload: 'How do I export my data?' },
+            ];
+        case 'Insights':
+            return [
+                 { label: 'Compare food spending', type: 'query', payload: 'Compare food spending this month vs last month' },
+                 { label: 'Busiest spending day?', type: 'query', payload: 'Which day of the week do I spend most?' },
+                 { label: 'What is a credit score?', type: 'query', payload: 'What is a credit score?' },
+                 ...defaults,
+            ];
+        case 'Budgets':
+            return [
+                { label: 'How can I save faster?', type: 'query', payload: 'How can I save money faster?' },
+                { label: 'What is a good savings rate?', type: 'query', payload: 'What is a good savings rate?' },
+                { label: 'What is an SIP?', type: 'query', payload: 'What is SIP?' },
+                { label: 'How can I improve my budget?', type: 'query', payload: 'How can I improve my budget?' },
+            ];
+        default:
+             return [
+                ...defaults,
+                { label: 'What is an emergency fund?', type: 'query', payload: 'What is an emergency fund?' },
+                { label: 'How do I edit a transaction?', type: 'query', payload: 'How do I edit a transaction?' },
+            ];
+    }
+}
 
 export const mintorAiService = {
     getCoachingTip,
+    getContextualStartingPrompts,
     generateWeeklyDigest,
     getResponse: async (query: string): Promise<Omit<MintorAiMessage, 'id'>> => {
         try {
@@ -423,69 +387,79 @@ export const mintorAiService = {
             const data: MintorData = {
                 transactions: dbService.getTransactions(),
             };
-            
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const lowerQuery = query.toLowerCase();
 
-            const systemInstruction = `You are Mintor, the friendly and helpful AI assistant within the Sentimint app. Your name is Mintor. Always introduce yourself as Mintor and refer to yourself as Mintor. The app you live in is called Sentimint.
-- Your goal is to provide concise, helpful, and encouraging financial advice.
-- When asked about your identity, explain that you use Google's advanced AI to provide answers but the user's financial data remains private on their device.
-- Use the provided tools to answer questions about the user's spending data or financial topics.
-- For general conversation or questions outside your tools' scope, answer conversationally.
-- Format currency using the Indian Rupee symbol (₹) and comma separators (e.g., ₹1,23,456).
-- Use markdown for formatting, especially bolding for emphasis on key terms and numbers.`;
+            // --- Local Rule-Based Query Engine ---
+            // This engine processes user queries offline by matching keywords and patterns.
+            // It's designed to be simple and fast, covering the most common user requests.
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: query,
-                config: {
-                    systemInstruction,
-                    tools: [{ functionDeclarations }],
-                },
-            });
+            const numberRegex = /(\d{1,10}(?:\.\d+)?)/g;
 
-            const functionCalls = response.functionCalls;
+            // Intent: Analyze spending
+            if (lowerQuery.includes('analyze') || lowerQuery.includes('how much did i spend')) {
+                const periodMatch = lowerQuery.match(/(day|week|month)/);
+                const period = periodMatch ? periodMatch[0] as 'day'|'week'|'month' : 'month';
+                return { sender: 'bot', text: analyzeSpending(period, data) };
+            }
 
-            if (functionCalls && functionCalls.length > 0) {
-                const fc = functionCalls[0];
-                const { name, args } = fc;
-                let resultText = "Sorry, something went wrong.";
-
-                switch (name) {
-                    case 'analyzeSpending':
-                        resultText = analyzeSpending(args.period as 'month' | 'week' | 'day', data);
-                        break;
-                    case 'compareSpending':
-                        resultText = compareSpending(args.category as string, args.period as 'month' | 'week', data);
-                        break;
-                    case 'getBiggestCategory':
-                        resultText = getBiggestCategory(args.period as 'month' | 'week' | 'day', data);
-                        break;
-                    case 'getSavingTips':
-                        resultText = getSavingTips(data, kb);
-                        break;
-                    case 'calculateEMI':
-                        resultText = calculateEMI(args.principal as number, args.rate as number, args.years as number);
-                        break;
-                    case 'calculateSIP':
-                        resultText = calculateSIP(args.monthlyInvestment as number, args.rate as number, args.years as number);
-                        break;
-                    case 'getKBAnswer':
-                        resultText = getKBAnswer(args.topic as string, kb);
-                        break;
-                    default:
-                        resultText = "I'm not sure how to handle that action.";
-                }
+            // Intent: Compare spending
+            if (lowerQuery.includes('compare')) {
+                const periodMatch = lowerQuery.match(/(week|month)/);
+                const period = periodMatch ? periodMatch[0] as 'week'|'month' : 'month';
                 
-                return { sender: 'bot', text: resultText };
+                // Simple category extraction: finds the first mentioned category.
+                let category = 'all';
+                const allCategories = [...DEFAULT_CATEGORIES, ...dbService.getCustomCategories()];
+                for (const cat of allCategories) {
+                    if (lowerQuery.includes(cat.toLowerCase())) {
+                        category = cat;
+                        break;
+                    }
+                }
+                return { sender: 'bot', text: compareSpending(category, period, data) };
+            }
+
+            // Intent: Biggest Category
+            if (lowerQuery.includes('biggest expense') || lowerQuery.includes('biggest category') || lowerQuery.includes('top category')) {
+                const periodMatch = lowerQuery.match(/(day|week|month)/);
+                const period = periodMatch ? periodMatch[0] as 'day'|'week'|'month' : 'month';
+                return { sender: 'bot', text: getBiggestCategory(period, data) };
+            }
+
+            // Intent: Saving Tips
+            if (lowerQuery.includes('saving tips') || lowerQuery.includes('save money')) {
+                return { sender: 'bot', text: getSavingTips(data, kb) };
             }
             
-            return { sender: 'bot', text: response.text };
+            // Intent: EMI calculation
+            if (lowerQuery.includes('emi') || lowerQuery.includes('loan')) {
+                const numbers = (lowerQuery.match(numberRegex) || []).map(Number);
+                if (numbers.length >= 3) {
+                     // Assumes order: principal, rate, years. Fragile but functional for offline use.
+                    return { sender: 'bot', text: calculateEMI(numbers[0], numbers[1], numbers[2]) };
+                }
+                return { sender: 'bot', text: "To calculate EMI, please provide the principal amount, interest rate (%), and tenure in years.\nFor example: 'Calculate EMI for 500000 at 8.5% for 5 years'." };
+            }
+            
+            // Intent: SIP calculation
+            if (lowerQuery.includes('sip') && (lowerQuery.includes('calculate') || lowerQuery.match(numberRegex))) {
+                 const numbers = (lowerQuery.match(numberRegex) || []).map(Number);
+                if (numbers.length >= 3) {
+                    // Assumes order: monthly investment, rate, years.
+                    return { sender: 'bot', text: calculateSIP(numbers[0], numbers[1], numbers[2]) };
+                }
+                return { sender: 'bot', text: "To calculate SIP returns, please provide the monthly investment, expected return rate (%), and duration in years.\nE.g., 'Calculate SIP for 5000 per month at 12% for 10 years'." };
+            }
+
+            // Fallback to Knowledge Base search for general questions.
+            return { sender: 'bot', text: getKBAnswer(lowerQuery, kb) };
 
         } catch (error) {
-            console.error("Error getting response from AI service:", error);
+            console.error("Error getting response from local AI service:", error);
             return {
                 sender: 'bot',
-                text: "I'm having a little trouble connecting right now. Please try again in a moment.",
+                text: "I'm having a little trouble thinking right now. Please try again in a moment.",
+                actions: []
             };
         }
     }

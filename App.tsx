@@ -31,6 +31,7 @@ export interface AppContextType {
   userChallenges: UserChallenge[];
   streak: number;
   theme: Theme;
+  screen: Screen;
   setScreen: (screen: Screen) => void;
   setTheme: (theme: Theme) => void;
   addTransaction: (tx: Omit<Transaction, 'id' | 'ts'>) => Promise<void>;
@@ -437,6 +438,7 @@ export default function App() {
         userChallenges,
         streak,
         theme,
+        screen,
         setScreen: handleSetScreen,
         setTheme,
         addTransaction,
