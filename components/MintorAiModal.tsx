@@ -17,12 +17,12 @@ const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: Mintor
             <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${isUser ? 'bg-primary-container text-on-primary-container rounded-br-none' : 'bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 text-on-surface-variant rounded-bl-none'}`}>
                 <p className="text-body-m whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: message.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}></p>
                  {message.actions && message.actions.length > 0 && (
-                    <div className="flex flex-col items-start gap-2 mt-3">
+                    <div className="flex flex-wrap items-start gap-2 mt-3">
                         {message.actions.map((action, index) => (
                             <button 
                                 key={index} 
                                 onClick={() => onAction(action)}
-                                className="text-sm bg-primary/20 dark:bg-primary/30 backdrop-blur-lg border border-primary/40 dark:border-primary/60 text-primary px-3 py-1.5 rounded-full text-left w-full transition-transform active:scale-95"
+                                className="text-sm bg-primary/20 dark:bg-primary/30 backdrop-blur-lg border border-primary/40 dark:border-primary/60 text-primary px-3 py-1.5 rounded-full text-left transition-transform active:scale-95"
                             >
                                 {action.label}
                             </button>
@@ -73,8 +73,9 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
             sender: 'user',
             text: query,
         };
-
-        setMessages(prev => [...prev, userMessage]);
+        
+        // Remove actions from previous bot messages
+        setMessages(prev => [...prev.map(m => ({...m, actions: []})), userMessage]);
         setInput('');
         setIsThinking(true);
 

@@ -390,13 +390,10 @@ export const mintorAiService = {
             const lowerQuery = query.toLowerCase();
 
             // --- Local Rule-Based Query Engine ---
-            // This engine processes user queries offline by matching keywords and patterns.
-            // It's designed to be simple and fast, covering the most common user requests.
-
             const numberRegex = /(\d{1,10}(?:\.\d+)?)/g;
 
             // Intent: Analyze spending
-            if (lowerQuery.includes('analyze') || lowerQuery.includes('how much did i spend')) {
+            if (lowerQuery.includes('analyze') || (lowerQuery.includes('how much') && lowerQuery.includes('spend'))) {
                 const periodMatch = lowerQuery.match(/(day|week|month)/);
                 const period = periodMatch ? periodMatch[0] as 'day'|'week'|'month' : 'month';
                 return { sender: 'bot', text: analyzeSpending(period, data) };
@@ -407,7 +404,6 @@ export const mintorAiService = {
                 const periodMatch = lowerQuery.match(/(week|month)/);
                 const period = periodMatch ? periodMatch[0] as 'week'|'month' : 'month';
                 
-                // Simple category extraction: finds the first mentioned category.
                 let category = 'all';
                 const allCategories = [...DEFAULT_CATEGORIES, ...dbService.getCustomCategories()];
                 for (const cat of allCategories) {
@@ -427,7 +423,7 @@ export const mintorAiService = {
             }
 
             // Intent: Saving Tips
-            if (lowerQuery.includes('saving tips') || lowerQuery.includes('save money')) {
+            if (lowerQuery.includes('saving tip') || lowerQuery.includes('save money')) {
                 return { sender: 'bot', text: getSavingTips(data, kb) };
             }
             
@@ -435,7 +431,6 @@ export const mintorAiService = {
             if (lowerQuery.includes('emi') || lowerQuery.includes('loan')) {
                 const numbers = (lowerQuery.match(numberRegex) || []).map(Number);
                 if (numbers.length >= 3) {
-                     // Assumes order: principal, rate, years. Fragile but functional for offline use.
                     return { sender: 'bot', text: calculateEMI(numbers[0], numbers[1], numbers[2]) };
                 }
                 return { sender: 'bot', text: "To calculate EMI, please provide the principal amount, interest rate (%), and tenure in years.\nFor example: 'Calculate EMI for 500000 at 8.5% for 5 years'." };
@@ -445,14 +440,14 @@ export const mintorAiService = {
             if (lowerQuery.includes('sip') && (lowerQuery.includes('calculate') || lowerQuery.match(numberRegex))) {
                  const numbers = (lowerQuery.match(numberRegex) || []).map(Number);
                 if (numbers.length >= 3) {
-                    // Assumes order: monthly investment, rate, years.
                     return { sender: 'bot', text: calculateSIP(numbers[0], numbers[1], numbers[2]) };
                 }
                 return { sender: 'bot', text: "To calculate SIP returns, please provide the monthly investment, expected return rate (%), and duration in years.\nE.g., 'Calculate SIP for 5000 per month at 12% for 10 years'." };
             }
 
-            // Fallback to Knowledge Base search for general questions.
-            return { sender: 'bot', text: getKBAnswer(lowerQuery, kb) };
+            // Fallback to Knowledge Base search
+            const kbResult = getKBAnswer(lowerQuery, kb);
+            return { sender: 'bot', text: kbResult };
 
         } catch (error) {
             console.error("Error getting response from local AI service:", error);
