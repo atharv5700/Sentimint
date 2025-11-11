@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { MintorAiMessage, MintorAction, Screen } from '../types';
-// FIX: Corrected import path from mintorAi to mintuAi.
-import { mintorAiService } from '../services/mintuAi';
+import { mintorAiService } from '../services/mintorAi';
 import { MINTOR_AI_ASSISTANT, SendIcon, CloseIcon } from '../constants';
 import { hapticClick } from '../services/haptics';
 import { useAppContext } from '../App';
