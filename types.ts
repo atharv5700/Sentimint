@@ -1,4 +1,5 @@
 import React from 'react';
+// Correctly import the type to be extended, not the value.
 import type { AppContextType as AppContextTypeExtended } from './App';
 
 export type Screen = 'Home' | 'Ledger' | 'Insights' | 'Budgets' | 'Settings';
