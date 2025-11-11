@@ -136,7 +136,7 @@ export const BudgetModal: React.FC<{ onClose: () => void, budgetToEdit: Budget |
                 </div>
                 <div className="flex justify-between items-center mb-4 flex-shrink-0 px-2 sm:px-0">
                     <h2 className="text-headline-m">{budgetToEdit ? 'Edit' : 'New'} Budget</h2>
-                    <button onClick={() => { hapticClick(); onClose(); }} className="text-on-surface-variant p-2" aria-label="Close add budget modal">
+                    <button onClick={() => { hapticClick(); onClose(); }} className="p-3 rounded-full text-on-surface-variant hover:bg-surface-variant/80 transition-colors" aria-label="Close add budget modal">
                         <CloseIcon />
                     </button>
                 </div>

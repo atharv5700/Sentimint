@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, createContext, useContext, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, createContext, useContext, useMemo, useRef, useLayoutEffect } from 'react';
 import type { Screen, Theme, Transaction, Budget, RecurringTransaction, UserChallenge, Challenge } from './types';
 import { dbService } from './services/db';
 import { ALL_CHALLENGES } from './data/challenges';
@@ -104,7 +104,31 @@ export default function App() {
     const [isBulkMode, setIsBulkMode] = useState(false);
     const [fabConfig, setFabConfig] = useState<FabConfig | null>(null);
 
+    const topAppBarRef = useRef<HTMLElement>(null);
+    const bottomNavRef = useRef<HTMLElement>(null);
+
     const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen || isBudgetModalOpen || isRecurringTxModalOpen || isSearchModalOpen || isImportModalOpen || isExportModalOpen || isManageCategoriesModalOpen, [isAddTxModalOpen, isMintorModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isSearchModalOpen, isImportModalOpen, isExportModalOpen, isManageCategoriesModalOpen]);
+    
+    useLayoutEffect(() => {
+        const topBar = topAppBarRef.current;
+        const bottomNav = bottomNavRef.current;
+
+        if (!topBar || !bottomNav) return;
+
+        const observer = new ResizeObserver(() => {
+            document.documentElement.style.setProperty('--top-app-bar-height', `${topBar.offsetHeight}px`);
+            document.documentElement.style.setProperty('--bottom-nav-height', `${bottomNav.offsetHeight}px`);
+        });
+
+        observer.observe(topBar);
+        observer.observe(bottomNav);
+
+        return () => {
+            observer.disconnect();
+            document.documentElement.style.removeProperty('--top-app-bar-height');
+            document.documentElement.style.removeProperty('--bottom-nav-height');
+        };
+    }, []);
 
     const processChallenges = useCallback(async (txs: Transaction[]) => {
         const challenges = dbService.getUserChallenges();
@@ -475,21 +499,30 @@ export default function App() {
                     aria-hidden={isAModalOpen}
                 >
                     <TopAppBar 
+                        ref={topAppBarRef}
                         onMintorClick={() => setMintorModalOpen(true)} 
                         onSearchClick={() => setSearchModalOpen(true)}
                     />
                     <main className="absolute inset-0 overflow-y-auto">
-                        <div key={screen} className="animate-screenFadeIn pt-[76px] pb-24">
+                        <div 
+                            key={screen} 
+                            className="animate-screenFadeIn"
+                            style={{ 
+                                paddingTop: 'var(--top-app-bar-height, 76px)', 
+                                paddingBottom: 'calc(var(--bottom-nav-height, 80px) + 4rem)' 
+                            }}
+                        >
                             {renderScreen()}
                         </div>
                     </main>
-                    <BottomNav activeScreen={screen} setScreen={handleSetScreen} isBulkMode={isBulkMode} />
+                    <BottomNav ref={bottomNavRef} activeScreen={screen} setScreen={handleSetScreen} isBulkMode={isBulkMode} />
                 </div>
                 
                 {fabDetails.show && !isAModalOpen && !isBulkMode && (
                      <button
                         onClick={fabDetails.onClick}
-                        className="fixed bottom-24 right-6 bg-primary-container/95 dark:bg-primary-container/90 backdrop-blur-sm border border-primary/20 text-on-primary-container rounded-2xl shadow-lg w-[3.75rem] h-[3.75rem] flex items-center justify-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-fabPopIn z-10"
+                        className="fixed right-6 bg-primary-container/95 dark:bg-primary-container/90 backdrop-blur-sm border border-primary/20 text-on-primary-container rounded-2xl shadow-lg w-[3.75rem] h-[3.75rem] flex items-center justify-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-fabPopIn z-10"
+                        style={{ bottom: `calc(var(--bottom-nav-height, 5rem) + 1.5rem)` }}
                         aria-label={fabDetails['aria-label']}
                     >
                         <PlusIcon className="w-8 h-8" />

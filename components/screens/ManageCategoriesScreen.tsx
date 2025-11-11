@@ -51,7 +51,7 @@ export default function ManageCategoriesModal({ isOpen, onClose }: ManageCategor
                 </div>
                 <div className="flex justify-between items-center mb-4 flex-shrink-0 px-2 sm:px-0">
                     <h2 className="text-headline-m">Manage Categories</h2>
-                    <button onClick={() => { hapticClick(); onClose(); }} className="text-on-surface-variant p-2" aria-label="Close manage categories modal">
+                    <button onClick={() => { hapticClick(); onClose(); }} className="p-3 rounded-full text-on-surface-variant hover:bg-surface-variant/80 transition-colors" aria-label="Close manage categories modal">
                         <CloseIcon />
                     </button>
                 </div>

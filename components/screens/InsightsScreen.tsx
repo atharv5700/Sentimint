@@ -2,9 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { Period } from '../../types';
 import InsightsDashboard from '../InsightsDashboard';
 import { hapticClick } from '../../services/haptics';
-import { useAppContext } from '../../App';
-import { reportService } from '../../services/reportGenerator';
-import { DownloadIcon } from '../../constants';
 
 const SegmentedControl: React.FC<{ options: {label: string, value: Period}[], selected: Period, onSelect: (value: Period) => void }> = ({ options, selected, onSelect }) => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -40,7 +37,7 @@ const SegmentedControl: React.FC<{ options: {label: string, value: Period}[], se
     }, [selected, options]);
 
     return (
-        <div ref={containerRef} className="relative flex justify-center p-1 bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 rounded-2xl mx-auto max-w-sm">
+        <div ref={containerRef} className="relative flex justify-center p-1 bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 rounded-2xl">
             <div 
                 className="absolute top-1 bottom-1 bg-primary-container rounded-2xl shadow transition-all duration-300 ease-out"
                 style={pillStyle}
@@ -62,34 +59,20 @@ const SegmentedControl: React.FC<{ options: {label: string, value: Period}[], se
 
 export default function InsightsScreen() {
     const [period, setPeriod] = useState<Period>('M');
-    const { transactions, theme } = useAppContext();
-
-    const handleGenerateReport = () => {
-        hapticClick();
-        const reportHtml = reportService.generateReport(transactions, period, theme);
-        const reportWindow = window.open('', '_blank');
-        reportWindow?.document.write(reportHtml);
-        reportWindow?.document.close();
-    };
 
     return (
         <div className="px-4 space-y-4">
-             <div className="flex justify-between items-center animate-screenFadeIn" style={{ animationDelay: '50ms' }}>
-                 <div className="flex-grow">
-                     <SegmentedControl
-                        options={[
-                            {label: 'Day', value: 'D'}, 
-                            {label: 'Week', value: 'W'},
-                            {label: 'Month', value: 'M'},
-                            {label: 'Year', value: 'Y'}
-                        ]}
-                        selected={period}
-                        onSelect={setPeriod}
-                    />
-                 </div>
-                 <button onClick={handleGenerateReport} className="ml-2 flex-shrink-0 bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 text-on-surface-variant w-12 h-12 rounded-2xl flex items-center justify-center">
-                    <DownloadIcon className="w-6 h-6"/>
-                </button>
+             <div className="animate-screenFadeIn" style={{ animationDelay: '50ms' }}>
+                 <SegmentedControl
+                    options={[
+                        {label: 'Day', value: 'D'}, 
+                        {label: 'Week', value: 'W'},
+                        {label: 'Month', value: 'M'},
+                        {label: 'Year', value: 'Y'}
+                    ]}
+                    selected={period}
+                    onSelect={setPeriod}
+                />
             </div>
             
             <div className="animate-screenFadeIn" style={{ animationDelay: '150ms' }}>

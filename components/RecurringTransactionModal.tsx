@@ -84,7 +84,7 @@ export default function RecurringTransactionModal({ isOpen, onClose, rTxToEdit }
                 </div>
                 <div className="flex justify-between items-center mb-4 flex-shrink-0 px-2 sm:px-0">
                     <h2 className="text-headline-m">{rTxToEdit ? 'Edit' : 'Add'} Recurring</h2>
-                    <button onClick={() => { hapticClick(); onClose(); }} className="text-on-surface-variant p-2" aria-label="Close modal">
+                    <button onClick={() => { hapticClick(); onClose(); }} className="p-3 rounded-full text-on-surface-variant hover:bg-surface-variant/80 transition-colors" aria-label="Close modal">
                         <CloseIcon />
                     </button>
                 </div>

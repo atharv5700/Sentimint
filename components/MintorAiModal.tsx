@@ -125,7 +125,7 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
                     style={{ paddingTop: `calc(1rem + env(safe-area-inset-top))` }}
                 >
                     <h2 className="text-title-m font-medium">{MINTOR_AI_ASSISTANT.name}</h2>
-                    <button onClick={() => { hapticClick(); handleAnimatedClose(); }} className="text-on-surface-variant p-1" aria-label="Close Mintor AI modal">
+                    <button onClick={() => { hapticClick(); handleAnimatedClose(); }} className="p-3 rounded-full text-on-surface-variant hover:bg-surface-variant/80 transition-colors" aria-label="Close Mintor AI modal">
                         <CloseIcon />
                     </button>
                 </header>

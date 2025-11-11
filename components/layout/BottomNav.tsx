@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, forwardRef } from 'react';
 import type { Screen } from '../../types';
 import { HomeIcon, TransactionsIcon, InsightsIcon, GoalsIcon, SettingsIcon } from '../../constants';
 import { hapticClick } from '../../services/haptics';
@@ -23,7 +23,7 @@ const navItems: NavItem[] = [
     { id: 'Settings', label: 'Settings', icon: SettingsIcon },
 ];
 
-export default function BottomNav({ activeScreen, setScreen, isBulkMode }: BottomNavProps) {
+const BottomNav = forwardRef<HTMLElement, BottomNavProps>(({ activeScreen, setScreen, isBulkMode }, ref) => {
     const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
     const [pillStyle, setPillStyle] = useState({});
 
@@ -41,6 +41,7 @@ export default function BottomNav({ activeScreen, setScreen, isBulkMode }: Botto
 
     return (
         <footer
+            ref={ref}
             className={`fixed bottom-0 left-0 right-0 z-30 backdrop-blur-lg border-t border-outline-variant/30 transition-transform duration-300 ease-in-out ${isBulkMode ? 'translate-y-full' : 'translate-y-0'}`}
             style={{ 
                 background: 'var(--bottom-nav-bg)',
@@ -81,4 +82,6 @@ export default function BottomNav({ activeScreen, setScreen, isBulkMode }: Botto
             </nav>
         </footer>
     );
-}
+});
+
+export default BottomNav;

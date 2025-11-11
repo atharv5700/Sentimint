@@ -99,7 +99,7 @@ export const ExportDataModal: React.FC<{ csvData: string; onClose: () => void }>
                 </div>
                 <div className="flex justify-between items-center mb-4 flex-shrink-0 px-2 sm:px-0">
                     <h2 className="text-headline-m">Export Data</h2>
-                    <button onClick={() => { hapticClick(); onClose(); }} className="text-on-surface-variant p-2" aria-label="Close export modal">
+                    <button onClick={() => { hapticClick(); onClose(); }} className="p-3 rounded-full text-on-surface-variant hover:bg-surface-variant/80 transition-colors" aria-label="Close export modal">
                         <CloseIcon />
                     </button>
                 </div>
