@@ -335,49 +335,6 @@ const getKBAnswer = (topic: string, kb: KnowledgeBase): string => {
     return `I'm not sure about "${topic}". Try asking 'help' to see what I can do.`;
 };
 
-
-const getContextualStartingPrompts = (screen: Screen): MintorAction[] => {
-    const defaults: MintorAction[] = [
-        { label: 'Analyze my spending', type: 'query', payload: 'Analyze my spending this month' },
-        { label: 'Give me saving tips', type: 'query', payload: 'Give me saving tips' },
-    ];
-    switch(screen) {
-        case 'Home':
-            return [
-                { label: 'Biggest expense this week?', type: 'query', payload: 'What was my biggest expense this week?' },
-                { label: 'Food spending this month?', type: 'query', payload: 'How much did I spend on food this month?' },
-                { label: 'Give me saving tips', type: 'query', payload: 'Give me saving tips' },
-                { label: 'What is an emergency fund?', type: 'query', payload: 'What is an emergency fund?' },
-            ];
-        case 'Ledger':
-             return [
-                { label: 'Compare spending: this month vs last', type: 'query', payload: 'Compare my total spending this month vs last month' },
-                { label: 'How do I edit a transaction?', type: 'query', payload: 'How do I edit a transaction?' },
-                { label: 'Export my data', type: 'query', payload: 'How do I export my data?' },
-            ];
-        case 'Insights':
-            return [
-                 { label: 'Compare food spending', type: 'query', payload: 'Compare food spending this month vs last month' },
-                 { label: 'Busiest spending day?', type: 'query', payload: 'Which day of the week do I spend most?' },
-                 { label: 'What is a credit score?', type: 'query', payload: 'What is a credit score?' },
-                 ...defaults,
-            ];
-        case 'Budgets':
-            return [
-                { label: 'How can I save faster?', type: 'query', payload: 'How can I save money faster?' },
-                { label: 'What is a good savings rate?', type: 'query', payload: 'What is a good savings rate?' },
-                { label: 'What is an SIP?', type: 'query', payload: 'What is SIP?' },
-                { label: 'How can I improve my budget?', type: 'query', payload: 'How can I improve my budget?' },
-            ];
-        default:
-             return [
-                ...defaults,
-                { label: 'What is an emergency fund?', type: 'query', payload: 'What is an emergency fund?' },
-                { label: 'How do I edit a transaction?', type: 'query', payload: 'How do I edit a transaction?' },
-            ];
-    }
-}
-
 const functionDeclarations: FunctionDeclaration[] = [
     {
         name: 'analyzeSpending',
@@ -459,7 +416,6 @@ const functionDeclarations: FunctionDeclaration[] = [
 
 export const mintorAiService = {
     getCoachingTip,
-    getContextualStartingPrompts,
     generateWeeklyDigest,
     getResponse: async (query: string): Promise<Omit<MintorAiMessage, 'id'>> => {
         try {
@@ -520,17 +476,16 @@ export const mintorAiService = {
                         resultText = "I'm not sure how to handle that action.";
                 }
                 
-                return { sender: 'bot', text: resultText, actions: [] };
+                return { sender: 'bot', text: resultText };
             }
             
-            return { sender: 'bot', text: response.text, actions: [] };
+            return { sender: 'bot', text: response.text };
 
         } catch (error) {
             console.error("Error getting response from AI service:", error);
             return {
                 sender: 'bot',
                 text: "I'm having a little trouble connecting right now. Please try again in a moment.",
-                actions: []
             };
         }
     }

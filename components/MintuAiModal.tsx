@@ -3,19 +3,18 @@ import type { MintorAiMessage, MintorAction, Screen } from '../types';
 import { mintorAiService } from '../services/mintorAi';
 import { MINTOR_AI_ASSISTANT, SendIcon, CloseIcon } from '../constants';
 import { hapticClick } from '../services/haptics';
+import { useAppContext } from '../App';
 
 interface MintorAiModalProps {
     isOpen: boolean;
     onClose: () => void;
-    navigateTo: (screen: Screen) => void;
-    activeScreen: Screen;
 }
 
 const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: MintorAction) => void }> = ({ message, onAction }) => {
     const isUser = message.sender === 'user';
     return (
         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-screenFadeIn`}>
-            <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${isUser ? 'bg-primary-container text-on-primary-container rounded-br-none' : 'bg-surface-variant text-on-surface-variant rounded-bl-none'}`}>
+            <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${isUser ? 'bg-primary-container text-on-primary-container rounded-br-none' : 'bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 text-on-surface-variant rounded-bl-none'}`}>
                 <p className="text-body-m whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: message.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}></p>
                  {message.actions && message.actions.length > 0 && (
                     <div className="flex flex-col items-start gap-2 mt-3">
@@ -39,11 +38,19 @@ const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: Mintor
 };
 
 
-export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScreen }: MintorAiModalProps) {
+export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
     const [messages, setMessages] = useState<MintorAiMessage[]>([]);
     const [input, setInput] = useState('');
     const chatEndRef = useRef<HTMLDivElement>(null);
     const [isThinking, setIsThinking] = useState(false);
+    // Fix: This component needs access to the screen to provide contextual prompts.
+    const [activeScreen, setActiveScreen] = useState<Screen>('Home');
+    const { setScreen } = useAppContext();
+
+    const navigateTo = (screen: Screen) => {
+        setScreen(screen);
+        onClose();
+    };
 
     useEffect(() => {
         if (isOpen && messages.length === 0) {
@@ -92,7 +99,6 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScree
     const handleActionClick = (action: MintorAction) => {
         if (action.type === 'navigate') {
             navigateTo(action.payload as Screen);
-            onClose();
         } else if (action.type === 'query') {
             handleSend(action.payload);
         }
@@ -102,10 +108,10 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScree
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-0 md:p-4 animate-backdropFadeIn">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-0 md:p-4 animate-backdropFadeIn">
             <div className="bg-surface rounded-none md:rounded-3xl w-full h-full md:max-w-2xl md:h-[calc(100%-2rem)] flex flex-col shadow-2xl animate-modalSlideUp">
                 <header 
-                    className="flex items-center justify-between p-4 border-b border-outline-variant"
+                    className="flex items-center justify-between p-4 border-b border-outline-variant bg-surface/80 backdrop-blur-lg z-10"
                     style={{ paddingTop: `calc(1rem + env(safe-area-inset-top))` }}
                 >
                     <h2 className="text-title-m font-medium">{MINTOR_AI_ASSISTANT.name}</h2>
@@ -129,7 +135,7 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScree
                     <div ref={chatEndRef} />
                 </main>
                 <footer 
-                    className="p-4 border-t border-outline-variant pb-safe"
+                    className="p-4 border-t border-outline-variant bg-surface/80 backdrop-blur-lg z-10 pb-safe"
                 >
                     <div className="flex items-center gap-2">
                         <input
@@ -138,10 +144,10 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScree
                             onChange={(e) => setInput(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                             placeholder="Ask me anything..."
-                            className="flex-1 bg-surface-variant text-on-surface-variant rounded-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="flex-1 bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 text-on-surface-variant rounded-2xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary"
                             disabled={isThinking}
                         />
-                         <button onClick={() => handleSend()} disabled={!input.trim() || isThinking} className="bg-primary text-on-primary p-3 rounded-full shadow hover:bg-primary/90 disabled:bg-outline disabled:opacity-50 transition-all">
+                         <button onClick={() => handleSend()} disabled={!input.trim() || isThinking} className="bg-primary text-on-primary p-3 rounded-2xl shadow hover:bg-primary/90 disabled:bg-outline disabled:opacity-50 transition-all">
                             <SendIcon />
                         </button>
                     </div>

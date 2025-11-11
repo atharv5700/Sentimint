@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { MintorAiMessage, MintorAction, Screen } from '../types';
+import type { MintorAiMessage } from '../types';
 import { mintorAiService } from '../services/mintorAi';
 import { MINTOR_AI_ASSISTANT, SendIcon, CloseIcon } from '../constants';
 import { hapticClick } from '../services/haptics';
@@ -7,40 +7,21 @@ import { hapticClick } from '../services/haptics';
 interface MintorAiModalProps {
     isOpen: boolean;
     onClose: () => void;
-    navigateTo: (screen: Screen) => void;
-    activeScreen: Screen;
 }
 
-const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: MintorAction) => void }> = ({ message, onAction }) => {
+const ChatBubble: React.FC<{ message: MintorAiMessage }> = ({ message }) => {
     const isUser = message.sender === 'user';
     return (
         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-screenFadeIn`}>
             <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${isUser ? 'bg-primary-container text-on-primary-container rounded-br-none' : 'bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 text-on-surface-variant rounded-bl-none'}`}>
                 <p className="text-body-m whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: message.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}></p>
-                 {message.actions && message.actions.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3 stagger-dropdown">
-                        {message.actions.map((action, index) => (
-                            <button 
-                                key={index}
-                                style={{ '--stagger-index': index } as React.CSSProperties}
-                                onClick={() => {
-                                    hapticClick();
-                                    onAction(action);
-                                }}
-                                className="text-sm bg-surface text-on-surface px-4 py-2 rounded-2xl text-left border border-outline/20 hover:bg-surface-variant transition-colors"
-                            >
-                                {action.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
             </div>
         </div>
     );
 };
 
 
-export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScreen }: MintorAiModalProps) {
+export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
     const [messages, setMessages] = useState<MintorAiMessage[]>([]);
     const [input, setInput] = useState('');
     const chatEndRef = useRef<HTMLDivElement>(null);
@@ -52,10 +33,9 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScree
                 id: `bot-${Date.now()}`,
                 sender: 'bot',
                 text: "Hi! I'm Mintor. I can analyze your spending, help with financial questions, and more.\n\nTo answer general questions, I use Google's AI, but be assured your personal financial data always stays on your device and is not shared.\n\nHow can I help you today?",
-                actions: mintorAiService.getContextualStartingPrompts(activeScreen),
             }]);
         }
-    }, [isOpen, messages.length, activeScreen]);
+    }, [isOpen, messages.length]);
     
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -90,16 +70,6 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScree
         }, 500);
     };
 
-    const handleActionClick = (action: MintorAction) => {
-        if (action.type === 'navigate') {
-            navigateTo(action.payload as Screen);
-            onClose();
-        } else if (action.type === 'query') {
-            handleSend(action.payload);
-        }
-    };
-
-
     if (!isOpen) return null;
 
     return (
@@ -115,7 +85,7 @@ export default function MintorAiModal({ isOpen, onClose, navigateTo, activeScree
                     </button>
                 </header>
                 <main className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {messages.map(msg => <ChatBubble key={msg.id} message={msg} onAction={handleActionClick} />)}
+                    {messages.map(msg => <ChatBubble key={msg.id} message={msg} />)}
                     {isThinking && (
                         <div className="flex justify-start">
                             <div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl bg-surface-variant text-on-surface-variant rounded-bl-none">

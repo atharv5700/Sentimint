@@ -505,8 +505,6 @@ export default function App() {
                     <MintorAiModal 
                         isOpen={isMintorModalOpen} 
                         onClose={handleCloseMintorModal}
-                        navigateTo={handleSetScreen}
-                        activeScreen={screen}
                     />
                 )}
                 {isSearchModalOpen && (
