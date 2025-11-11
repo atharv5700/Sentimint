@@ -102,7 +102,7 @@ const analyzeWeekdaySpending = (data: AppData): CoachingTip | null => {
     };
 };
 
-const getCoachingTip = (): CoachingTip | null => {
+const getCoachingTip = async (): Promise<CoachingTip | null> => {
     const data: AppData = {
         transactions: dbService.getTransactions(),
     };
@@ -119,12 +119,34 @@ const getCoachingTip = (): CoachingTip | null => {
         if (result) return result;
     }
     
-    // Fallback tip
+    // Fallback tip - now daily rotating from KB
+    const kb = await getKbData();
+    const tips = kb?.savingTips?.general || [];
+    if (tips.length === 0) {
+        return {
+            id: 'default-tip',
+            icon: LightbulbIcon,
+            title: 'Daily Tip',
+            text: "Review your subscriptions regularly. You might find services you no longer need!",
+        };
+    }
+
+    const getDayOfYear = () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 0);
+        const diff = now.getTime() - start.getTime();
+        const oneDay = 1000 * 60 * 60 * 24;
+        return Math.floor(diff / oneDay);
+    };
+
+    const dayIndex = getDayOfYear();
+    const fallbackTipText = tips[dayIndex % tips.length];
+
     return {
-        id: 'default-tip',
+        id: `daily-tip-${dayIndex}`,
         icon: LightbulbIcon,
         title: 'Daily Tip',
-        text: "Review your subscriptions regularly. You might find services you no longer need!",
+        text: fallbackTipText,
     };
 };
 

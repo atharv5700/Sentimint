@@ -37,8 +37,11 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
     const [dailyQuote, setDailyQuote] = useState<Quote | null>(null);
     
     useEffect(() => {
-        const tipData = mintorAiService.getCoachingTip();
-        setTip(tipData);
+        const fetchTip = async () => {
+            const tipData = await mintorAiService.getCoachingTip();
+            setTip(tipData);
+        };
+        fetchTip();
 
         const getDayOfYear = () => {
             const now = new Date();

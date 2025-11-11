@@ -503,7 +503,9 @@ export default function App() {
                         onMintorClick={() => setMintorModalOpen(true)} 
                         onSearchClick={() => setSearchModalOpen(true)}
                     />
-                    <main className="absolute inset-0 overflow-y-auto">
+                    <main 
+                        className="absolute inset-0 overflow-y-auto"
+                    >
                         <div 
                             key={screen} 
                             className="animate-screenFadeIn"

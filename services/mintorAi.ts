@@ -1,6 +1,7 @@
+import { GoogleGenAI, FunctionDeclaration, Type } from '@google/genai';
 import type { Transaction, MintorAiMessage, MintorAction, CoachingTip, AppContextType, Screen, KnowledgeBase } from '../types';
 import { dbService } from './db';
-import { ChartBarIcon, LightbulbIcon, TrendingUpIcon, TrophyIcon, DEFAULT_CATEGORIES } from '../constants';
+import { ChartBarIcon, LightbulbIcon, TrendingUpIcon, TrophyIcon } from '../constants';
 
 let kbData: KnowledgeBase | null = null;
 const getKbData = async (): Promise<KnowledgeBase> => {
@@ -101,7 +102,7 @@ const analyzeWeekdaySpending = (data: AppData): CoachingTip | null => {
     };
 };
 
-const getCoachingTip = (): CoachingTip | null => {
+const getCoachingTip = async (): Promise<CoachingTip | null> => {
     const data: AppData = {
         transactions: dbService.getTransactions(),
     };
@@ -118,12 +119,34 @@ const getCoachingTip = (): CoachingTip | null => {
         if (result) return result;
     }
     
-    // Fallback tip
+    // Fallback tip - now daily rotating from KB
+    const kb = await getKbData();
+    const tips = kb?.savingTips?.general || [];
+    if (tips.length === 0) {
+        return {
+            id: 'default-tip',
+            icon: LightbulbIcon,
+            title: 'Daily Tip',
+            text: "Review your subscriptions regularly. You might find services you no longer need!",
+        };
+    }
+
+    const getDayOfYear = () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 0);
+        const diff = now.getTime() - start.getTime();
+        const oneDay = 1000 * 60 * 60 * 24;
+        return Math.floor(diff / oneDay);
+    };
+
+    const dayIndex = getDayOfYear();
+    const fallbackTipText = tips[dayIndex % tips.length];
+
     return {
-        id: 'default-tip',
+        id: `daily-tip-${dayIndex}`,
         icon: LightbulbIcon,
         title: 'Daily Tip',
-        text: "Review your subscriptions regularly. You might find services you no longer need!",
+        text: fallbackTipText,
     };
 };
 
@@ -377,6 +400,85 @@ const getContextualStartingPrompts = (screen: Screen): MintorAction[] => {
     }
 }
 
+const functionDeclarations: FunctionDeclaration[] = [
+    {
+        name: 'analyzeSpending',
+        description: 'Analyzes user spending for a given period (day, week, month). Provides a summary of total spending, top category, and spending associated with negative moods.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                period: { type: Type.STRING, enum: ['day', 'week', 'month'], description: 'The time period to analyze.' }
+            },
+            required: ['period']
+        }
+    },
+    {
+        name: 'compareSpending',
+        description: 'Compares spending for a specific category or total spending between the current period and the previous one (e.g., this month vs. last month).',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                category: { type: Type.STRING, description: 'The spending category to compare. Use "all" for total spending.' },
+                period: { type: Type.STRING, enum: ['week', 'month'], description: 'The time period for comparison.' }
+            },
+            required: ['category', 'period']
+        }
+    },
+    {
+        name: 'getBiggestCategory',
+        description: 'Finds and returns the category with the highest spending for a given period.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                period: { type: Type.STRING, enum: ['day', 'week', 'month'], description: 'The time period to analyze.' }
+            },
+            required: ['period']
+        }
+    },
+    {
+        name: 'getSavingTips',
+        description: 'Provides the user with a few personalized or general saving tips.',
+        parameters: { type: Type.OBJECT, properties: {} }
+    },
+    {
+        name: 'calculateEMI',
+        description: 'Calculates the Equated Monthly Installment (EMI) for a loan.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                principal: { type: Type.NUMBER, description: 'The total loan amount.' },
+                rate: { type: Type.NUMBER, description: 'The annual interest rate in percent.' },
+                years: { type: Type.NUMBER, description: 'The loan tenure in years.' }
+            },
+            required: ['principal', 'rate', 'years']
+        }
+    },
+    {
+        name: 'calculateSIP',
+        description: 'Calculates the future value of a Systematic Investment Plan (SIP).',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                monthlyInvestment: { type: Type.NUMBER, description: 'The amount invested per month.' },
+                rate: { type: Type.NUMBER, description: 'The expected annual rate of return in percent.' },
+                years: { type: Type.NUMBER, description: 'The investment duration in years.' }
+            },
+            required: ['monthlyInvestment', 'rate', 'years']
+        }
+    },
+    {
+        name: 'getKBAnswer',
+        description: 'Retrieves information about financial topics (like SIP, PPF, credit score) or how to use the Sentimint app (like editing a transaction, setting a budget). Use this for "what is" or "how to" questions.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                topic: { type: Type.STRING, description: 'The financial or app-related topic. E.g., "SIP", "edit transaction", "emergency fund", "help".' }
+            },
+            required: ['topic']
+        }
+    },
+];
+
 export const mintorAiService = {
     getCoachingTip,
     getContextualStartingPrompts,
@@ -387,73 +489,69 @@ export const mintorAiService = {
             const data: MintorData = {
                 transactions: dbService.getTransactions(),
             };
-            const lowerQuery = query.toLowerCase();
+            
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-            // --- Local Rule-Based Query Engine ---
-            const numberRegex = /(\d{1,10}(?:\.\d+)?)/g;
+            const systemInstruction = `You are Mintor, the friendly and helpful AI assistant within the Sentimint app. Your name is Mintor. Always introduce yourself as Mintor and refer to yourself as Mintor. The app you live in is called Sentimint.
+- Your goal is to provide concise, helpful, and encouraging financial advice.
+- When asked about your identity, explain that you use Google's advanced AI to provide answers but the user's financial data remains private on their device.
+- Use the provided tools to answer questions about the user's spending data or financial topics.
+- For general conversation or questions outside your tools' scope, answer conversationally.
+- Format currency using the Indian Rupee symbol (₹) and comma separators (e.g., ₹1,23,456).
+- Use markdown for formatting, especially bolding for emphasis on key terms and numbers.`;
 
-            // Intent: Analyze spending
-            if (lowerQuery.includes('analyze') || (lowerQuery.includes('how much') && lowerQuery.includes('spend'))) {
-                const periodMatch = lowerQuery.match(/(day|week|month)/);
-                const period = periodMatch ? periodMatch[0] as 'day'|'week'|'month' : 'month';
-                return { sender: 'bot', text: analyzeSpending(period, data) };
-            }
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: query,
+                config: {
+                    systemInstruction,
+                    tools: [{ functionDeclarations }],
+                },
+            });
 
-            // Intent: Compare spending
-            if (lowerQuery.includes('compare')) {
-                const periodMatch = lowerQuery.match(/(week|month)/);
-                const period = periodMatch ? periodMatch[0] as 'week'|'month' : 'month';
-                
-                let category = 'all';
-                const allCategories = [...DEFAULT_CATEGORIES, ...dbService.getCustomCategories()];
-                for (const cat of allCategories) {
-                    if (lowerQuery.includes(cat.toLowerCase())) {
-                        category = cat;
+            const functionCalls = response.functionCalls;
+
+            if (functionCalls && functionCalls.length > 0) {
+                const fc = functionCalls[0];
+                const { name, args } = fc;
+                let resultText = "Sorry, something went wrong.";
+
+                switch (name) {
+                    case 'analyzeSpending':
+                        resultText = analyzeSpending(args.period as 'month' | 'week' | 'day', data);
                         break;
-                    }
+                    case 'compareSpending':
+                        resultText = compareSpending(args.category as string, args.period as 'month' | 'week', data);
+                        break;
+                    case 'getBiggestCategory':
+                        resultText = getBiggestCategory(args.period as 'month' | 'week' | 'day', data);
+                        break;
+                    case 'getSavingTips':
+                        resultText = getSavingTips(data, kb);
+                        break;
+                    case 'calculateEMI':
+                        resultText = calculateEMI(args.principal as number, args.rate as number, args.years as number);
+                        break;
+                    case 'calculateSIP':
+                        resultText = calculateSIP(args.monthlyInvestment as number, args.rate as number, args.years as number);
+                        break;
+                    case 'getKBAnswer':
+                        resultText = getKBAnswer(args.topic as string, kb);
+                        break;
+                    default:
+                        resultText = "I'm not sure how to handle that action.";
                 }
-                return { sender: 'bot', text: compareSpending(category, period, data) };
-            }
-
-            // Intent: Biggest Category
-            if (lowerQuery.includes('biggest expense') || lowerQuery.includes('biggest category') || lowerQuery.includes('top category')) {
-                const periodMatch = lowerQuery.match(/(day|week|month)/);
-                const period = periodMatch ? periodMatch[0] as 'day'|'week'|'month' : 'month';
-                return { sender: 'bot', text: getBiggestCategory(period, data) };
-            }
-
-            // Intent: Saving Tips
-            if (lowerQuery.includes('saving tip') || lowerQuery.includes('save money')) {
-                return { sender: 'bot', text: getSavingTips(data, kb) };
+                
+                return { sender: 'bot', text: resultText, actions: [] };
             }
             
-            // Intent: EMI calculation
-            if (lowerQuery.includes('emi') || lowerQuery.includes('loan')) {
-                const numbers = (lowerQuery.match(numberRegex) || []).map(Number);
-                if (numbers.length >= 3) {
-                    return { sender: 'bot', text: calculateEMI(numbers[0], numbers[1], numbers[2]) };
-                }
-                return { sender: 'bot', text: "To calculate EMI, please provide the principal amount, interest rate (%), and tenure in years.\nFor example: 'Calculate EMI for 500000 at 8.5% for 5 years'." };
-            }
-            
-            // Intent: SIP calculation
-            if (lowerQuery.includes('sip') && (lowerQuery.includes('calculate') || lowerQuery.match(numberRegex))) {
-                 const numbers = (lowerQuery.match(numberRegex) || []).map(Number);
-                if (numbers.length >= 3) {
-                    return { sender: 'bot', text: calculateSIP(numbers[0], numbers[1], numbers[2]) };
-                }
-                return { sender: 'bot', text: "To calculate SIP returns, please provide the monthly investment, expected return rate (%), and duration in years.\nE.g., 'Calculate SIP for 5000 per month at 12% for 10 years'." };
-            }
-
-            // Fallback to Knowledge Base search
-            const kbResult = getKBAnswer(lowerQuery, kb);
-            return { sender: 'bot', text: kbResult };
+            return { sender: 'bot', text: response.text, actions: [] };
 
         } catch (error) {
-            console.error("Error getting response from local AI service:", error);
+            console.error("Error getting response from AI service:", error);
             return {
                 sender: 'bot',
-                text: "I'm having a little trouble thinking right now. Please try again in a moment.",
+                text: "I'm having a little trouble connecting right now. Please try again in a moment.",
                 actions: []
             };
         }
