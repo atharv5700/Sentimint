@@ -17,12 +17,15 @@ const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: Mintor
             <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${isUser ? 'bg-primary-container text-on-primary-container rounded-br-none' : 'bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 text-on-surface-variant rounded-bl-none'}`}>
                 <p className="text-body-m whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: message.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}></p>
                  {message.actions && message.actions.length > 0 && (
-                    <div className="flex flex-wrap items-start gap-2 mt-3">
+                    <div className="flex flex-col items-start gap-2 mt-3">
                         {message.actions.map((action, index) => (
                             <button 
                                 key={index} 
-                                onClick={() => onAction(action)}
-                                className="text-sm bg-primary/20 dark:bg-primary/30 backdrop-blur-lg border border-primary/40 dark:border-primary/60 text-primary px-3 py-1.5 rounded-full text-left transition-transform active:scale-95"
+                                onClick={() => {
+                                    hapticClick();
+                                    onAction(action);
+                                }}
+                                className="text-sm bg-primary-container text-on-primary-container px-3 py-1.5 rounded-xl text-left w-full transition-transform active:scale-95"
                             >
                                 {action.label}
                             </button>
@@ -40,11 +43,20 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
     const [input, setInput] = useState('');
     const chatEndRef = useRef<HTMLDivElement>(null);
     const [isThinking, setIsThinking] = useState(false);
-    const { setScreen, screen } = useAppContext();
+    const { screen, setScreen } = useAppContext();
+    const [isClosing, setIsClosing] = useState(false);
+
+    const handleAnimatedClose = () => {
+        setIsClosing(true);
+        setTimeout(() => {
+            onClose();
+            setIsClosing(false); // Reset for the next time it opens
+        }, 400); // Must match animation duration in index.html
+    };
 
     const navigateTo = (screen: Screen) => {
         setScreen(screen);
-        onClose();
+        handleAnimatedClose();
     };
 
     useEffect(() => {
@@ -52,7 +64,7 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
             setMessages([{
                 id: `bot-${Date.now()}`,
                 sender: 'bot',
-                text: "Hi! I'm Mintor. I can analyze your spending, help with financial questions, and more.\n\nAll my calculations run securely on your device, ensuring your financial data remains private.\n\nHow can I help you today?",
+                text: "Hi! I'm Mintor. I can analyze your spending, help with financial questions, and more.\n\nYour personal financial data always stays on your device and is never shared.",
                 actions: mintorAiService.getContextualStartingPrompts(screen),
             }]);
         }
@@ -73,9 +85,8 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
             sender: 'user',
             text: query,
         };
-        
-        // Remove actions from previous bot messages
-        setMessages(prev => [...prev.map(m => ({...m, actions: []})), userMessage]);
+
+        setMessages(prev => [...prev, userMessage]);
         setInput('');
         setIsThinking(true);
 
@@ -93,7 +104,6 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
     };
 
     const handleActionClick = (action: MintorAction) => {
-        hapticClick();
         if (action.type === 'navigate') {
             navigateTo(action.payload as Screen);
         } else if (action.type === 'query') {
@@ -105,14 +115,17 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-0 md:p-4 animate-backdropFadeIn">
-            <div className="bg-surface rounded-none md:rounded-3xl w-full h-full md:max-w-2xl md:h-[calc(100%-2rem)] flex flex-col shadow-2xl animate-modalSlideUp">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-0 md:p-4 animate-backdropFadeIn" onClick={handleAnimatedClose}>
+            <div 
+                className={`bg-surface rounded-none md:rounded-3xl w-full h-full md:max-w-2xl md:h-[calc(100%-2rem)] flex flex-col shadow-2xl origin-top-right ${isClosing ? 'animate-mintor-close' : 'animate-mintor-open'}`}
+                onClick={e => e.stopPropagation()}
+            >
                 <header 
                     className="flex items-center justify-between p-4 border-b border-outline-variant bg-surface/80 backdrop-blur-lg z-10"
                     style={{ paddingTop: `calc(1rem + env(safe-area-inset-top))` }}
                 >
                     <h2 className="text-title-m font-medium">{MINTOR_AI_ASSISTANT.name}</h2>
-                    <button onClick={() => { hapticClick(); onClose(); }} className="text-on-surface-variant p-1" aria-label="Close Mintor AI modal">
+                    <button onClick={() => { hapticClick(); handleAnimatedClose(); }} className="text-on-surface-variant p-1" aria-label="Close Mintor AI modal">
                         <CloseIcon />
                     </button>
                 </header>
