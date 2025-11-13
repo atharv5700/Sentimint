@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { MintorAiMessage, MintorAction, Screen } from '../types';
-import { mintorAiService } from '../services/mintorAi';
+import { mintorAiService } from 'services/mintorAi';
 import { SendIcon, CloseIcon } from '../constants';
-import { hapticClick } from '../services/haptics';
+import { hapticClick } from 'services/haptics';
 import { useAppContext } from '../App';
 
 interface MintorAiModalProps {

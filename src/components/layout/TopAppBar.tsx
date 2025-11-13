@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react';
 import { SearchIcon, MintorAiIcon } from '../../constants';
-import { hapticClick } from '../../services/haptics';
+import { hapticClick } from 'services/haptics';
 
 interface TopAppBarProps {
     onMintorClick: () => void;

@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { Transaction } from '../types';
 import { useAppContext } from '../App';
 import { MOOD_MAP, TrashIcon, TagIcon, LinkIcon, CloseIcon, DEFAULT_TAGS } from '../constants';
-import { hapticClick, hapticSuccess } from '../services/haptics';
+import { hapticClick, hapticSuccess } from 'services/haptics';
 import CustomSelect from './CustomSelect';
 
 type SortOrder = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
@@ -227,31 +227,14 @@ export default function TransactionList({
         });
     };
     
-    // FIX: Combined sorting and grouping logic into two clear, dependent useMemo hooks.
-    // This correctly applies sorting for all `sortOrder` types.
-    const sortedTransactions = useMemo(() => {
-        const txs = [...transactions];
-        switch (sortOrder) {
-            case 'date-asc':
-                return txs.sort((a, b) => a.ts - b.ts);
-            case 'amount-desc':
-                return txs.sort((a, b) => b.amount - a.amount);
-            case 'amount-asc':
-                return txs.sort((a, b) => a.amount - b.amount);
-            case 'date-desc':
-            default:
-                return txs.sort((a, b) => b.ts - a.ts);
-        }
-    }, [transactions, sortOrder]);
+    const isAmountSort = sortOrder.startsWith('amount');
 
     const transactionsByMonth = useMemo(() => {
-        if (!sortOrder.startsWith('date') || !showMonthHeaders) {
-            return null; // Render as a flat list if not sorting by date or if headers are off
-        }
+        if (isAmountSort) return [];
 
         const monthMap = new Map<string, { label: string; txs: Transaction[] }>();
         
-        sortedTransactions.forEach(tx => {
+        transactions.forEach(tx => {
             const date = new Date(tx.ts);
             const key = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, '0')}`;
             
@@ -264,9 +247,16 @@ export default function TransactionList({
             monthMap.get(key)!.txs.push(tx);
         });
         
-        // Map is already ordered by insertion due to `sortedTransactions`.
-        return Array.from(monthMap.entries());
-    }, [sortedTransactions, sortOrder, showMonthHeaders]);
+        const grouped = Array.from(monthMap.entries());
+
+        if (sortOrder === 'date-asc') {
+            grouped.sort((a, b) => a[0].localeCompare(b[0]));
+        } else { // 'date-desc'
+            grouped.sort((a, b) => b[0].localeCompare(a[0]));
+        }
+
+        return grouped;
+    }, [transactions, isAmountSort, sortOrder]);
     
     if (transactions.length === 0) {
         return <div className="text-center p-8 text-on-surface-variant">No transactions found.</div>;
@@ -274,30 +264,9 @@ export default function TransactionList({
 
     return (
         <div>
-            {transactionsByMonth ? (
-                // Render grouped by month
-                transactionsByMonth.map(([key, { label, txs }], index) => (
-                    <div key={key}>
-                        <h3 className={`bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 rounded-2xl py-2 px-4 text-title-m font-medium text-on-surface-variant ${index === 0 ? 'mb-2' : 'my-2'}`}>{label}</h3>
-                        <div className="stagger-children">
-                            {txs.map((tx, txIndex) => (
-                                <TransactionCard 
-                                    key={tx.id} 
-                                    tx={tx} 
-                                    onEdit={onEditTransaction}
-                                    onSelect={toggleSelection}
-                                    isSelected={selectedIds.includes(tx.id)}
-                                    isBulkMode={isBulkSelectEnabled ? isBulkMode : false}
-                                    style={{'--stagger-delay': txIndex} as React.CSSProperties}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                ))
-            ) : (
-                // Render as a flat list
+            {isAmountSort || !showMonthHeaders ? (
                  <div className="stagger-children">
-                    {sortedTransactions.map((tx, index) => (
+                    {transactions.map((tx, index) => (
                         <TransactionCard 
                             key={tx.id} 
                             tx={tx} 
@@ -309,6 +278,25 @@ export default function TransactionList({
                         />
                     ))}
                 </div>
+            ) : (
+                transactionsByMonth.map(([key, { label, txs }], index) => (
+                    <div key={key}>
+                        <h3 className={`bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 rounded-2xl py-2 px-4 text-title-m font-medium text-on-surface-variant ${index === 0 ? 'mb-2' : 'my-2'}`}>{label}</h3>
+                        <div className="stagger-children">
+                            {Array.isArray(txs) && txs.map((tx, index) => (
+                                <TransactionCard 
+                                    key={tx.id} 
+                                    tx={tx} 
+                                    onEdit={onEditTransaction}
+                                    onSelect={toggleSelection}
+                                    isSelected={selectedIds.includes(tx.id)}
+                                    isBulkMode={isBulkSelectEnabled ? isBulkMode : false}
+                                    style={{'--stagger-delay': index} as React.CSSProperties}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                ))
             )}
             {isBulkSelectEnabled && <BulkActionToolbar selectedIds={selectedIds} onClear={() => setSelectedIds([])} transactions={transactions}/>}
         </div>

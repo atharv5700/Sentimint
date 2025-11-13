@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, createContext, useContext, use
 import type { Screen, Theme, Transaction, Budget, RecurringTransaction, UserChallenge, Challenge } from './types';
 import { dbService } from './services/db';
 import { ALL_CHALLENGES } from './data/challenges';
-import { hapticClick, hapticSuccess, hapticError } from './services/haptics';
+import { hapticClick, hapticSuccess, hapticError } from 'services/haptics';
 import HomeScreen from './components/screens/HomeScreen';
 import TransactionsScreen from './components/screens/TransactionsScreen';
 import InsightsScreen from './components/screens/InsightsScreen';

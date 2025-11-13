@@ -17,7 +17,7 @@ export default function InsightsScreen() {
                         {label: 'Year', value: 'Y'}
                     ]}
                     selected={period}
-                    onSelect={(value) => setPeriod(value as Period)}
+                    onSelect={(value) => setPeriod(value)}
                 />
             </div>
             

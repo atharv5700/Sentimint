@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../../App';
 import { CloseIcon, PlusIcon, TrashIcon, DEFAULT_CATEGORIES } from '../../constants';
-import { hapticClick, hapticError } from '../../services/haptics';
+import { hapticClick, hapticError } from 'services/haptics';
 
 interface ManageCategoriesModalProps {
     isOpen: boolean;

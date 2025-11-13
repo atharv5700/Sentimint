@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { Transaction, Mood } from '../types';
 import { useAppContext } from '../App';
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS, MOOD_MAP, ChevronDownIcon, PlusIcon, CloseIcon, SparkleIcon } from '../constants';
-import { hapticClick, hapticError } from '../services/haptics';
+import { hapticClick, hapticError } from 'services/haptics';
 import CustomSelect from './CustomSelect';
 
 interface AddTransactionModalProps {

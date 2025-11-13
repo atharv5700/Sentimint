@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { hapticClick } from '../services/haptics';
+import { hapticClick } from 'services/haptics';
 
 interface SegmentedControlProps<T extends string> {
     options: { label: string; value: T }[];

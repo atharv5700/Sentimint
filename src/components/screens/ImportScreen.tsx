@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { Mood, Transaction } from '../../types';
 import { useAppContext } from '../../App';
-import { hapticClick, hapticError, hapticSuccess } from '../../services/haptics';
+import { hapticClick, hapticError, hapticSuccess } from 'services/haptics';
 import { CloseIcon, DEFAULT_CATEGORIES } from '../../constants';
 
 interface ImportDataModalProps {
