@@ -68,8 +68,8 @@
     "50_30_20_rule": { "keywords": ["50/30/20", "50 30 20", "budgeting rule"], "answer": "The 50/30/20 rule is a simple budgeting guideline. It suggests you should spend 50% of your after-tax income on needs (rent, bills), 30% on wants (entertainment, dining out), and 20% on savings and debt repayment." }
   },
   "howToApp": {
-    "edit_transaction": { "keywords": ["edit transaction", "change transaction", "update expense"], "answer": "To edit a transaction, go to the 'Home' or 'Transactions' screen and simply tap on the transaction you wish to change. The edit screen will pop up." },
-    "delete_transaction": { "keywords": ["delete transaction", "remove transaction", "delete expense"], "answer": "To delete a transaction, go to the 'Home' or 'Transactions' screen. Long-press on a transaction to enter bulk-edit mode, select the ones you want to delete, and tap the trash icon." },
+    "edit_transaction": { "keywords": ["edit transaction", "change transaction", "update expense"], "answer": "To edit a transaction, go to the 'Home' or 'Ledger' screen and simply tap on the transaction you wish to change. The edit screen will pop up." },
+    "delete_transaction": { "keywords": ["delete transaction", "remove transaction", "delete expense"], "answer": "To delete a transaction, go to the 'Home' or 'Ledger' screen. Long-press on a transaction to enter bulk-edit mode, select the ones you want to delete, and tap the trash icon." },
     "set_budget": { "keywords": ["set budget", "create budget", "add budget"], "answer": "You can create and manage your budgets on the 'Budgets' screen. Tap the floating plus button to add a new budget for any category." },
     "export_csv": { "keywords": ["export", "csv", "download data"], "answer": "You can export all your transaction data to a CSV file from the 'Settings' page under the Data Management section." },
     "import_csv": { "keywords": ["import", "upload data"], "answer": "You can import transactions from a CSV file. Go to 'Settings', then 'Data Management', and tap 'Import Data from CSV'. Follow the on-screen instructions for the correct file format." },

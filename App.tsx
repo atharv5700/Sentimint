@@ -18,6 +18,19 @@ import GlobalSearchModal from './components/GlobalSearchModal';
 import { PlusIcon } from './constants';
 import RecurringTransactionModal from './components/RecurringTransactionModal';
 
+/**
+ * CAPACITOR PLUGINS FOR NATIVE BUILDS
+ * To enable full native functionality, please install the following plugins:
+ * 
+ * npm install @capacitor/app @capacitor/haptics @capacitor/network @capacitor/storage
+ * npx cap sync
+ * 
+ * - @capacitor/app: Used for native app events, like handling the Android back button.
+ * - @capacitor/haptics: Provides access to the device's native haptic feedback engine.
+ * - @capacitor/network: Offers a reliable way to check the device's network connection status.
+ * - @capacitor/storage: A more robust key-value store than localStorage for native devices.
+ */
+
 interface FabConfig {
     onClick: () => void;
     'aria-label': string;
@@ -222,7 +235,7 @@ export default function App() {
 
     // System Back Button / Gesture handling for modals
     useEffect(() => {
-        const handlePopState = () => {
+        const handleCloseActions = () => {
             if (isAddTxModalOpen) setAddTxModalOpen(false);
             if (isMintorModalOpen) setMintorModalOpen(false);
             if (isSearchModalOpen) setSearchModalOpen(false);
@@ -237,11 +250,25 @@ export default function App() {
             if (!window.history.state?.modal) {
                 window.history.pushState({ modal: true }, '');
             }
-            window.addEventListener('popstate', handlePopState);
+            window.addEventListener('popstate', handleCloseActions);
+
+            // Capacitor-specific back button handling for Android
+            let listener: any;
+            if (window.Capacitor?.isPluginAvailable('App')) {
+                listener = window.Capacitor.Plugins.App.addListener('backButton', (e: { canGoBack: boolean }) => {
+                    e.canGoBack = false; // Prevent default back button action
+                    handleCloseActions();
+                });
+            }
+
+            return () => {
+                window.removeEventListener('popstate', handleCloseActions);
+                listener?.remove();
+            };
         }
     
         return () => {
-            window.removeEventListener('popstate', handlePopState);
+            window.removeEventListener('popstate', handleCloseActions);
         };
     }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen, isSearchModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isImportModalOpen, isExportModalOpen, isManageCategoriesModalOpen]);
 

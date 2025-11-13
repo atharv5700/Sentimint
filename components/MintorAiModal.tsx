@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { MintorAiMessage, MintorAction, Screen } from '../types';
 import { mintorAiService } from '../services/mintorAi';
-import { MINTOR_AI_ASSISTANT, SendIcon, CloseIcon } from '../constants';
+import { SendIcon, CloseIcon } from '../constants';
 import { hapticClick } from '../services/haptics';
 import { useAppContext } from '../App';
 
@@ -25,7 +25,7 @@ const ChatBubble: React.FC<{ message: MintorAiMessage, onAction: (action: Mintor
                                     hapticClick();
                                     onAction(action);
                                 }}
-                                className="text-sm bg-primary-container text-on-primary-container px-3 py-1.5 rounded-xl text-left w-full transition-transform active:scale-95"
+                                className="text-sm bg-surface/80 hover:bg-surface-variant text-on-surface-variant px-3 py-1.5 rounded-xl text-left w-full transition-transform active:scale-95"
                             >
                                 {action.label}
                             </button>
@@ -85,8 +85,9 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
             sender: 'user',
             text: query,
         };
-
-        setMessages(prev => [...prev, userMessage]);
+        
+        // Remove actions from previous bot message
+        setMessages(prev => [...prev.map(m => ({...m, actions: []})), userMessage]);
         setInput('');
         setIsThinking(true);
 
@@ -124,10 +125,10 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
                     className="flex items-center justify-between p-4 border-b border-outline-variant bg-surface/80 backdrop-blur-lg z-10"
                     style={{ paddingTop: `calc(1rem + env(safe-area-inset-top))` }}
                 >
-                    <div className="text-title-l font-bold tracking-tight">
+                    <div className="text-4xl font-bold tracking-tight">
                         <span className="bg-gradient-to-br from-primary to-primary-container bg-clip-text text-transparent">Min</span>
                         <span className="text-on-surface-variant [text-shadow:_0_0_5px_rgb(var(--color-surface-variant)/0.3)] [-webkit-text-stroke:_0.25px_rgb(var(--color-outline-variant)/0.5)]">tor</span>
-                        <span className="text-on-surface-variant/80 font-medium ml-1">AI</span>
+                        <span className="text-on-surface-variant/80 font-medium ml-1 text-2xl">AI</span>
                     </div>
                     <button onClick={() => { hapticClick(); handleAnimatedClose(); }} className="p-3 rounded-full text-on-surface-variant hover:bg-surface-variant/80 transition-colors" aria-label="Close Mintor AI modal">
                         <CloseIcon />
@@ -136,7 +137,7 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
                 <main className="flex-1 overflow-y-auto p-4 space-y-4">
                     {messages.map(msg => <ChatBubble key={msg.id} message={msg} onAction={handleActionClick} />)}
                     {isThinking && (
-                        <div className="flex justify-start">
+                        <div className="flex justify-start animate-screenFadeIn">
                             <div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl bg-surface-variant text-on-surface-variant rounded-bl-none">
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 bg-on-surface-variant rounded-full animate-bounce [animation-delay:-0.3s]"></div>

@@ -1,5 +1,12 @@
 import type { Transaction, Theme, Mood, Budget, RecurringTransaction, UserChallenge } from '../types';
 
+/**
+ * For native builds, it's recommended to use the Capacitor Storage plugin
+ * for more robust and performant key-value storage.
+ * This implementation uses localStorage as a web-standard fallback.
+ * To upgrade: npm install @capacitor/storage
+ */
+
 const DB_KEY = 'sentimint_db';
 const THEME_KEY = 'sentimint_theme';
 

@@ -1,7 +1,7 @@
 import { GoogleGenAI, FunctionDeclaration, Type } from '@google/genai';
 import type { Transaction, MintorAiMessage, MintorAction, CoachingTip, AppContextType, Screen, KnowledgeBase } from '../types';
 import { dbService } from './db';
-import { ChartBarIcon, LightbulbIcon, TrendingUpIcon, TrophyIcon } from '../constants';
+import { ChartBarIcon, LightbulbIcon, TrendingUpIcon } from '../constants';
 
 let kbData: KnowledgeBase | null = null;
 const getKbData = async (): Promise<KnowledgeBase> => {
@@ -92,7 +92,7 @@ const analyzeWeekdaySpending = (data: AppData): CoachingTip | null => {
 
     const totalTransport = transportTxs.reduce((sum, tx) => sum + tx.amount, 0);
 
-    if (weekdaySpending / totalTransport < 0.7) return null; // Only if >70% is on weekdays
+    if (totalTransport > 0 && (weekdaySpending / totalTransport < 0.7)) return null; // Only if >70% is on weekdays
 
     return {
         id: 'weekday-spending',
@@ -466,18 +466,7 @@ const functionDeclarations: FunctionDeclaration[] = [
             },
             required: ['monthlyInvestment', 'rate', 'years']
         }
-    },
-    {
-        name: 'getKBAnswer',
-        description: 'Retrieves information about financial topics (like SIP, PPF, credit score) or how to use the Sentimint app (like editing a transaction, setting a budget). Use this for "what is" or "how to" questions.',
-        parameters: {
-            type: Type.OBJECT,
-            properties: {
-                topic: { type: Type.STRING, description: 'The financial or app-related topic. E.g., "SIP", "edit transaction", "emergency fund", "help".' }
-            },
-            required: ['topic']
-        }
-    },
+    }
 ];
 
 export const mintorAiService = {
@@ -494,6 +483,7 @@ export const mintorAiService = {
         }
 
         // Step 2: If no KB match, check for online status before attempting an API call.
+        // For native apps, this can be enhanced with @capacitor/network
         if (!navigator.onLine) {
             return {
                 sender: 'bot',
@@ -553,15 +543,18 @@ export const mintorAiService = {
                     case 'calculateSIP':
                         resultText = calculateSIP(args.monthlyInvestment as number, args.rate as number, args.years as number);
                         break;
-                    case 'getKBAnswer':
-                        // This case is now handled before the API call, but we keep it as a fallback.
-                        resultText = getKBAnswer(args.topic as string, kb) || "I couldn't find information on that topic.";
-                        break;
                     default:
                         resultText = "I'm not sure how to handle that action.";
                 }
                 
                 return { sender: 'bot', text: resultText, actions: [] };
+            }
+            
+            // If Gemini responds without using a tool, check the KB again with its response.
+            // This handles cases where Gemini rephrases a question that the KB could answer.
+            const rephrasedKbAnswer = getKBAnswer(response.text, kb);
+            if (rephrasedKbAnswer) {
+                return { sender: 'bot', text: rephrasedKbAnswer, actions: [] };
             }
             
             return { sender: 'bot', text: response.text, actions: [] };
