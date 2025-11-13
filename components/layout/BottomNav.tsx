@@ -61,7 +61,8 @@ const BottomNav = forwardRef<HTMLElement, BottomNavProps>(({ activeScreen, setSc
                     return (
                         <button
                             key={item.id}
-                            ref={el => buttonRefs.current[index] = el}
+                            // FIX: The ref callback should not return a value. Using braces to ensure an implicit return is not made.
+                            ref={el => { buttonRefs.current[index] = el; }}
                             onClick={() => {
                                 hapticClick();
                                 setScreen(item.id);

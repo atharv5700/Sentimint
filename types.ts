@@ -1,8 +1,7 @@
 import React from 'react';
-// Correctly import the type to be extended, not the value.
 import type { AppContextType as AppContextTypeExtended } from './App';
 
-// FIX: Consolidated Capacitor Plugin type definitions to resolve conflicts across files.
+// Consolidated Capacitor Plugin type definitions to resolve conflicts across files.
 // This single global declaration ensures all used plugins are available type-wise.
 declare global {
   interface Window {
@@ -12,7 +11,7 @@ declare global {
         App?: {
           addListener: (eventName: 'backButton', listenerFunc: (e: { canGoBack: boolean; }) => void) => { remove: () => void; };
         };
-        Storage?: {
+        Preferences?: {
           get: (options: { key: string; }) => Promise<{ value: string | null; }>;
           set: (options: { key: string; value: string; }) => Promise<void>;
           remove: (options: { key: string; }) => Promise<void>;
@@ -146,6 +145,4 @@ export type KnowledgeBase = {
     savingTips: { general: string[] };
 };
 
-
-// Re-export the extended type for use in other files
 export type AppContextType = AppContextTypeExtended;

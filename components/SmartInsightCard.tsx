@@ -1,5 +1,4 @@
 import React from 'react';
-// Fix: Replaced non-existent 'SmartInsight' type with 'CoachingTip'.
 import type { CoachingTip, Screen } from '../types';
 import { hapticClick } from '../services/haptics';
 

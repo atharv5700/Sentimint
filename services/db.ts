@@ -1,17 +1,15 @@
 import type { Transaction, Theme, Mood, Budget, RecurringTransaction, UserChallenge } from '../types';
 
 /**
- * For native builds, this service now prioritizes the Capacitor Storage plugin
+ * For native builds, this service now prioritizes the Capacitor Preferences plugin
  * for robust and performant key-value storage.
  * It gracefully falls back to localStorage for web environments.
  */
 
-// FIX: Removed local type definitions for Capacitor plugins to use the central definition in `types.ts`.
-
 const DB_KEY = 'sentimint_db';
 const THEME_KEY = 'sentimint_theme';
 
-const canUseStorage = () => window.Capacitor?.isPluginAvailable('Storage');
+const canUseStorage = () => window.Capacitor?.isPluginAvailable('Preferences');
 
 // Unicode-safe Base64 encoding. The native btoa function fails on non-Latin1 characters.
 const utf8_to_b64 = (str: string): string => {
@@ -73,7 +71,7 @@ class DbService {
         let encryptedData: string | null = null;
         try {
             if (canUseStorage()) {
-                const { value } = await window.Capacitor!.Plugins.Storage!.get({ key: DB_KEY });
+                const { value } = await window.Capacitor!.Plugins.Preferences!.get({ key: DB_KEY });
                 encryptedData = value;
             } else {
                 encryptedData = localStorage.getItem(DB_KEY);
@@ -100,7 +98,7 @@ class DbService {
             const encryptedData = encrypt(this.db);
             if (encryptedData) {
                 if (canUseStorage()) {
-                    await window.Capacitor!.Plugins.Storage!.set({ key: DB_KEY, value: encryptedData });
+                    await window.Capacitor!.Plugins.Preferences!.set({ key: DB_KEY, value: encryptedData });
                 } else {
                     localStorage.setItem(DB_KEY, encryptedData);
                 }
@@ -321,7 +319,7 @@ class DbService {
             streakData: { currentStreak: 0, lastLogDate: '' },
         };
         if (canUseStorage()) {
-            await window.Capacitor!.Plugins.Storage!.remove({ key: DB_KEY });
+            await window.Capacitor!.Plugins.Preferences!.remove({ key: DB_KEY });
         } else {
             localStorage.removeItem(DB_KEY);
         }

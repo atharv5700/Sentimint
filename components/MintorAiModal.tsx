@@ -64,7 +64,7 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
             setMessages([{
                 id: `bot-${Date.now()}`,
                 sender: 'bot',
-                text: "Hi! I'm Mintor. I can analyze your spending, help with financial questions, and more.\n\nYour personal financial data always stays on your device and is never shared.",
+                text: "Hello! I'm Mintor. I can analyze your spending, offer saving tips, or answer financial questions. Your personal data always stays on your device. How can I help?",
                 actions: mintorAiService.getContextualStartingPrompts(screen),
             }]);
         }
@@ -86,7 +86,7 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
             text: query,
         };
         
-        // Remove actions from previous bot message
+        // Remove actions from previous bot message to prevent multiple clicks
         setMessages(prev => [...prev.map(m => ({...m, actions: []})), userMessage]);
         setInput('');
         setIsThinking(true);
@@ -118,17 +118,17 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-0 md:p-4 animate-backdropFadeIn" onClick={handleAnimatedClose}>
             <div 
-                className={`bg-surface rounded-none md:rounded-3xl w-full h-full md:max-w-2xl md:h-[calc(100%-2rem)] flex flex-col shadow-2xl origin-top-right ${isClosing ? 'animate-mintor-close' : 'animate-mintor-open'}`}
+                className={`bg-surface rounded-none md:rounded-3xl w-full h-full md:max-w-2xl md:h-[calc(100%-2rem)] flex flex-col shadow-2xl origin-center md:origin-top-right ${isClosing ? 'animate-mintor-close' : 'animate-mintor-open'}`}
                 onClick={e => e.stopPropagation()}
             >
                 <header 
                     className="flex items-center justify-between p-4 border-b border-outline-variant bg-surface/80 backdrop-blur-lg z-10"
                     style={{ paddingTop: `calc(1rem + env(safe-area-inset-top))` }}
                 >
-                    <div className="text-4xl font-bold tracking-tight">
+                    <div className="text-4xl font-bold tracking-tight flex items-baseline">
                         <span className="bg-gradient-to-br from-primary to-primary-container bg-clip-text text-transparent">Mint</span>
-                        <span className="text-on-surface-variant [text-shadow:_0_0_5px_rgb(var(--color-surface-variant)/0.3)] [-webkit-text-stroke:_0.25px_rgb(var(--color-outline-variant)/0.5)]">or</span>
-                        <span className="text-on-surface-variant/80 font-medium text-2xl">. AI</span>
+                        <span className="text-on-surface-variant [text-shadow:_0_0_10px_rgb(var(--color-surface-variant)/0.3)] [-webkit-text-stroke:_0.5px_rgb(var(--color-outline-variant)/0.5)]">or.</span>
+                        <span className="text-on-surface-variant [text-shadow:_0_0_10px_rgb(var(--color-surface-variant)/0.3)] [-webkit-text-stroke:_0.5px_rgb(var(--color-outline-variant)/0.5)] text-title-l ml-1">AI</span>
                     </div>
                     <button onClick={() => { hapticClick(); handleAnimatedClose(); }} className="p-3 rounded-full text-on-surface-variant hover:bg-surface-variant/80 transition-colors" aria-label="Close Mintor AI modal">
                         <CloseIcon />

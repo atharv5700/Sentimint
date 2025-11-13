@@ -9,7 +9,8 @@ interface ImportDataModalProps {
     onClose: () => void;
 }
 
-type ParsedTx = Omit<Transaction, 'id' | 'currency' | 'goal_id' | 'tags_json'>;
+// FIX: Removed non-existent 'goal_id' from Omit as it's not a property of Transaction.
+type ParsedTx = Omit<Transaction, 'id' | 'currency' | 'tags_json'>;
 
 export default function ImportDataModal({ isOpen, onClose }: ImportDataModalProps) {
     const { addTransaction, refreshData } = useAppContext();
@@ -84,7 +85,7 @@ export default function ImportDataModal({ isOpen, onClose }: ImportDataModalProp
         const txPromises = parsedTxs.map(tx => addTransaction({
             ...tx,
             currency: 'INR',
-            goal_id: null,
+            // FIX: Removed non-existent property 'goal_id' which caused a type error.
             tags_json: '[]'
         }));
         
