@@ -22,13 +22,13 @@ import RecurringTransactionModal from './components/RecurringTransactionModal';
  * CAPACITOR PLUGINS FOR NATIVE BUILDS
  * To enable full native functionality, please install the following plugins:
  * 
- * npm install @capacitor/app @capacitor/haptics @capacitor/network @capacitor/storage
+ * npm install @capacitor/app @capacitor/haptics @capacitor/network @capacitor/preferences
  * npx cap sync
  * 
  * - @capacitor/app: Used for native app events, like handling the Android back button.
  * - @capacitor/haptics: Provides access to the device's native haptic feedback engine.
  * - @capacitor/network: Offers a reliable way to check the device's network connection status.
- * - @capacitor/storage: A more robust key-value store than localStorage for native devices.
+ * - @capacitor/preferences: A more robust key-value store than localStorage for native devices.
  */
 
 interface FabConfig {
@@ -210,7 +210,7 @@ export default function App() {
         await dbService.init();
         const recurringProcessed = await dbService.processRecurringTransactions();
         if (recurringProcessed) {
-            console.log('Recurring transactions were processed.');
+            console.debug('Recurring transactions were processed.');
         }
         await refreshData();
         setIsDataReady(true);
@@ -246,30 +246,36 @@ export default function App() {
             if (isManageCategoriesModalOpen) setManageCategoriesModalOpen(false);
         };
     
+        // Capacitor-specific back button handling for Android
+        let listener: any;
+        if (window.Capacitor?.isPluginAvailable('App')) {
+            const App = window.Capacitor.Plugins.App;
+            listener = App.addListener('backButton', (e: { canGoBack: boolean }) => {
+                if (isAModalOpen) {
+                    // Prevent default back button action (which would exit the app)
+                    // and instead, close the open modal.
+                    e.canGoBack = false;
+                    handleCloseActions();
+                } else {
+                    // If no modals are open, minimize the app for a native-like experience.
+                    App.minimizeApp();
+                }
+            });
+        }
+
+        // Web-specific history handling for back gesture/button
         if (isAModalOpen) {
             if (!window.history.state?.modal) {
                 window.history.pushState({ modal: true }, '');
             }
             window.addEventListener('popstate', handleCloseActions);
-
-            // Capacitor-specific back button handling for Android
-            let listener: any;
-            if (window.Capacitor?.isPluginAvailable('App')) {
-                listener = window.Capacitor.Plugins.App.addListener('backButton', (e: { canGoBack: boolean }) => {
-                    e.canGoBack = false; // Prevent default back button action
-                    handleCloseActions();
-                });
-            }
-
-            return () => {
-                window.removeEventListener('popstate', handleCloseActions);
-                listener?.remove();
-            };
         }
-    
+
         return () => {
             window.removeEventListener('popstate', handleCloseActions);
+            listener?.remove();
         };
+
     }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen, isSearchModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isImportModalOpen, isExportModalOpen, isManageCategoriesModalOpen]);
 
 

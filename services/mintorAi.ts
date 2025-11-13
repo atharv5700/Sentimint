@@ -24,15 +24,36 @@ const getKbData = async (): Promise<KnowledgeBase> => {
 };
 
 const isOnline = async (): Promise<boolean> => {
+    // Prioritize Capacitor's Network plugin for reliable status on native devices.
     if (window.Capacitor?.isPluginAvailable('Network')) {
         try {
             const status = await window.Capacitor.Plugins.Network!.getStatus();
             return status.connected;
         } catch (e) {
-            console.warn("Capacitor Network plugin check failed, falling back to navigator.onLine", e);
+            console.warn("Capacitor Network plugin check failed, falling back to fetch test.", e);
         }
     }
-    return navigator.onLine;
+
+    // Fallback for web and if Capacitor fails: a real network request.
+    // navigator.onLine is notoriously unreliable (can be true even without internet).
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5-second timeout
+
+        // We fetch a resource that is known to return a 204 No Content response
+        // and has permissive CORS policies. It's a lightweight and reliable check.
+        const response = await fetch('https://clients3.google.com/generate_204', {
+            method: 'HEAD',
+            signal: controller.signal,
+            cache: 'no-store', // Ensure it's a fresh request
+        });
+
+        clearTimeout(timeoutId);
+        return response.ok;
+    } catch (error) {
+        // This will catch network errors (no connection) and aborts (timeout).
+        return false;
+    }
 };
 
 
@@ -125,7 +146,7 @@ const getKBAnswer = (query: string, kb: KnowledgeBase): string | null => {
     for (const key in allSections) {
         const entry = allSections[key as keyof typeof allSections];
         for (const keyword of entry.keywords || []) {
-            // FIX: Use regex with word boundaries to prevent partial matches like 'hi' in 'this'.
+            // Use regex with word boundaries to prevent partial matches like 'hi' in 'this'.
             const regex = new RegExp(`\\b${keyword}\\b`, 'i');
             if (regex.test(lowerQuery)) {
                 const score = keyword.length; // Simple scoring: longer keyword = better match
