@@ -8,17 +8,7 @@
  * otherwise it will fall back to the web standard Vibration API.
  */
 
-// This type definition helps with TypeScript checking without needing the full library import.
-declare global {
-  interface Window {
-    Capacitor?: {
-      isPluginAvailable: (name: string) => boolean;
-      Plugins: {
-        [key: string]: any;
-      }
-    };
-  }
-}
+// FIX: Removed local type definitions for Capacitor plugins to use the central definition in `types.ts`.
 
 const canUseHaptics = () => window.Capacitor?.isPluginAvailable('Haptics');
 

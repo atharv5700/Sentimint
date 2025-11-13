@@ -1,14 +1,17 @@
 import type { Transaction, Theme, Mood, Budget, RecurringTransaction, UserChallenge } from '../types';
 
 /**
- * For native builds, it's recommended to use the Capacitor Storage plugin
- * for more robust and performant key-value storage.
- * This implementation uses localStorage as a web-standard fallback.
- * To upgrade: npm install @capacitor/storage
+ * For native builds, this service now prioritizes the Capacitor Storage plugin
+ * for robust and performant key-value storage.
+ * It gracefully falls back to localStorage for web environments.
  */
+
+// FIX: Removed local type definitions for Capacitor plugins to use the central definition in `types.ts`.
 
 const DB_KEY = 'sentimint_db';
 const THEME_KEY = 'sentimint_theme';
+
+const canUseStorage = () => window.Capacitor?.isPluginAvailable('Storage');
 
 // Unicode-safe Base64 encoding. The native btoa function fails on non-Latin1 characters.
 const utf8_to_b64 = (str: string): string => {
@@ -63,39 +66,53 @@ class DbService {
     };
 
     constructor() {
-        this.load();
+        // Data loading is now handled in the async init() method.
     }
     
-    private load() {
-        const encryptedData = localStorage.getItem(DB_KEY);
-        const data = decrypt<Database>(encryptedData);
-        if (data) {
-            this.db = {
-                transactions: data.transactions || [],
-                budgets: data.budgets || [],
-                recurring_transactions: data.recurring_transactions || [],
-                customCategories: data.customCategories || [],
-                userChallenges: data.userChallenges || [],
-                streakData: data.streakData || { currentStreak: 0, lastLogDate: '' },
-            };
+    private async load() {
+        let encryptedData: string | null = null;
+        try {
+            if (canUseStorage()) {
+                const { value } = await window.Capacitor!.Plugins.Storage!.get({ key: DB_KEY });
+                encryptedData = value;
+            } else {
+                encryptedData = localStorage.getItem(DB_KEY);
+            }
+
+            const data = decrypt<Database>(encryptedData);
+            if (data) {
+                this.db = {
+                    transactions: data.transactions || [],
+                    budgets: data.budgets || [],
+                    recurring_transactions: data.recurring_transactions || [],
+                    customCategories: data.customCategories || [],
+                    userChallenges: data.userChallenges || [],
+                    streakData: data.streakData || { currentStreak: 0, lastLogDate: '' },
+                };
+            }
+        } catch (e) {
+            console.error("Failed to load data from storage:", e);
         }
     }
 
-    private save() {
+    private async save() {
         try {
             const encryptedData = encrypt(this.db);
-            // Only save if encryption was successful
             if (encryptedData) {
-                localStorage.setItem(DB_KEY, encryptedData);
+                if (canUseStorage()) {
+                    await window.Capacitor!.Plugins.Storage!.set({ key: DB_KEY, value: encryptedData });
+                } else {
+                    localStorage.setItem(DB_KEY, encryptedData);
+                }
             }
         } catch (e) {
-            console.error("Failed to save data to localStorage:", e);
-            // Inform the user that data could not be saved.
-            alert('Critical Error: Could not save data. Your latest changes might be lost. Please check your browser storage permissions and try to free up some space.');
+            console.error("Failed to save data to storage:", e);
+            alert('Critical Error: Could not save data. Your latest changes might be lost.');
         }
     }
 
     public async init() {
+        await this.load();
         if (this.db.transactions.length === 0 && this.db.recurring_transactions.length === 0) {
             console.log("No transactions found, seeding data.");
             await this.seedRecentTransactions();
@@ -104,8 +121,6 @@ class DbService {
     
     private async seedRecentTransactions() {
         const today = new Date();
-        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
         
         const demoTxs: Omit<Transaction, 'id' | 'ts'>[] = [
             { amount: 350, currency: 'INR', category: 'Food', merchant: 'Swiggy', mood: 4, note: 'Dinner', tags_json: '[]' },
@@ -116,16 +131,11 @@ class DbService {
             { amount: 3000, currency: 'INR', category: 'Bills', merchant: 'Airtel', mood: 2, note: 'Internet bill', tags_json: '["planned"]' },
             { amount: 750, currency: 'INR', category: 'Entertainment', merchant: 'PVR Cinemas', mood: 5, note: 'Movie night', tags_json: '["social"]' },
             { amount: 450, currency: 'INR', category: 'Health', merchant: 'Apollo Pharmacy', mood: 3, note: 'Medicines', tags_json: '[]' },
-            { amount: 500, currency: 'INR', category: 'Transport', merchant: 'Uber', mood: 3, note: 'Trip to office', tags_json: '[]' },
-            { amount: 2200, currency: 'INR', category: 'Shopping', merchant: 'Amazon', mood: 4, note: 'New gadget', tags_json: '["reward"]' },
-            { amount: 600, currency: 'INR', category: 'Food', merchant: 'Zomato', mood: 1, note: 'Late night order', tags_json: '["impulse"]' },
-            { amount: 950, currency: 'INR', category: 'Other', merchant: 'Gift Store', mood: 5, note: 'Birthday gift', tags_json: '["social"]' },
         ];
 
-        this.db.transactions = []; // Clear any previous seed data
+        this.db.transactions = [];
         
         demoTxs.forEach((tx, i) => {
-            // Distribute transactions throughout the current month
             const day = Math.max(1, Math.floor(Math.random() * (today.getDate() - 1)));
             const date = new Date(today.getFullYear(), today.getMonth(), day);
             date.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60));
@@ -138,9 +148,8 @@ class DbService {
             this.db.transactions.push(newTx);
         });
         
-        // Sort transactions by date descending after seeding
         this.db.transactions.sort((a,b) => b.ts - a.ts);
-        this.save();
+        await this.save();
     }
 
     public async processRecurringTransactions(): Promise<boolean> {
@@ -152,24 +161,13 @@ class DbService {
             let nextDueDate = new Date(rTx.last_added_date || rTx.start_date);
             
             while (nextDueDate.getTime() <= today.getTime()) {
-                // If the due date is after the start date, add it
                 if (nextDueDate.getTime() >= new Date(rTx.start_date).getTime()) {
                      const newTx: Omit<Transaction, 'id' | 'ts'> = {
-                        amount: rTx.amount,
-                        currency: rTx.currency,
-                        category: rTx.category,
-                        merchant: rTx.merchant,
-                        mood: rTx.mood,
-                        note: rTx.note,
-                        tags_json: rTx.tags_json,
+                        amount: rTx.amount, currency: rTx.currency, category: rTx.category, merchant: rTx.merchant,
+                        mood: rTx.mood, note: rTx.note, tags_json: rTx.tags_json,
                     };
-                    const createdTx = {
-                        ...newTx,
-                        id: `tx-recurring-${rTx.id}-${nextDueDate.getTime()}`,
-                        ts: nextDueDate.getTime(),
-                    };
+                    const createdTx = { ...newTx, id: `tx-recurring-${rTx.id}-${nextDueDate.getTime()}`, ts: nextDueDate.getTime() };
 
-                    // Avoid adding duplicates
                     if (!this.db.transactions.some(t => t.id === createdTx.id)) {
                         this.db.transactions.push(createdTx);
                         rTx.last_added_date = nextDueDate.getTime();
@@ -177,40 +175,25 @@ class DbService {
                     }
                 }
 
-                // Calculate next due date
-                if (rTx.frequency === 'daily') {
-                    nextDueDate.setDate(nextDueDate.getDate() + 1);
-                } else if (rTx.frequency === 'weekly') {
-                    nextDueDate.setDate(nextDueDate.getDate() + 7);
-                } else if (rTx.frequency === 'monthly') {
-                    nextDueDate.setMonth(nextDueDate.getMonth() + 1);
-                } else {
-                    break; // Should not happen
-                }
+                if (rTx.frequency === 'daily') nextDueDate.setDate(nextDueDate.getDate() + 1);
+                else if (rTx.frequency === 'weekly') nextDueDate.setDate(nextDueDate.getDate() + 7);
+                else if (rTx.frequency === 'monthly') nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+                else break;
             }
         }
         
-        if (changed) {
-            this.save();
-        }
+        if (changed) await this.save();
         return changed;
     }
 
-
     // Transactions
-    public getTransactions(): Transaction[] {
-        return [...this.db.transactions].sort((a,b) => b.ts - a.ts);
-    }
+    public getTransactions(): Transaction[] { return [...this.db.transactions].sort((a,b) => b.ts - a.ts); }
     
     public async addTransaction(tx: Omit<Transaction, 'id' | 'ts'>): Promise<Transaction> {
-        const newTx: Transaction = {
-            ...tx,
-            id: `tx-${Date.now()}`,
-            ts: Date.now(),
-        };
+        const newTx: Transaction = { ...tx, id: `tx-${Date.now()}`, ts: Date.now() };
         this.db.transactions.push(newTx);
         this.updateStreakData(new Date(newTx.ts));
-        this.save();
+        await this.save();
         return newTx;
     }
     
@@ -218,33 +201,27 @@ class DbService {
         const index = this.db.transactions.findIndex(t => t.id === tx.id);
         if (index > -1) {
             this.db.transactions[index] = tx;
-            this.save();
+            await this.save();
         }
     }
     
     public async deleteTransaction(id: string): Promise<void> {
         this.db.transactions = this.db.transactions.filter(t => t.id !== id);
-        this.save();
+        await this.save();
     }
 
     public async deleteTransactions(ids: string[]): Promise<void> {
         this.db.transactions = this.db.transactions.filter(t => !ids.includes(t.id));
-        this.save();
+        await this.save();
     }
 
     // Recurring Transactions
-    public getRecurringTransactions(): RecurringTransaction[] {
-        return [...this.db.recurring_transactions].sort((a,b) => a.start_date - b.start_date);
-    }
+    public getRecurringTransactions(): RecurringTransaction[] { return [...this.db.recurring_transactions].sort((a,b) => a.start_date - b.start_date); }
 
     public async addRecurringTransaction(rTx: Omit<RecurringTransaction, 'id' | 'last_added_date'>): Promise<RecurringTransaction> {
-        const newRTx: RecurringTransaction = {
-            ...rTx,
-            id: `rtx-${Date.now()}`,
-            last_added_date: null,
-        };
+        const newRTx: RecurringTransaction = { ...rTx, id: `rtx-${Date.now()}`, last_added_date: null };
         this.db.recurring_transactions.push(newRTx);
-        this.save();
+        await this.save();
         return newRTx;
     }
 
@@ -252,28 +229,22 @@ class DbService {
         const index = this.db.recurring_transactions.findIndex(t => t.id === rTx.id);
         if (index > -1) {
             this.db.recurring_transactions[index] = rTx;
-            this.save();
+            await this.save();
         }
     }
 
     public async deleteRecurringTransaction(id: string): Promise<void> {
         this.db.recurring_transactions = this.db.recurring_transactions.filter(t => t.id !== id);
-        this.save();
+        await this.save();
     }
 
     // Budgets
-    public getBudgets(): Budget[] {
-        return [...this.db.budgets];
-    }
+    public getBudgets(): Budget[] { return [...this.db.budgets]; }
     
     public async addBudget(budget: Omit<Budget, 'id' | 'created_at'>): Promise<Budget> {
-        const newBudget: Budget = {
-            ...budget,
-            id: `budget-${Date.now()}`,
-            created_at: Date.now(),
-        };
+        const newBudget: Budget = { ...budget, id: `budget-${Date.now()}`, created_at: Date.now() };
         this.db.budgets.push(newBudget);
-        this.save();
+        await this.save();
         return newBudget;
     }
     
@@ -281,80 +252,61 @@ class DbService {
         const index = this.db.budgets.findIndex(b => b.id === budget.id);
         if (index > -1) {
             this.db.budgets[index] = budget;
-            this.save();
+            await this.save();
         }
     }
     
     public async deleteBudget(id: string): Promise<void> {
         this.db.budgets = this.db.budgets.filter(b => b.id !== id);
-        this.save();
+        await this.save();
     }
 
     // Custom Categories
-    public getCustomCategories(): string[] {
-        return [...this.db.customCategories];
-    }
+    public getCustomCategories(): string[] { return [...this.db.customCategories]; }
     
     public async addCustomCategory(category: string): Promise<void> {
         if (!this.db.customCategories.includes(category)) {
             this.db.customCategories.push(category);
-            this.save();
+            await this.save();
         }
     }
 
     public async deleteCustomCategory(category: string): Promise<void> {
         this.db.customCategories = this.db.customCategories.filter(c => c !== category);
-        this.save();
+        await this.save();
     }
     
     // Challenges
-    public getUserChallenges(): UserChallenge[] {
-        return [...this.db.userChallenges];
-    }
+    public getUserChallenges(): UserChallenge[] { return [...this.db.userChallenges]; }
 
     public async saveUserChallenges(challenges: UserChallenge[]): Promise<void> {
         this.db.userChallenges = challenges;
-        this.save();
+        await this.save();
     }
     
     // Streak
-    public getStreakData(): { currentStreak: number, lastLogDate: string } {
-        return { ...this.db.streakData };
-    }
+    public getStreakData(): { currentStreak: number, lastLogDate: string } { return { ...this.db.streakData }; }
 
     private updateStreakData(logDate: Date) {
         const todayStr = logDate.toISOString().split('T')[0];
-        
-        if (this.db.streakData.lastLogDate === todayStr) {
-            return; // Already logged today
-        }
-
+        if (this.db.streakData.lastLogDate === todayStr) return;
         const yesterday = new Date(logDate);
         yesterday.setDate(logDate.getDate() - 1);
         const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-        if (this.db.streakData.lastLogDate === yesterdayStr) {
-            this.db.streakData.currentStreak += 1; // Continue streak
-        } else {
-            this.db.streakData.currentStreak = 1; // Reset or start streak
-        }
+        if (this.db.streakData.lastLogDate === yesterdayStr) this.db.streakData.currentStreak += 1;
+        else this.db.streakData.currentStreak = 1;
         this.db.streakData.lastLogDate = todayStr;
     }
 
-    // Theme
+    // Theme (uses localStorage for synchronous access to prevent flashing)
     public getTheme(): Theme {
         const theme = localStorage.getItem(THEME_KEY) as Theme | null;
         if (theme) return theme;
-        // Check system preference
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            return 'dark';
-        }
+        if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark';
         return 'light';
     }
 
-    public setTheme(theme: Theme) {
-        localStorage.setItem(THEME_KEY, theme);
-    }
+    public setTheme(theme: Theme) { localStorage.setItem(THEME_KEY, theme); }
     
     // Data Management
     public exportToCsv(): string {
@@ -365,16 +317,15 @@ class DbService {
     
     public async deleteAllData(): Promise<void> {
         this.db = {
-            transactions: [],
-            budgets: [],
-            recurring_transactions: [],
-            customCategories: [],
-            userChallenges: [],
+            transactions: [], budgets: [], recurring_transactions: [], customCategories: [], userChallenges: [],
             streakData: { currentStreak: 0, lastLogDate: '' },
         };
-        localStorage.removeItem(DB_KEY);
+        if (canUseStorage()) {
+            await window.Capacitor!.Plugins.Storage!.remove({ key: DB_KEY });
+        } else {
+            localStorage.removeItem(DB_KEY);
+        }
         localStorage.removeItem(THEME_KEY);
-        // We can reload to force the app to re-initialize
         window.location.reload();
     }
 }
