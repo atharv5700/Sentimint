@@ -7,6 +7,7 @@ let kbData: KnowledgeBase | null = null;
 const getKbData = async (): Promise<KnowledgeBase> => {
     if (kbData) return kbData;
     try {
+        // Correct path for assets in the public folder
         const response = await fetch('/assets/kb/mintor_kb.json');
         if (!response.ok) throw new Error('Failed to fetch knowledge base');
         kbData = await response.json();
@@ -188,7 +189,7 @@ export const mintorAiService = {
         // 1. OFFLINE-FIRST: Check local knowledge base.
         const kbAnswer = getKBAnswer(query, kb);
         if (kbAnswer) return { sender: 'bot', text: kbAnswer };
-
+        
         // 2. ONLINE POWER: Use Gemini. If it fails due to network, we'll catch it.
         try {
             const data: AppData = { transactions: dbService.getTransactions() };
@@ -222,10 +223,10 @@ export const mintorAiService = {
 
         } catch (error) {
             console.error("Error with Gemini API:", error);
-            
-            // Differentiate between network errors and other API errors.
-            // A TypeError with "Failed to fetch" is the standard browser error for no network connection.
-            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+
+            // If the API call fails for any reason, check the browser's/device's network status.
+            // This is more reliable than trying to parse specific error messages.
+            if (navigator.onLine === false) {
                  return { 
                      sender: 'bot', 
                      text: "It seems you're offline. I can answer general financial questions, but for personal spending analysis, I need an internet connection.", 
@@ -233,7 +234,7 @@ export const mintorAiService = {
                  };
             }
             
-            // For all other errors (API key issues, server errors, etc.), return a generic message.
+            // If navigator.onLine is true, the error is likely a server issue, firewall, or CORS problem.
             return { sender: 'bot', text: "I'm having a little trouble connecting right now. Please try again in a moment." };
         }
     }
