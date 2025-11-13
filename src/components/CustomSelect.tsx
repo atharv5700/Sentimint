@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-// FIX: Updated import path to be relative.
-import { ChevronDownIcon } from '../constants';
+import { ChevronDownIcon } from 'constants';
 
 type Option = {
     value: string | number;

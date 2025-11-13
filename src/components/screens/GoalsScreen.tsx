@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-// FIX: Updated import paths to be relative.
+// FIX: Changed import paths to be relative
 import type { Budget, Challenge, UserChallenge } from '../../types';
 import { useAppContext } from '../../App';
 import { ALL_CHALLENGES } from '../../data/challenges';

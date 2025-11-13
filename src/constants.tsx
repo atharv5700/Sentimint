@@ -1,5 +1,5 @@
 import React from 'react';
-// FIX: Updated import path to be relative.
+// FIX: Changed import path to be relative
 import type { Mood } from './types';
 
 export const DEFAULT_CATEGORIES = [

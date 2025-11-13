@@ -1,6 +1,5 @@
-// FIX: Updated import path to be relative.
-import { LightbulbIcon } from '../constants';
-import type { FinanceTrick } from '../types';
+import { LightbulbIcon } from 'constants';
+import type { FinanceTrick } from 'types';
 
 export const FINANCE_TRICKS: FinanceTrick[] = [
     {

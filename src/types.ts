@@ -1,5 +1,5 @@
 import React from 'react';
-// FIX: Updated import path to be relative.
+// FIX: Changed import path to be relative
 import type { AppContextType as AppContextTypeExtended } from './App';
 
 // Consolidated Capacitor Plugin type definitions to resolve conflicts across files.

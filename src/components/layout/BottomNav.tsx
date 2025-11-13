@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, forwardRef } from 'react';
-// FIX: Updated import paths to be relative.
+// FIX: Changed import paths to be relative
 import type { Screen } from '../../types';
 import { HomeIcon, TransactionsIcon, InsightsIcon, GoalsIcon, SettingsIcon } from '../../constants';
 import { hapticClick } from '../../services/haptics';

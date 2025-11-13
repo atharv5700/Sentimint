@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, createContext, useContext, useMemo, useRef, useLayoutEffect } from 'react';
-// FIX: Updated import paths to be relative.
+// FIX: Changed import paths to be relative
 import type { Screen, Theme, Transaction, Budget, RecurringTransaction, UserChallenge, Challenge } from './types';
 import { dbService } from './services/db';
 import { ALL_CHALLENGES } from './data/challenges';

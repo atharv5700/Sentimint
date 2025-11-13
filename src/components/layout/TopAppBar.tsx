@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-// FIX: Updated import paths to be relative.
+// FIX: Changed import paths to be relative
 import { SearchIcon, MintorAiIcon } from '../../constants';
 import { hapticClick } from '../../services/haptics';
 

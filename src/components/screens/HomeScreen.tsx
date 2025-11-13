@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-// FIX: Updated import paths to be relative.
+// FIX: Changed import paths to be relative
 import type { Transaction, Screen, CoachingTip, FinanceTrick, Quote } from '../../types';
 import { useAppContext } from '../../App';
 import { MOOD_MAP, GoalsIcon } from '../../constants';

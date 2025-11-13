@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-// FIX: Updated import paths to be relative.
+// FIX: Changed import paths to be relative
 import type { Transaction } from '../../types';
 import { useAppContext } from '../../App';
 import TransactionList from '../TransactionList';

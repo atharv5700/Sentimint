@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-// FIX: Updated import paths to be relative.
+// FIX: Changed import paths to be relative
 import type { MintorAiMessage, MintorAction, Screen } from '../types';
 import { mintorAiService } from '../services/mintorAi';
 import { SendIcon, CloseIcon } from '../constants';

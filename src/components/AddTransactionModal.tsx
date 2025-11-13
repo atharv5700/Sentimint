@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-// FIX: Updated import paths to be relative.
+// FIX: Changed import paths to be relative
 import type { Transaction, Mood } from '../types';
 import { useAppContext } from '../App';
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS, MOOD_MAP, ChevronDownIcon, PlusIcon, CloseIcon, SparkleIcon } from '../constants';

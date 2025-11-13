@@ -1,5 +1,5 @@
 import { GoogleGenAI, FunctionDeclaration, Type } from '@google/genai';
-// FIX: Updated import paths to be relative.
+// FIX: Changed import paths to be relative
 import type { Transaction, MintorAiMessage, MintorAction, CoachingTip, Screen, KnowledgeBase } from '../types';
 import { dbService } from './db';
 import { ChartBarIcon, LightbulbIcon } from '../constants';
@@ -8,7 +8,6 @@ let kbData: KnowledgeBase | null = null;
 const getKbData = async (): Promise<KnowledgeBase> => {
     if (kbData) return kbData;
     try {
-        // Correct path for assets in the public folder
         const response = await fetch('/assets/kb/mintor_kb.json');
         if (!response.ok) throw new Error('Failed to fetch knowledge base');
         kbData = await response.json();
@@ -24,6 +23,40 @@ const getKbData = async (): Promise<KnowledgeBase> => {
         };
     }
 };
+
+const isOnline = async (): Promise<boolean> => {
+    // Prioritize Capacitor's Network plugin for reliable status on native devices.
+    if (window.Capacitor?.isPluginAvailable('Network')) {
+        try {
+            const status = await window.Capacitor.Plugins.Network!.getStatus();
+            return status.connected;
+        } catch (e) {
+            console.warn("Capacitor Network plugin check failed, falling back to fetch test.", e);
+        }
+    }
+
+    // Fallback for web and if Capacitor fails: a real network request.
+    // navigator.onLine is notoriously unreliable (can be true even without internet).
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5-second timeout
+
+        // We fetch a resource that is known to return a 204 No Content response
+        // and has permissive CORS policies. It's a lightweight and reliable check.
+        const response = await fetch('https://clients3.google.com/generate_204', {
+            method: 'HEAD',
+            signal: controller.signal,
+            cache: 'no-store', // Ensure it's a fresh request
+        });
+
+        clearTimeout(timeoutId);
+        return response.ok;
+    } catch (error) {
+        // This will catch network errors (no connection) and aborts (timeout).
+        return false;
+    }
+};
+
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
 
@@ -190,8 +223,13 @@ export const mintorAiService = {
         // 1. OFFLINE-FIRST: Check local knowledge base.
         const kbAnswer = getKBAnswer(query, kb);
         if (kbAnswer) return { sender: 'bot', text: kbAnswer };
+
+        // 2. CONNECTIVITY CHECK: If no KB answer, check network.
+        if (!(await isOnline())) {
+            return { sender: 'bot', text: "It seems you're offline. I can answer general financial questions, but for personal spending analysis, I need an internet connection.", actions: [ { label: 'What is a credit score?', type: 'query', payload: 'What is a credit score?' } ] };
+        }
         
-        // 2. ONLINE POWER: Use Gemini. If it fails due to network, we'll catch it.
+        // 3. ONLINE POWER: Use Gemini with function calling.
         try {
             const data: AppData = { transactions: dbService.getTransactions() };
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
@@ -224,18 +262,6 @@ export const mintorAiService = {
 
         } catch (error) {
             console.error("Error with Gemini API:", error);
-
-            // If the API call fails for any reason, check the browser's/device's network status.
-            // This is more reliable than trying to parse specific error messages.
-            if (navigator.onLine === false) {
-                 return { 
-                     sender: 'bot', 
-                     text: "It seems you're offline. I can answer general financial questions, but for personal spending analysis, I need an internet connection.", 
-                     actions: [ { label: 'What is a credit score?', type: 'query', payload: 'What is a credit score?' } ] 
-                 };
-            }
-            
-            // If navigator.onLine is true, the error is likely a server issue, firewall, or CORS problem.
             return { sender: 'bot', text: "I'm having a little trouble connecting right now. Please try again in a moment." };
         }
     }
