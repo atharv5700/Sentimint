@@ -70,22 +70,25 @@
   "howToApp": {
     "edit_transaction": { "keywords": ["edit transaction", "change transaction", "update expense"], "answer": "To edit a transaction, go to the 'Home' or 'Transactions' screen and simply tap on the transaction you wish to change. The edit screen will pop up." },
     "delete_transaction": { "keywords": ["delete transaction", "remove transaction", "delete expense"], "answer": "To delete a transaction, go to the 'Home' or 'Transactions' screen. Long-press on a transaction to enter bulk-edit mode, select the ones you want to delete, and tap the trash icon." },
-    "link_transaction": { "keywords": ["link transaction", "link to goal", "connect to goal"], "answer": "When you add or edit a transaction, you'll see a 'Link to Goal' dropdown. You can select any of your active goals from there to link the expense." },
-    "set_goal": { "keywords": ["set a goal", "create goal", "add a goal"], "answer": "Go to the 'Goals' screen, select the 'Goals' tab, and tap the floating plus button to add a new goal. You'll be able to set a title, target amount, and an optional deadline." },
-    "export_csv": { "keywords": ["export", "csv", "download data"], "answer": "You can export all your transaction data to a CSV file from the 'Settings' page under the Data Management section. You can also export from the 'Transactions' screen." },
+    "set_budget": { "keywords": ["set budget", "create budget", "add budget"], "answer": "You can create and manage your budgets on the 'Budgets' screen. Tap the floating plus button to add a new budget for any category." },
+    "export_csv": { "keywords": ["export", "csv", "download data"], "answer": "You can export all your transaction data to a CSV file from the 'Settings' page under the Data Management section." },
     "import_csv": { "keywords": ["import", "upload data"], "answer": "You can import transactions from a CSV file. Go to 'Settings', then 'Data Management', and tap 'Import Data from CSV'. Follow the on-screen instructions for the correct file format." },
-    "search": { "keywords": ["search", "find transaction"], "answer": "Tap the search icon in the top-right corner of the app to search for transactions, goals, and budgets all at once." },
+    "search": { "keywords": ["search", "find transaction"], "answer": "Tap the search icon in the top-right corner of the app to search for transactions and budgets all at once." },
     "delete_data": { "keywords": ["delete all data", "reset app", "erase data"], "answer": "Be careful! You can delete all your app data from the 'Settings' page. This action cannot be undone." },
     "change_theme": { "keywords": ["change theme", "dark mode", "light mode", "appearance"], "answer": "You can switch between light and dark themes in the 'Settings' page under the 'Appearance' section." },
     "manage_categories": { "keywords": ["manage categories", "add category", "delete category"], "answer": "Go to 'Settings' > 'Personalization' > 'Manage Categories'. There you can add new custom categories or delete ones you've created (as long as they are not used by any transactions)." },
-    "recurring_transactions": { "keywords": ["recurring", "subscription", "bills"], "answer": "Recurring transactions are for automatic payments like rent, subscriptions, or bills. You can set them up in the 'Transactions' screen under the 'Recurring' tab. The app will automatically add them on their due dates." },
-    "challenges": { "keywords": ["challenges", "challenge"], "answer": "Challenges are fun tasks to help you build better spending habits. You can find and start them on the 'Goals' screen under the 'Challenges' tab. Completing them unlocks achievement badges!" },
+    "recurring_transactions": { "keywords": ["recurring", "subscription", "bills"], "answer": "Recurring transactions are for automatic payments like rent, subscriptions, or bills. You can set them up on the 'Budgets' screen under the 'Recurring' tab. The app will automatically add them on their due dates." },
+    "challenges": { "keywords": ["challenges", "challenge"], "answer": "Challenges are fun tasks to help you build better spending habits. You can find and start them on the 'Budgets' screen under the 'Challenges' tab. Completing them unlocks achievement badges!" },
     "streak": { "keywords": ["streak", "fire icon", "day streak"], "answer": "The streak counter on the Home screen shows how many consecutive days you have logged at least one transaction. It's a great way to stay motivated and consistent with tracking!" },
-    "average_mood": { "keywords": ["average mood", "avg mood", "mood calculation"], "answer": "The Average Mood on the Home screen is calculated based on all the transactions within the selected time period (Day, Week, Month, or Year). It gives you a quick glance at how you've been feeling about your spending." },
-    "help": { "keywords": ["help", "what can you do", "capabilities"], "answer": "I can do a few things:\n- Analyze your spending for a day, week, or month.\n- Compare your spending between periods.\n- Find your biggest spending category.\n- Offer saving tips.\n- Explain financial topics like SIPs or credit scores.\n- Calculate loan EMIs or SIP returns.\n- Answer questions about how to use the app." }
+    "average_mood": { "keywords": ["average mood", "avg mood", "mood calculation"], "answer": "The Average Mood on the Home screen is calculated based on all the transactions logged. It gives you a quick glance at how you've been feeling about your spending." },
+    "help": { "keywords": ["help", "what can you do", "capabilities", "features"], "answer": "I can do a few things:\n- Analyze your spending for a day, week, or month.\n- Compare your spending between periods.\n- Find your biggest spending category.\n- Offer saving tips.\n- Explain financial topics like SIPs or credit scores.\n- Calculate loan EMIs or SIP returns.\n- Answer questions about how to use the app." }
   },
   "appAbout": {
-    "sentimint": { "keywords": ["sentimint", "about this app", "privacy"], "answer": "Sentimint is your personal finance tracker. It helps you understand the emotions behind your spending to build healthier financial habits. All your financial data always stays private on your device." }
+    "sentimint": { "keywords": ["sentimint", "about this app", "what is this app", "privacy"], "answer": "Sentimint is your personal finance tracker. It helps you understand the emotions behind your spending to build healthier financial habits. All your financial data always stays private on your device." },
+    "creator": {
+        "keywords": ["creator", "developer", "who made", "who created", "who built", "developed by", "author", "built by"],
+        "answer": "Sentimint was created and developed by Atharv Mahesh Deshpande."
+    }
   },
   "savingTips": {
     "general": [
@@ -95,7 +98,13 @@
       "Review your subscriptions. Cancel any you don't use regularly.",
       "Try the '30-day rule' for non-essential purchases. If you still want it after 30 days, consider buying it.",
       "Plan your meals for the week to avoid impulsive food orders and reduce grocery waste.",
-      "Unsubscribe from marketing emails to reduce the temptation of sales and promotions."
+      "Unsubscribe from marketing emails to reduce the temptation of sales and promotions.",
+      "Before buying something on sale, ask yourself: 'Would I buy this at full price?' It helps curb impulse shopping.",
+      "Set specific, measurable, achievable, relevant, and time-bound (SMART) financial goals.",
+      "Use cash for certain spending categories like 'Entertainment' or 'Dining Out' to physically see your budget shrink.",
+      "Check your bank statements monthly for any unusual charges or forgotten subscriptions.",
+      "When you get a raise or a bonus, allocate a portion of it directly to your savings or investments before you get used to the extra income. This is called 'paying yourself first'.",
+      "Compare prices before making a significant purchase. A few minutes of research can save you a lot of money."
     ]
   }
 }

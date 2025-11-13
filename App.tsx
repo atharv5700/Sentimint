@@ -110,22 +110,18 @@ export default function App() {
     const isAModalOpen = useMemo(() => isAddTxModalOpen || isMintorModalOpen || isBudgetModalOpen || isRecurringTxModalOpen || isSearchModalOpen || isImportModalOpen || isExportModalOpen || isManageCategoriesModalOpen, [isAddTxModalOpen, isMintorModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isSearchModalOpen, isImportModalOpen, isExportModalOpen, isManageCategoriesModalOpen]);
     
     useLayoutEffect(() => {
-        const topBar = topAppBarRef.current;
         const bottomNav = bottomNavRef.current;
 
-        if (!topBar || !bottomNav) return;
+        if (!bottomNav) return;
 
         const observer = new ResizeObserver(() => {
-            document.documentElement.style.setProperty('--top-app-bar-height', `${topBar.offsetHeight}px`);
             document.documentElement.style.setProperty('--bottom-nav-height', `${bottomNav.offsetHeight}px`);
         });
 
-        observer.observe(topBar);
         observer.observe(bottomNav);
 
         return () => {
             observer.disconnect();
-            document.documentElement.style.removeProperty('--top-app-bar-height');
             document.documentElement.style.removeProperty('--bottom-nav-height');
         };
     }, []);
@@ -495,7 +491,7 @@ export default function App() {
         <AppContext.Provider value={appContextValue}>
             <div className={`font-sans bg-background text-on-surface transition-colors duration-300`}>
                 <div 
-                    className="h-screen relative"
+                    className="h-screen overflow-y-auto"
                     aria-hidden={isAModalOpen}
                 >
                     <TopAppBar 
@@ -503,14 +499,11 @@ export default function App() {
                         onMintorClick={() => setMintorModalOpen(true)} 
                         onSearchClick={() => setSearchModalOpen(true)}
                     />
-                    <main 
-                        className="absolute inset-0 overflow-y-auto"
-                    >
+                    <main>
                         <div 
                             key={screen} 
-                            className="animate-screenFadeIn"
+                            className="animate-screenFadeIn pt-4"
                             style={{ 
-                                paddingTop: 'var(--top-app-bar-height, 76px)', 
                                 paddingBottom: 'calc(var(--bottom-nav-height, 80px) + 4rem)' 
                             }}
                         >

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Transaction, Screen, CoachingTip, FinanceTrick, Quote } from '../../types';
 import { useAppContext } from '../../App';
-import { MOOD_MAP } from '../../constants';
+import { MOOD_MAP, GoalsIcon } from '../../constants';
 import TransactionList from '../TransactionList';
 import ProgressBar from '../ProgressBar';
 import { mintorAiService } from '../../services/mintorAi';
@@ -169,20 +169,24 @@ export default function HomeScreen({ onEditTransaction, setScreen }: HomeScreenP
 
                 {budgetStatus.length > 0 && (
                     <div className="animate-screenFadeIn" style={{ animationDelay: '300ms' }}>
-                        <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-title-m font-medium text-on-surface">Monthly Budgets</h3>
-                            <button onClick={() => { hapticClick(); setScreen('Budgets'); }} className="text-primary font-medium text-sm">Manage</button>
-                        </div>
-                        <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl space-y-4 transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
-                            {budgetStatus.slice(0, 3).map(budget => (
-                                <div key={budget.id}>
-                                    <div className="flex justify-between items-center mb-1 text-sm">
-                                        <span className="font-medium text-on-surface-variant">{budget.category}</span>
-                                        <span className="text-on-surface-variant/80">{formatCurrency(budget.spent)} / {formatCurrency(budget.amount)}</span>
+                        <div 
+                            className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl"
+                        >
+                            <h3 className="text-title-m font-medium text-on-surface-variant">Monthly Budgets</h3>
+                            <p className="text-body-m text-on-surface-variant/70 mb-4">{new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}</p>
+
+                            <div className="space-y-4">
+                                {budgetStatus.slice(0, 2).map(budget => (
+                                    <div key={budget.id}>
+                                        <div className="flex justify-between items-center mb-1 text-sm">
+                                            <span className="font-medium text-on-surface-variant">{budget.category}</span>
+                                            <span className="text-on-surface-variant/70">{formatCurrency(budget.spent)} / {formatCurrency(budget.amount)}</span>
+                                        </div>
+                                        <ProgressBar progress={budget.progress} />
                                     </div>
-                                    <ProgressBar progress={budget.progress} />
-                                </div>
-                            ))}
+                                ))}
+                            </div>
+                             {budgetStatus.length > 2 && <p className="text-center text-sm mt-4 text-on-surface-variant/70">+ {budgetStatus.length - 2} more budgets</p>}
                         </div>
                     </div>
                 )}

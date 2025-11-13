@@ -124,7 +124,11 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
                     className="flex items-center justify-between p-4 border-b border-outline-variant bg-surface/80 backdrop-blur-lg z-10"
                     style={{ paddingTop: `calc(1rem + env(safe-area-inset-top))` }}
                 >
-                    <h2 className="text-title-m font-medium">{MINTOR_AI_ASSISTANT.name}</h2>
+                    <div className="text-title-l font-bold tracking-tight">
+                        <span className="bg-gradient-to-br from-primary to-primary-container bg-clip-text text-transparent">Min</span>
+                        <span className="text-on-surface-variant [text-shadow:_0_0_5px_rgb(var(--color-surface-variant)/0.3)] [-webkit-text-stroke:_0.25px_rgb(var(--color-outline-variant)/0.5)]">tor</span>
+                        <span className="text-on-surface-variant/80 font-medium ml-1">AI</span>
+                    </div>
                     <button onClick={() => { hapticClick(); handleAnimatedClose(); }} className="p-3 rounded-full text-on-surface-variant hover:bg-surface-variant/80 transition-colors" aria-label="Close Mintor AI modal">
                         <CloseIcon />
                     </button>

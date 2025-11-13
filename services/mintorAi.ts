@@ -7,13 +7,14 @@ let kbData: KnowledgeBase | null = null;
 const getKbData = async (): Promise<KnowledgeBase> => {
     if (kbData) return kbData;
     try {
-        const response = await fetch('/assets/kb/mintu_kb.json');
+        const response = await fetch('/assets/kb/mintor_kb.json');
         if (!response.ok) throw new Error('Failed to fetch knowledge base');
         kbData = await response.json();
         return kbData as KnowledgeBase;
     } catch (e) {
         console.error("Could not load Mintor AI knowledge base.", e);
         return {
+          greetingsAndChitChat: {},
           financeGeneral: {},
           howToApp: {},
           appAbout: {},
@@ -49,7 +50,6 @@ const analyzeTopCategory = (data: AppData): CoachingTip | null => {
         icon: ChartBarIcon,
         title: 'Top Category This Week',
         text: `Your biggest spending category so far is **${topCategory[0]}**, amounting to **${formatCurrency(topCategory[1])}**.`,
-        action: { label: 'See Insights', type: 'navigate', payload: 'Insights' }
     };
 };
 
@@ -342,18 +342,19 @@ const getKBAnswer = (topic: string, kb: KnowledgeBase): string => {
     if (!kb) return "Sorry, my knowledge base is currently unavailable.";
     const lowerTopic = topic.toLowerCase();
     
-    const allKBs = { ...kb.financeGeneral, ...kb.howToApp, ...kb.appAbout };
+    const allKBs = { ...kb.greetingsAndChitChat, ...kb.financeGeneral, ...kb.howToApp, ...kb.appAbout };
     
-    const key = Object.keys(allKBs).find(k => lowerTopic.includes(k));
-    
-    if (key && allKBs[key as keyof typeof allKBs]) {
-        return allKBs[key as keyof typeof allKBs];
+    for (const key in allKBs) {
+        const entry = allKBs[key as keyof typeof allKBs];
+        // Use regex for more accurate, whole-word matching.
+        if (entry && entry.keywords && new RegExp(`\\b(${entry.keywords.join('|')})\\b`, 'i').test(lowerTopic)) {
+            const answer = Array.isArray(entry.answers)
+                ? entry.answers[Math.floor(Math.random() * entry.answers.length)]
+                : entry.answer;
+            if (answer) return answer;
+        }
     }
     
-    if (lowerTopic.includes('help') || lowerTopic.includes('what can you do')) {
-         return "I can do a few things:\n- Analyze your spending for a day, week, or month.\n- Compare your spending between periods.\n- Find your biggest spending category.\n- Offer saving tips.\n- Explain financial topics like SIPs or credit scores.\n- Calculate loan EMIs or SIP returns.\n- Answer questions about how to use the app.";
-    }
-
     return `I'm not sure about "${topic}". Try asking 'help' to see what I can do.`;
 };
 
@@ -484,8 +485,25 @@ export const mintorAiService = {
     getContextualStartingPrompts,
     generateWeeklyDigest,
     getResponse: async (query: string): Promise<Omit<MintorAiMessage, 'id'>> => {
+        const kb = await getKbData();
+
+        // Step 1: Check KB first for fast, offline-capable answers to common questions.
+        const kbAnswer = getKBAnswer(query, kb);
+        if (!kbAnswer.startsWith("I'm not sure about")) {
+            return { sender: 'bot', text: kbAnswer, actions: [] };
+        }
+
+        // Step 2: If no KB match, check for online status before attempting an API call.
+        if (!navigator.onLine) {
+            return {
+                sender: 'bot',
+                text: "It looks like you're offline. I can answer saved questions about finance and the app. For a full analysis of your spending, please connect to the internet.",
+                actions: []
+            };
+        }
+        
+        // Step 3: If online and no direct KB match, use Gemini for advanced NLU and analysis.
         try {
-            const kb = await getKbData();
             const data: MintorData = {
                 transactions: dbService.getTransactions(),
             };
@@ -551,7 +569,7 @@ export const mintorAiService = {
             console.error("Error getting response from AI service:", error);
             return {
                 sender: 'bot',
-                text: "I'm having a little trouble connecting right now. Please try again in a moment.",
+                text: "I'm having a little trouble connecting to my advanced features right now. Please try again in a moment.",
                 actions: []
             };
         }

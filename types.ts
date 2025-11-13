@@ -104,10 +104,17 @@ export type UserChallenge = {
     endDate?: number;
 };
 
+type KBEntry = {
+    keywords: string[];
+    answer?: string;
+    answers?: string[];
+};
+
 export type KnowledgeBase = {
-    financeGeneral: Record<string, string>;
-    howToApp: Record<string, string>;
-    appAbout: Record<string, string>;
+    greetingsAndChitChat: Record<string, KBEntry>;
+    financeGeneral: Record<string, KBEntry>;
+    howToApp: Record<string, KBEntry>;
+    appAbout: Record<string, KBEntry>;
     savingTips: { general: string[] };
 };
 

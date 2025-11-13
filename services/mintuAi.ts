@@ -7,13 +7,16 @@ let kbData: KnowledgeBase | null = null;
 const getKbData = async (): Promise<KnowledgeBase> => {
     if (kbData) return kbData;
     try {
-        const response = await fetch('/assets/kb/mintu_kb.json');
+        // Fix: Corrected typo in knowledge base filename
+        const response = await fetch('/assets/kb/mintor_kb.json');
         if (!response.ok) throw new Error('Failed to fetch knowledge base');
         kbData = await response.json();
         return kbData as KnowledgeBase;
     } catch (e) {
         console.error("Could not load Mintor AI knowledge base.", e);
+        // Fix: Added missing 'greetingsAndChitChat' property to fallback object.
         return {
+          greetingsAndChitChat: {},
           financeGeneral: {},
           howToApp: {},
           appAbout: {},
@@ -342,12 +345,20 @@ const getKBAnswer = (topic: string, kb: KnowledgeBase): string => {
     if (!kb) return "Sorry, my knowledge base is currently unavailable.";
     const lowerTopic = topic.toLowerCase();
     
-    const allKBs = { ...kb.financeGeneral, ...kb.howToApp, ...kb.appAbout };
+    // Fix: Include all knowledge base sections in the search.
+    const allKBs = { ...kb.greetingsAndChitChat, ...kb.financeGeneral, ...kb.howToApp, ...kb.appAbout };
     
     const key = Object.keys(allKBs).find(k => lowerTopic.includes(k));
     
+    // Fix: Correctly return a string from the KBEntry object instead of the object itself.
     if (key && allKBs[key as keyof typeof allKBs]) {
-        return allKBs[key as keyof typeof allKBs];
+        const entry = allKBs[key as keyof typeof allKBs];
+        const answer = Array.isArray(entry.answers)
+            ? entry.answers[Math.floor(Math.random() * entry.answers.length)]
+            : entry.answer;
+        if (answer) {
+            return answer;
+        }
     }
     
     if (lowerTopic.includes('help') || lowerTopic.includes('what can you do')) {
