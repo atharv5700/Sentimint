@@ -156,9 +156,9 @@ export default function SettingsScreen() {
             
             <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 4} as React.CSSProperties}>
                 <h2 className="text-title-m font-medium mb-2">About Sentimint</h2>
-                <p className="text-body-m mb-4">Our mission is to help you build a healthier relationship with your finances by understanding the emotions behind your spending.</p>
-                <h2 className="text-title-m font-medium mb-2">Privacy Commitment</h2>
-                <p className="text-body-m">Your privacy is paramount. All data processing runs entirely on-device; your data never leaves your phone.</p>
+                <p className="text-body-m">
+                    Sentimint is your offline-first personal finance companion, built on the simple but powerful idea that how you feel is directly linked to how you spend. Our mission is to help you build a healthier, more mindful relationship with your money by uncovering the emotions behind your transactions. By tracking your spending and your feelings together, you can identify patterns, celebrate mindful choices, and gain the self awareness needed to reach your financial goals.
+                </p>
             </div>
             
             <div className="bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 p-4 rounded-3xl text-on-surface-variant" style={{'--stagger-delay': 5} as React.CSSProperties}>
