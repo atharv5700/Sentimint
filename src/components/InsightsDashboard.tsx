@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+// FIX: Updated import paths to be relative.
 import type { Period, Transaction } from '../types';
 import { useAppContext } from '../App';
 import { MOOD_MAP } from '../constants';

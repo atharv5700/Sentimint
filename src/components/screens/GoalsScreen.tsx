@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+// FIX: Updated import paths to be relative.
 import type { Budget, Challenge, UserChallenge } from '../../types';
 import { useAppContext } from '../../App';
 import { ALL_CHALLENGES } from '../../data/challenges';
-import { PlusIcon, TrashIcon, CheckIcon, CloseIcon, CHALLENGE_BADGE_MAP, DEFAULT_CATEGORIES } from '../../constants';
-import { hapticClick, hapticError, hapticSuccess } from 'services/haptics';
+import { TrashIcon, CheckIcon, CloseIcon, CHALLENGE_BADGE_MAP, DEFAULT_CATEGORIES } from '../../constants';
+import { hapticClick, hapticError, hapticSuccess } from '../../services/haptics';
 import ProgressBar from '../ProgressBar';
 import { EmptyState } from '../EmptyState';
 import SegmentedControl from '../SegmentedControl';

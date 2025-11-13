@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
+// FIX: Updated import paths to be relative.
 import { SearchIcon, MintorAiIcon } from '../../constants';
-import { hapticClick } from 'services/haptics';
+import { hapticClick } from '../../services/haptics';
 
 interface TopAppBarProps {
     onMintorClick: () => void;

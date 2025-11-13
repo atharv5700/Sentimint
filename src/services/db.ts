@@ -1,3 +1,4 @@
+// FIX: Updated import path to be relative.
 import type { Transaction, Theme, Mood, Budget, RecurringTransaction, UserChallenge } from '../types';
 
 /**

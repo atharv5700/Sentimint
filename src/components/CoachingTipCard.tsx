@@ -1,5 +1,5 @@
 import React from 'react';
-import type { CoachingTip, Screen } from '../types';
+import type { CoachingTip, Screen } from 'types';
 import { hapticClick } from 'services/haptics';
 
 interface CoachingTipCardProps {

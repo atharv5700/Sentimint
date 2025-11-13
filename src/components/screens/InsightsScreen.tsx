@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+// FIX: Updated import paths to be relative.
 import type { Period } from '../../types';
 import InsightsDashboard from '../InsightsDashboard';
 import SegmentedControl from '../SegmentedControl';
@@ -17,7 +18,7 @@ export default function InsightsScreen() {
                         {label: 'Year', value: 'Y'}
                     ]}
                     selected={period}
-                    onSelect={(value) => setPeriod(value)}
+                    onSelect={(value) => setPeriod(value as Period)}
                 />
             </div>
             

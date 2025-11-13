@@ -1,15 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
+// FIX: Updated import paths to be relative.
 import type { Transaction, Screen, CoachingTip, FinanceTrick, Quote } from '../../types';
 import { useAppContext } from '../../App';
 import { MOOD_MAP, GoalsIcon } from '../../constants';
 import TransactionList from '../TransactionList';
 import ProgressBar from '../ProgressBar';
-import { mintorAiService } from 'services/mintorAi';
+import { mintorAiService } from '../../services/mintorAi';
 import CoachingTipCard from '../CoachingTipCard';
 import WeeklyDigest from '../WeeklyDigest';
 import { useAnimatedCounter } from '../../hooks/useAnimatedCounter';
 import { EmptyState } from '../EmptyState';
-import { hapticClick } from 'services/haptics';
+import { hapticClick } from '../../services/haptics';
 import StreakCounter from '../StreakCounter';
 import { FINANCE_TRICKS } from '../../data/financeTricks';
 import { QUOTES } from '../../data/quotes';

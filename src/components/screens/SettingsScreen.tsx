@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+// FIX: Updated import paths to be relative.
 import { useAppContext } from '../../App';
 import type { Theme } from '../../types';
-import { hapticClick, hapticSuccess, hapticError } from 'services/haptics';
+import { hapticClick, hapticSuccess, hapticError } from '../../services/haptics';
 import { CloseIcon } from '../../constants';
 import SegmentedControl from '../SegmentedControl';
 

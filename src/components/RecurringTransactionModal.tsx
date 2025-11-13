@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
+// FIX: Updated import paths to be relative.
 import type { RecurringTransaction, Mood } from '../types';
 import { useAppContext } from '../App';
 import { DEFAULT_CATEGORIES, MOOD_MAP, CloseIcon } from '../constants';
-import { hapticClick, hapticError } from 'services/haptics';
+import { hapticClick, hapticError } from '../services/haptics';
 
 interface RecurringTransactionModalProps {
     isOpen: boolean;

@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
+// FIX: Updated import paths to be relative.
 import type { Transaction } from '../../types';
 import { useAppContext } from '../../App';
 import TransactionList from '../TransactionList';
-import { hapticClick } from 'services/haptics';
+import { hapticClick } from '../../services/haptics';
 import { EmptyState } from '../EmptyState';
 
 export default function TransactionsScreen({ onEditTransaction }: { onEditTransaction: (tx: Transaction) => void }) {

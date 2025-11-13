@@ -1,7 +1,8 @@
 import React, { useRef, useState, useEffect, forwardRef } from 'react';
+// FIX: Updated import paths to be relative.
 import type { Screen } from '../../types';
 import { HomeIcon, TransactionsIcon, InsightsIcon, GoalsIcon, SettingsIcon } from '../../constants';
-import { hapticClick } from 'services/haptics';
+import { hapticClick } from '../../services/haptics';
 
 interface BottomNavProps {
     activeScreen: Screen;
