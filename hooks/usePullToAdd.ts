@@ -1,4 +1,3 @@
-// Fix: Added React import to resolve errors with React.TouchEvent type.
 import React, { useState, useRef, useCallback } from 'react';
 
 const PULL_THRESHOLD = 80; // pixels

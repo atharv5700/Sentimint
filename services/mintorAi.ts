@@ -338,8 +338,8 @@ const calculateSIP = (monthlyInvestment: number, rate: number, years: number): s
     return `A monthly SIP of ${formatCurrency(monthlyInvestment)} at an expected ${rate}% return for ${years} years could grow to approximately **${formatCurrency(futureValue)}**.`;
 };
 
-const getKBAnswer = (topic: string, kb: KnowledgeBase): string => {
-    if (!kb) return "Sorry, my knowledge base is currently unavailable.";
+const getKBAnswer = (topic: string, kb: KnowledgeBase): string | null => {
+    if (!kb) return null;
     const lowerTopic = topic.toLowerCase();
     
     const allKBs = { ...kb.greetingsAndChitChat, ...kb.financeGeneral, ...kb.howToApp, ...kb.appAbout };
@@ -355,7 +355,7 @@ const getKBAnswer = (topic: string, kb: KnowledgeBase): string => {
         }
     }
     
-    return `I'm not sure about "${topic}". Try asking 'help' to see what I can do.`;
+    return null;
 };
 
 
@@ -489,7 +489,7 @@ export const mintorAiService = {
 
         // Step 1: Check KB first for fast, offline-capable answers to common questions.
         const kbAnswer = getKBAnswer(query, kb);
-        if (!kbAnswer.startsWith("I'm not sure about")) {
+        if (kbAnswer) {
             return { sender: 'bot', text: kbAnswer, actions: [] };
         }
 
@@ -554,7 +554,8 @@ export const mintorAiService = {
                         resultText = calculateSIP(args.monthlyInvestment as number, args.rate as number, args.years as number);
                         break;
                     case 'getKBAnswer':
-                        resultText = getKBAnswer(args.topic as string, kb);
+                        // This case is now handled before the API call, but we keep it as a fallback.
+                        resultText = getKBAnswer(args.topic as string, kb) || "I couldn't find information on that topic.";
                         break;
                     default:
                         resultText = "I'm not sure how to handle that action.";
