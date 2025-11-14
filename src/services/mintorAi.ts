@@ -1,5 +1,4 @@
 import { GoogleGenAI, FunctionDeclaration, Type } from '@google/genai';
-// FIX: Changed import paths to be relative
 import type { Transaction, MintorAiMessage, MintorAction, CoachingTip, Screen, KnowledgeBase } from '../types';
 import { dbService } from './db';
 import { ChartBarIcon, LightbulbIcon } from '../constants';

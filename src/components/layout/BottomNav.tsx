@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect, forwardRef } from 'react';
-// FIX: Changed import paths to be relative
 import type { Screen } from '../../types';
 import { HomeIcon, TransactionsIcon, InsightsIcon, GoalsIcon, SettingsIcon } from '../../constants';
 import { hapticClick } from '../../services/haptics';
@@ -62,7 +61,6 @@ const BottomNav = forwardRef<HTMLElement, BottomNavProps>(({ activeScreen, setSc
                     return (
                         <button
                             key={item.id}
-                            // FIX: The ref callback should not return a value. Using braces to ensure an implicit return is not made.
                             ref={el => { buttonRefs.current[index] = el; }}
                             onClick={() => {
                                 hapticClick();

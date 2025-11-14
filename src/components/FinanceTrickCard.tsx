@@ -1,5 +1,5 @@
 import React from 'react';
-import type { FinanceTrick } from 'types';
+import type { FinanceTrick } from '../types';
 
 interface FinanceTrickCardProps {
     trick: FinanceTrick;

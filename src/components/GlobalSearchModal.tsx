@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useAppContext } from 'App';
-import { SearchIcon, CloseIcon, TransactionsIcon, GoalsIcon, MOOD_MAP } from 'constants';
-import type { Transaction, Budget } from 'types';
+import { useAppContext } from '../App';
+import { SearchIcon, CloseIcon, TransactionsIcon, GoalsIcon, MOOD_MAP } from '../constants';
+import type { Transaction, Budget } from '../types';
 
 interface GlobalSearchModalProps {
     isOpen: boolean;

@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-// FIX: Changed import paths to be relative
 import { useAppContext } from '../../App';
 import { CloseIcon, PlusIcon, TrashIcon, DEFAULT_CATEGORIES } from '../../constants';
 import { hapticClick, hapticError } from '../../services/haptics';
@@ -83,4 +82,33 @@ export default function ManageCategoriesModal({ isOpen, onClose }: ManageCategor
                          <h2 className="text-title-m font-medium mb-2 text-on-surface-variant">Custom Categories</h2>
                          <div className="flex flex-col gap-2 stagger-children">
                             {customCategories.length > 0 ? customCategories.map((cat, i) => (
-                                 <div key={cat} className="flex justify-between items-center bg-surface p-3 rounded-xl" style={{'--stagger-delay': i
+                                 <div key={cat} className="flex justify-between items-center bg-surface p-3 rounded-xl" style={{'--stagger-delay': i} as React.CSSProperties}>
+                                    <span className="text-on-surface">{cat}</span>
+                                    <button 
+                                        onClick={() => handleDeleteCategory(cat)}
+                                        disabled={!!categoryUsage[cat]}
+                                        className="text-on-surface-variant/70 hover:text-error disabled:opacity-50 disabled:cursor-not-allowed"
+                                        aria-label={`Delete category ${cat}`}
+                                    >
+                                        <TrashIcon className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            )) : <p className="text-sm text-center text-on-surface-variant p-4">You haven't added any custom categories yet.</p>}
+                         </div>
+                    </section>
+
+                     <section>
+                         <h2 className="text-title-m font-medium mb-2 text-on-surface-variant">Default Categories</h2>
+                         <div className="flex flex-wrap gap-2">
+                            {DEFAULT_CATEGORIES.map(cat => (
+                                 <div key={cat} className="bg-surface/80 p-3 rounded-xl text-sm text-on-surface">
+                                    {cat}
+                                </div>
+                            ))}
+                         </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    );
+}

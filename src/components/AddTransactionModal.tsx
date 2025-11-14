@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-// FIX: Changed import paths to be relative
 import type { Transaction, Mood } from '../types';
 import { useAppContext } from '../App';
-import { DEFAULT_CATEGORIES, DEFAULT_TAGS, MOOD_MAP, ChevronDownIcon, PlusIcon, CloseIcon, SparkleIcon } from '../constants';
+import { DEFAULT_CATEGORIES, DEFAULT_TAGS, MOOD_MAP, CloseIcon, PlusIcon } from '../constants';
 import { hapticClick, hapticError } from '../services/haptics';
-import CustomSelect from './CustomSelect';
 
 interface AddTransactionModalProps {
     isOpen: boolean;
@@ -44,7 +42,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
     const allCategories = useMemo(() => [...DEFAULT_CATEGORIES, ...customCategories], [customCategories]);
 
     // Available tags are now default + any custom tags for THIS transaction
-    const availableTags = [...new Set([...DEFAULT_TAGS, ...tags])];
+    const availableTags = Array.from(new Set([...DEFAULT_TAGS, ...tags]));
 
     useEffect(() => {
         if (isAddingTag) {
@@ -120,19 +118,19 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
             onClose();
         }
     };
-
-    if (!isOpen) return null;
-
+    
     const formattedAmount = useMemo(() => {
         if (!amount) return '';
         const numericAmount = parseFloat(amount.replace(/,/g, ''));
         if (isNaN(numericAmount)) return '';
         return new Intl.NumberFormat('en-IN').format(numericAmount);
     }, [amount]);
+
+    if (!isOpen) return null;
     
     return (
         <>
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-end justify-center transition-opacity duration-300 animate-backdropFadeIn">
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-end justify-center transition-opacity duration-300 animate-backdropFadeIn" onClick={onClose}>
                 <div className="bg-surface rounded-t-[28px] p-2 sm:p-4 w-full max-w-2xl flex flex-col max-h-[90vh] animate-modalSlideUp">
                     <div className="flex justify-center mb-2 flex-shrink-0">
                         <div className="w-8 h-1 bg-outline rounded-full"></div>

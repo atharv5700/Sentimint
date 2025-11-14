@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-// FIX: Changed import paths to be relative
 import type { RecurringTransaction, Mood } from '../types';
 import { useAppContext } from '../App';
 import { DEFAULT_CATEGORIES, MOOD_MAP, CloseIcon } from '../constants';
@@ -68,15 +67,15 @@ export default function RecurringTransactionModal({ isOpen, onClose, rTxToEdit }
         onClose();
     };
 
-    if (!isOpen) return null;
-
     const formattedAmount = useMemo(() => {
         if (!amount) return '';
         const numericAmount = parseFloat(amount.replace(/,/g, ''));
         if (isNaN(numericAmount)) return '';
         return new Intl.NumberFormat('en-IN').format(numericAmount);
     }, [amount]);
-    
+
+    if (!isOpen) return null;
+
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center p-0 animate-backdropFadeIn" onClick={onClose}>
             <div className="bg-surface rounded-t-[28px] p-2 sm:p-4 w-full max-w-2xl flex flex-col max-h-[90vh] animate-modalSlideUp" onClick={e => e.stopPropagation()}>

@@ -1,5 +1,4 @@
 import React from 'react';
-// FIX: Changed import path to be relative
 import type { AppContextType as AppContextTypeExtended } from './App';
 
 // Consolidated Capacitor Plugin type definitions to resolve conflicts across files.
@@ -11,7 +10,6 @@ declare global {
       Plugins: {
         App?: {
           addListener: (eventName: 'backButton', listenerFunc: (e: { canGoBack: boolean; }) => void) => { remove: () => void; };
-          // FIX: Added missing `minimizeApp` method to the Capacitor App plugin type definition to resolve an error in App.tsx.
           minimizeApp: () => Promise<void>;
         };
         Preferences?: {

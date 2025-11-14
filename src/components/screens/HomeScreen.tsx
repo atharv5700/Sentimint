@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-// FIX: Changed import paths to be relative
 import type { Transaction, Screen, CoachingTip, FinanceTrick, Quote } from '../../types';
 import { useAppContext } from '../../App';
-import { MOOD_MAP, GoalsIcon } from '../../constants';
+import { MOOD_MAP } from '../../constants';
 import TransactionList from '../TransactionList';
 import ProgressBar from '../ProgressBar';
 import { mintorAiService } from '../../services/mintorAi';

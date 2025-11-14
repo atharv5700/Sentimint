@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-// FIX: Changed import paths to be relative
 import type { MintorAiMessage, MintorAction, Screen } from '../types';
 import { mintorAiService } from '../services/mintorAi';
 import { SendIcon, CloseIcon } from '../constants';
@@ -52,7 +51,7 @@ export default function MintorAiModal({ isOpen, onClose }: MintorAiModalProps) {
         setTimeout(() => {
             onClose();
             setIsClosing(false); // Reset for the next time it opens
-        }, 400); // Must match animation duration in index.html
+        }, 400); // Must match animation duration
     };
 
     const navigateTo = (screen: Screen) => {

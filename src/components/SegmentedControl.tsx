@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { hapticClick } from 'services/haptics';
+import { hapticClick } from '../services/haptics';
 
 interface SegmentedControlProps<T extends string> {
     options: { label: string; value: T }[];
@@ -28,10 +28,7 @@ export default function SegmentedControl<T extends string>({ options, selected, 
             }
         };
         
-        // Defer the style calculation until after the browser has painted, ensuring dimensions are available.
         const animationFrameId = requestAnimationFrame(updatePillStyle);
-        
-        // Also update on resize for responsiveness.
         window.addEventListener('resize', updatePillStyle);
 
         return () => {
@@ -50,7 +47,7 @@ export default function SegmentedControl<T extends string>({ options, selected, 
                 <button
                     key={value}
                     onClick={() => { hapticClick(); onSelect(value); }}
-                    className={`relative z-10 w-full capitalize px-4 py-2 text-sm font-medium rounded-2xl transition-colors duration-200 ${
+                    className={`relative z-10 w-full capitalize px-4 sm:px-6 py-2 text-sm font-medium rounded-2xl transition-colors duration-200 ${
                         selected === value ? 'text-on-primary-container' : 'text-on-surface-variant'
                     }`}
                 >

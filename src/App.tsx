@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, createContext, useContext, useMemo, useRef, useLayoutEffect } from 'react';
-// FIX: Changed import paths to be relative
 import type { Screen, Theme, Transaction, Budget, RecurringTransaction, UserChallenge, Challenge } from './types';
 import { dbService } from './services/db';
 import { ALL_CHALLENGES } from './data/challenges';
@@ -251,17 +250,19 @@ export default function App() {
         let listener: any;
         if (window.Capacitor?.isPluginAvailable('App')) {
             const App = window.Capacitor.Plugins.App;
-            listener = App.addListener('backButton', (e: { canGoBack: boolean }) => {
-                if (isAModalOpen) {
-                    // Prevent default back button action (which would exit the app)
-                    // and instead, close the open modal.
-                    e.canGoBack = false;
-                    handleCloseActions();
-                } else {
-                    // If no modals are open, minimize the app for a native-like experience.
-                    App.minimizeApp();
-                }
-            });
+            if (App) {
+                listener = App.addListener('backButton', (e: { canGoBack: boolean }) => {
+                    if (isAModalOpen) {
+                        // Prevent default back button action (which would exit the app)
+                        // and instead, close the open modal.
+                        e.canGoBack = false;
+                        handleCloseActions();
+                    } else {
+                        // If no modals are open, minimize the app for a native-like experience.
+                        App.minimizeApp();
+                    }
+                });
+            }
         }
 
         // Web-specific history handling for back gesture/button

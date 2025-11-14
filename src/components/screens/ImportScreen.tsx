@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-// FIX: Changed import paths to be relative
 import type { Mood, Transaction } from '../../types';
 import { useAppContext } from '../../App';
 import { hapticClick, hapticError, hapticSuccess } from '../../services/haptics';
@@ -10,7 +9,6 @@ interface ImportDataModalProps {
     onClose: () => void;
 }
 
-// FIX: Removed non-existent 'goal_id' from Omit as it's not a property of Transaction.
 type ParsedTx = Omit<Transaction, 'id' | 'currency' | 'tags_json'>;
 
 export default function ImportDataModal({ isOpen, onClose }: ImportDataModalProps) {
@@ -83,14 +81,17 @@ export default function ImportDataModal({ isOpen, onClose }: ImportDataModalProp
         hapticClick();
         setIsImporting(true);
 
-        const txPromises = parsedTxs.map(tx => addTransaction({
-            ...tx,
-            currency: 'INR',
-            // FIX: Removed non-existent property 'goal_id' which caused a type error.
-            tags_json: '[]'
-        }));
-        
-        await Promise.all(txPromises);
+        // Create transactions without 'await' in the loop for parallel processing
+        const txCreationPromises = parsedTxs.map(tx => {
+            const fullTx: Omit<Transaction, 'id' | 'ts'> = {
+                ...tx,
+                currency: 'INR',
+                tags_json: '[]'
+            };
+            return addTransaction(fullTx);
+        });
+
+        await Promise.all(txCreationPromises);
         
         setIsImporting(false);
         hapticSuccess();

@@ -1,10 +1,9 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-// FIX: Changed import paths to be relative
 import type { Budget, Challenge, UserChallenge } from '../../types';
 import { useAppContext } from '../../App';
 import { ALL_CHALLENGES } from '../../data/challenges';
 import { TrashIcon, CheckIcon, CloseIcon, CHALLENGE_BADGE_MAP, DEFAULT_CATEGORIES } from '../../constants';
-import { hapticClick, hapticError, hapticSuccess } from '../../services/haptics';
+import { hapticClick, hapticError } from '../../services/haptics';
 import ProgressBar from '../ProgressBar';
 import { EmptyState } from '../EmptyState';
 import SegmentedControl from '../SegmentedControl';
@@ -270,15 +269,17 @@ export default function GoalsScreen() {
     return (
         <div className="relative min-h-full">
             <div className="px-4">
-                 <div className="mb-4 max-w-sm mx-auto">
-                    <SegmentedControl
-                        options={[
-                            { label: 'Budgets', value: 'budgets' },
-                            { label: 'Challenges', value: 'challenges' }
-                        ]}
-                        selected={activeTab}
-                        onSelect={(val) => setActiveTab(val as 'budgets' | 'challenges')}
-                    />
+                 <div className="mb-4">
+                    <div className="mx-auto max-w-sm">
+                        <SegmentedControl
+                            options={[
+                                { label: 'Budgets', value: 'budgets' },
+                                { label: 'Challenges', value: 'challenges' }
+                            ]}
+                            selected={activeTab}
+                            onSelect={(val) => setActiveTab(val as 'budgets' | 'challenges')}
+                        />
+                    </div>
                 </div>
 
                 <div key={activeTab} className="animate-screenFadeIn">

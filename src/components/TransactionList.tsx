@@ -1,10 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-// FIX: Changed import paths to be relative
 import type { Transaction } from '../types';
 import { useAppContext } from '../App';
 import { MOOD_MAP, TrashIcon, TagIcon, CloseIcon, DEFAULT_TAGS } from '../constants';
 import { hapticClick, hapticSuccess } from '../services/haptics';
-import CustomSelect from './CustomSelect';
 
 type SortOrder = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
 

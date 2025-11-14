@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-// FIX: Changed import paths to be relative
 import type { Period } from '../../types';
 import InsightsDashboard from '../InsightsDashboard';
 import SegmentedControl from '../SegmentedControl';

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-// FIX: Changed import paths to be relative
 import { useAppContext } from '../../App';
 import type { Theme } from '../../types';
 import { hapticClick, hapticSuccess, hapticError } from '../../services/haptics';

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDownIcon } from 'constants';
+import { ChevronDownIcon } from '../constants';
 
 type Option = {
     value: string | number;
