@@ -8,18 +8,15 @@
  * otherwise it will fall back to the web standard Vibration API.
  */
 
-// FIX: Removed local type definitions for Capacitor plugins to use the central definition in `types.ts`.
-
-const canUseHaptics = () => window.Capacitor?.isPluginAvailable('Haptics');
-
 /**
  * Triggers a short, crisp vibration for button clicks and interactions.
  * Conforms to Material Design guidelines for light impact.
  */
 export const hapticClick = () => {
   try {
-    if (canUseHaptics()) {
-      window.Capacitor.Plugins.Haptics.impact({ style: 'light' });
+    const Haptics = window.Capacitor?.Plugins?.Haptics;
+    if (window.Capacitor?.isPluginAvailable('Haptics') && Haptics) {
+      Haptics.impact({ style: 'light' });
     } else if (window.navigator?.vibrate) {
       window.navigator.vibrate(10);
     }
@@ -34,8 +31,9 @@ export const hapticClick = () => {
  */
 export const hapticSuccess = () => {
   try {
-    if (canUseHaptics()) {
-      window.Capacitor.Plugins.Haptics.notification({ type: 'success' });
+    const Haptics = window.Capacitor?.Plugins?.Haptics;
+    if (window.Capacitor?.isPluginAvailable('Haptics') && Haptics) {
+      Haptics.notification({ type: 'success' });
     } else if (window.navigator?.vibrate) {
       window.navigator.vibrate([20, 80, 20]);
     }
@@ -50,8 +48,9 @@ export const hapticSuccess = () => {
  */
 export const hapticError = () => {
   try {
-    if (canUseHaptics()) {
-       window.Capacitor.Plugins.Haptics.notification({ type: 'error' });
+    const Haptics = window.Capacitor?.Plugins?.Haptics;
+    if (window.Capacitor?.isPluginAvailable('Haptics') && Haptics) {
+       Haptics.notification({ type: 'error' });
     } else if (window.navigator?.vibrate) {
       window.navigator.vibrate([80, 40, 80]);
     }

@@ -1,4 +1,4 @@
-import type { Transaction, Theme, Mood, Budget, RecurringTransaction, UserChallenge } from '../types';
+import type { Transaction, Theme, Budget, RecurringTransaction, UserChallenge } from '../types';
 
 /**
  * For native builds, this service now prioritizes the Capacitor Preferences plugin
@@ -71,8 +71,11 @@ class DbService {
         let encryptedData: string | null = null;
         try {
             if (canUseStorage()) {
-                const { value } = await window.Capacitor!.Plugins.Preferences!.get({ key: DB_KEY });
-                encryptedData = value;
+                const Preferences = window.Capacitor?.Plugins?.Preferences;
+                if (Preferences) {
+                    const { value } = await Preferences.get({ key: DB_KEY });
+                    encryptedData = value;
+                }
             } else {
                 encryptedData = localStorage.getItem(DB_KEY);
             }
@@ -97,8 +100,11 @@ class DbService {
         try {
             const encryptedData = encrypt(this.db);
             if (encryptedData) {
-                if (canUseStorage()) {
-                    await window.Capacitor!.Plugins.Preferences!.set({ key: DB_KEY, value: encryptedData });
+                 if (canUseStorage()) {
+                    const Preferences = window.Capacitor?.Plugins?.Preferences;
+                    if (Preferences) {
+                        await Preferences.set({ key: DB_KEY, value: encryptedData });
+                    }
                 } else {
                     localStorage.setItem(DB_KEY, encryptedData);
                 }
@@ -193,6 +199,32 @@ class DbService {
         this.updateStreakData(new Date(newTx.ts));
         await this.save();
         return newTx;
+    }
+
+    public async importTransactions(txs: Omit<Transaction, 'id'>[]): Promise<void> {
+        const newTxs: Transaction[] = txs.map((tx, i) => ({
+          ...tx,
+          id: `imported-${tx.ts}-${i}`
+        }));
+
+        this.db.transactions.push(...newTxs);
+
+        // Don't update streak for past transactions in bulk
+        // Only update if there are transactions for today or yesterday
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        newTxs.forEach(tx => {
+            const txDateStr = new Date(tx.ts).toISOString().split('T')[0];
+            if (txDateStr === todayStr || txDateStr === yesterdayStr) {
+                this.updateStreakData(new Date(tx.ts));
+            }
+        });
+
+        await this.save();
     }
     
     public async updateTransaction(tx: Transaction): Promise<void> {
@@ -319,7 +351,10 @@ class DbService {
             streakData: { currentStreak: 0, lastLogDate: '' },
         };
         if (canUseStorage()) {
-            await window.Capacitor!.Plugins.Preferences!.remove({ key: DB_KEY });
+            const Preferences = window.Capacitor?.Plugins?.Preferences;
+            if (Preferences) {
+                await Preferences.remove({ key: DB_KEY });
+            }
         } else {
             localStorage.removeItem(DB_KEY);
         }

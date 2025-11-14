@@ -1,5 +1,4 @@
 import React from 'react';
-import type { AppContextType as AppContextTypeExtended } from './App';
 
 // Consolidated Capacitor Plugin type definitions to resolve conflicts across files.
 // This single global declaration ensures all used plugins are available type-wise.
@@ -10,7 +9,6 @@ declare global {
       Plugins: {
         App?: {
           addListener: (eventName: 'backButton', listenerFunc: (e: { canGoBack: boolean; }) => void) => { remove: () => void; };
-          // FIX: Added missing `minimizeApp` method to the Capacitor App plugin type definition to resolve an error in App.tsx.
           minimizeApp: () => Promise<void>;
         };
         Preferences?: {
@@ -147,4 +145,40 @@ export type KnowledgeBase = {
     savingTips: { general: string[] };
 };
 
-export type AppContextType = AppContextTypeExtended;
+export interface AppContextType {
+  transactions: Transaction[];
+  budgets: Budget[];
+  recurringTransactions: RecurringTransaction[];
+  customCategories: string[];
+  userChallenges: UserChallenge[];
+  streak: number;
+  theme: Theme;
+  screen: Screen;
+  setScreen: (screen: Screen) => void;
+  setTheme: (theme: Theme) => void;
+  addTransaction: (tx: Omit<Transaction, 'id' | 'ts'>) => Promise<void>;
+  updateTransaction: (tx: Transaction) => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
+  deleteTransactions: (ids: string[]) => Promise<void>;
+  importTransactions: (txs: Omit<Transaction, 'id'>[]) => Promise<void>;
+  addBudget: (budget: Omit<Budget, 'id' | 'created_at'>) => Promise<void>;
+  updateBudget: (budget: Budget) => Promise<void>;
+  deleteBudget: (id: string) => Promise<void>;
+  addRecurringTransaction: (rTx: Omit<RecurringTransaction, 'id' | 'last_added_date'>) => Promise<void>;
+  updateRecurringTransaction: (rTx: RecurringTransaction) => Promise<void>;
+  deleteRecurringTransaction: (id: string) => Promise<void>;
+  addCustomCategory: (category: string) => Promise<void>;
+  deleteCustomCategory: (category: string) => Promise<void>;
+  startChallenge: (challengeId: string) => Promise<void>;
+  formatCurrency: (amount: number) => string;
+  isBulkMode: boolean;
+  setIsBulkMode: (isBulk: boolean) => void;
+  setFabConfig: (config: FabConfig | null) => void;
+  openTransactionModal: (tx?: Transaction | null) => void;
+  openBudgetModal: (budget?: Budget | null) => void;
+  openRecurringTransactionModal: (rTx?: RecurringTransaction | null) => void;
+  openImportModal: () => void;
+  openExportModal: () => void;
+  openManageCategoriesModal: () => void;
+  refreshData: () => Promise<void>;
+}

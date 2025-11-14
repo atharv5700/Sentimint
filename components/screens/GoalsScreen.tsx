@@ -1,69 +1,12 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Budget, Challenge, UserChallenge } from '../../types';
 import { useAppContext } from '../../App';
 import { ALL_CHALLENGES } from '../../data/challenges';
-import { PlusIcon, TrashIcon, CheckIcon, PencilIcon, DEFAULT_CATEGORIES, CloseIcon, CHALLENGE_BADGE_MAP } from '../../constants';
-import { hapticClick, hapticError, hapticSuccess } from '../../services/haptics';
+import { TrashIcon, CheckIcon, CloseIcon, CHALLENGE_BADGE_MAP, DEFAULT_CATEGORIES } from '../../constants';
+import { hapticClick, hapticError } from '../../services/haptics';
 import ProgressBar from '../ProgressBar';
 import { EmptyState } from '../EmptyState';
-
-const SegmentedControl: React.FC<{
-    options: { label: string; value: string }[];
-    selected: string;
-    onSelect: (value: string) => void;
-}> = ({ options, selected, onSelect }) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [pillStyle, setPillStyle] = useState({});
-
-    useEffect(() => {
-        const updatePillStyle = () => {
-            const container = containerRef.current;
-            if (!container) return;
-            const selectedIndex = options.findIndex(opt => opt.value === selected);
-            if (selectedIndex === -1) return;
-
-            const selectedButton = container.children[selectedIndex + 1] as HTMLElement;
-            if (selectedButton && selectedButton.offsetWidth > 0) {
-                setPillStyle({
-                    left: `${selectedButton.offsetLeft}px`,
-                    width: `${selectedButton.offsetWidth}px`,
-                });
-            }
-        };
-
-        const animationFrameId = requestAnimationFrame(updatePillStyle);
-        window.addEventListener('resize', updatePillStyle);
-
-        return () => {
-            cancelAnimationFrame(animationFrameId);
-            window.removeEventListener('resize', updatePillStyle);
-        };
-    }, [selected, options]);
-
-    return (
-        <div ref={containerRef} className="relative flex justify-center p-1 bg-surface-variant/60 dark:bg-surface-variant/40 backdrop-blur-lg border border-outline/20 rounded-2xl mx-auto max-w-sm">
-            <div 
-                className="absolute top-1 bottom-1 bg-primary-container rounded-2xl shadow transition-all duration-300 ease-out"
-                style={pillStyle}
-            />
-            {options.map(({ label, value }) => (
-                <button 
-                    key={value} 
-                    onClick={() => { hapticClick(); onSelect(value); }} 
-                    className={`relative z-10 w-full capitalize px-4 py-2 text-sm font-medium rounded-2xl transition-colors duration-200 ${selected === value ? 'text-on-primary-container' : 'text-on-surface-variant'}`}
-                >
-                    {label}
-                </button>
-            ))}
-        </div>
-    );
-};
-
-export const GoalModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-    // This component is no longer used but kept in the file to avoid breaking the export.
-    // It will be removed in a future cleanup.
-    return null;
-}
+import SegmentedControl from '../SegmentedControl';
 
 const BudgetListItem: React.FC<{ budget: Budget, spent: number, onEdit: (budget: Budget) => void }> = ({ budget, spent, onEdit }) => {
     const { formatCurrency, deleteBudget } = useAppContext();
@@ -276,7 +219,7 @@ export default function GoalsScreen() {
         return (
             <div 
                 style={style}
-                className={`bg-surface-variant p-4 rounded-3xl transition-all duration-300 ${isStarted ? 'opacity-0 scale-95' : ''}`}>
+                className={`bg-surface-variant/60 dark:bg-surface-variant/40 p-4 rounded-3xl transition-all duration-300 ${isStarted ? 'opacity-0 scale-95' : ''}`}>
                 <div className="flex items-start gap-4">
                     <div className="bg-surface/50 rounded-full p-3 mt-1 flex-shrink-0">
                         <BadgeIcon className="w-6 h-6 text-on-surface-variant" />
@@ -321,14 +264,16 @@ export default function GoalsScreen() {
         <div className="relative min-h-full">
             <div className="px-4">
                  <div className="mb-4">
-                    <SegmentedControl
-                        options={[
-                            { label: 'Budgets', value: 'budgets' },
-                            { label: 'Challenges', value: 'challenges' }
-                        ]}
-                        selected={activeTab}
-                        onSelect={(val) => setActiveTab(val as 'budgets' | 'challenges')}
-                    />
+                    <div className="mx-auto max-w-sm">
+                        <SegmentedControl
+                            options={[
+                                { label: 'Budgets', value: 'budgets' },
+                                { label: 'Challenges', value: 'challenges' }
+                            ]}
+                            selected={activeTab}
+                            onSelect={(val) => setActiveTab(val as 'budgets' | 'challenges')}
+                        />
+                    </div>
                 </div>
 
                 <div key={activeTab} className="animate-screenFadeIn">
@@ -365,7 +310,7 @@ export default function GoalsScreen() {
                              {completedChallenges.length > 0 && (
                                 <div>
                                     <h2 className="text-title-m font-medium mb-2">Achievements</h2>
-                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 p-4 bg-surface-variant rounded-3xl">
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 p-4 bg-surface-variant/60 dark:bg-surface-variant/40 rounded-3xl">
                                         {completedChallenges.map(c => <AchievementBadge key={c.challengeId} challenge={c} />)}
                                     </div>
                                 </div>

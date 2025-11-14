@@ -9,11 +9,10 @@ interface ImportDataModalProps {
     onClose: () => void;
 }
 
-// FIX: Removed non-existent 'goal_id' from Omit as it's not a property of Transaction.
 type ParsedTx = Omit<Transaction, 'id' | 'currency' | 'tags_json'>;
 
 export default function ImportDataModal({ isOpen, onClose }: ImportDataModalProps) {
-    const { addTransaction, refreshData } = useAppContext();
+    const { importTransactions } = useAppContext();
     const [fileName, setFileName] = useState('');
     const [parsedTxs, setParsedTxs] = useState<ParsedTx[]>([]);
     const [error, setError] = useState('');
@@ -51,7 +50,8 @@ export default function ImportDataModal({ isOpen, onClose }: ImportDataModalProp
                 const tx: any = {};
                 header.forEach((h, index) => tx[h] = values[index]);
                 
-                const ts = new Date(tx.date).getTime();
+                // Allow for different date formats by trying to parse them robustly
+                const ts = Date.parse(tx.date);
                 const amount = parseFloat(tx.amount);
 
                 if (isNaN(ts) || isNaN(amount)) {
@@ -82,19 +82,23 @@ export default function ImportDataModal({ isOpen, onClose }: ImportDataModalProp
         hapticClick();
         setIsImporting(true);
 
-        const txPromises = parsedTxs.map(tx => addTransaction({
+        const fullTxs = parsedTxs.map(tx => ({
             ...tx,
-            currency: 'INR',
-            // FIX: Removed non-existent property 'goal_id' which caused a type error.
+            currency: 'INR' as const,
             tags_json: '[]'
         }));
         
-        await Promise.all(txPromises);
-        
-        setIsImporting(false);
-        hapticSuccess();
-        await refreshData();
-        onClose();
+        try {
+            await importTransactions(fullTxs);
+            hapticSuccess();
+            onClose();
+        } catch (e) {
+            hapticError();
+            setError("An error occurred during import.");
+            console.error("Import failed:", e);
+        } finally {
+            setIsImporting(false);
+        }
     };
 
     if (!isOpen) return null;
@@ -113,12 +117,12 @@ export default function ImportDataModal({ isOpen, onClose }: ImportDataModalProp
                 </div>
                 
                 <div className="overflow-y-auto px-2 sm:px-0 pb-4 space-y-4">
-                    <div className="bg-surface-variant p-4 rounded-3xl space-y-4">
+                    <div className="bg-surface-variant/60 dark:bg-surface-variant/40 p-4 rounded-3xl space-y-4">
                         <div>
                             <h2 className="text-title-m mb-1">Instructions</h2>
                             <p className="text-body-m text-on-surface-variant">
                                 Import a CSV file with columns: <strong>date, amount, merchant, category</strong>.
-                                Optional columns: <strong>mood</strong> (1-5), <strong>note</strong>.
+                                Optional columns: <strong>mood</strong> (1-5), <strong>note</strong>. The date should be in a recognizable format (e.g., YYYY-MM-DD).
                             </p>
                         </div>
                         
@@ -133,21 +137,21 @@ export default function ImportDataModal({ isOpen, onClose }: ImportDataModalProp
                     {parsedTxs.length > 0 && (
                         <div className="mt-6">
                             <h2 className="text-title-m mb-2">Preview ({parsedTxs.length} transactions)</h2>
-                            <div className="max-h-60 overflow-y-auto bg-surface-variant p-2 rounded-2xl">
+                            <div className="max-h-60 overflow-y-auto bg-surface-variant/60 p-2 rounded-2xl">
                                 <table className="w-full text-sm">
                                     <thead>
                                         <tr className="text-left text-on-surface-variant">
                                             <th className="p-2">Date</th>
                                             <th className="p-2">Merchant</th>
-                                            <th className="p-2">Amount</th>
+                                            <th className="p-2 text-right">Amount</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {parsedTxs.slice(0, 50).map((tx, i) => ( // Preview max 50
-                                            <tr key={i} className="border-t border-outline">
-                                                <td className="p-2">{new Date(tx.ts).toLocaleDateString()}</td>
-                                                <td className="p-2">{tx.merchant}</td>
-                                                <td className="p-2 text-right">{tx.amount}</td>
+                                            <tr key={i} className="border-t border-outline/50">
+                                                <td className="p-2 whitespace-nowrap">{new Date(tx.ts).toLocaleDateString()}</td>
+                                                <td className="p-2 truncate">{tx.merchant}</td>
+                                                <td className="p-2 text-right font-mono">{tx.amount}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -163,7 +167,7 @@ export default function ImportDataModal({ isOpen, onClose }: ImportDataModalProp
                          <button 
                             onClick={handleImport}
                             disabled={isImporting}
-                            className="w-full py-4 rounded-full bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant"
+                            className="w-full py-4 rounded-2xl bg-primary text-on-primary font-bold disabled:bg-outline disabled:text-on-surface-variant"
                         >
                             {isImporting ? 'Importing...' : `Import ${parsedTxs.length} Transactions`}
                         </button>
