@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useLayoutEffect } from 'react';
 import { hapticClick } from '../services/haptics';
 
 interface SegmentedControlProps<T extends string> {
@@ -11,7 +11,7 @@ export default function SegmentedControl<T extends string>({ options, selected, 
     const containerRef = useRef<HTMLDivElement>(null);
     const [pillStyle, setPillStyle] = useState({});
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const updatePillStyle = () => {
             const container = containerRef.current;
             if (!container) return;
@@ -20,7 +20,7 @@ export default function SegmentedControl<T extends string>({ options, selected, 
             if (selectedIndex === -1) return;
 
             const selectedButton = container.children[selectedIndex + 1] as HTMLElement; // +1 to account for the pill div itself
-            if (selectedButton) {
+            if (selectedButton && selectedButton.offsetWidth > 0) {
                 setPillStyle({
                     left: `${selectedButton.offsetLeft}px`,
                     width: `${selectedButton.offsetWidth}px`,
@@ -28,7 +28,6 @@ export default function SegmentedControl<T extends string>({ options, selected, 
             }
         };
         
-        // Run on mount and on selection change
         updatePillStyle();
 
         window.addEventListener('resize', updatePillStyle);

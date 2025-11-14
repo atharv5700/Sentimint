@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, forwardRef } from 'react';
+import React, { useRef, useState, useLayoutEffect, forwardRef } from 'react';
 import type { Screen } from '../../types';
 import { HomeIcon, TransactionsIcon, InsightsIcon, GoalsIcon, SettingsIcon } from '../../constants';
 import { hapticClick } from '../../services/haptics';
@@ -27,7 +27,7 @@ const BottomNav = forwardRef<HTMLElement, BottomNavProps>(({ activeScreen, setSc
     const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
     const [pillStyle, setPillStyle] = useState({});
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const activeIndex = navItems.findIndex(item => item.id === activeScreen);
         const activeButton = buttonRefs.current[activeIndex];
 
