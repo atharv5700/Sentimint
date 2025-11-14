@@ -19,8 +19,8 @@ export default function SegmentedControl<T extends string>({ options, selected, 
             const selectedIndex = options.findIndex(opt => opt.value === selected);
             if (selectedIndex === -1) return;
 
-            const selectedButton = container.children[selectedIndex + 1] as HTMLElement; // +1 for pill
-            if (selectedButton && selectedButton.offsetWidth > 0) {
+            const selectedButton = container.children[selectedIndex + 1] as HTMLElement; // +1 to account for the pill div itself
+            if (selectedButton) {
                 setPillStyle({
                     left: `${selectedButton.offsetLeft}px`,
                     width: `${selectedButton.offsetWidth}px`,
@@ -28,13 +28,11 @@ export default function SegmentedControl<T extends string>({ options, selected, 
             }
         };
         
-        const animationFrameId = requestAnimationFrame(updatePillStyle);
-        window.addEventListener('resize', updatePillStyle);
+        // Run on mount and on selection change
+        updatePillStyle();
 
-        return () => {
-            cancelAnimationFrame(animationFrameId);
-            window.removeEventListener('resize', updatePillStyle);
-        };
+        window.addEventListener('resize', updatePillStyle);
+        return () => window.removeEventListener('resize', updatePillStyle);
     }, [selected, options]);
 
     return (

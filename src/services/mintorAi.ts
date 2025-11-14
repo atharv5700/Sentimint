@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, FunctionDeclaration, Type } from '@google/genai';
 import type { Transaction, MintorAiMessage, MintorAction, CoachingTip, Screen, KnowledgeBase } from '../types';
 import { dbService } from './db';
@@ -25,9 +26,10 @@ const getKbData = async (): Promise<KnowledgeBase> => {
 
 const isOnline = async (): Promise<boolean> => {
     // Prioritize Capacitor's Network plugin for reliable status on native devices.
-    if (window.Capacitor?.isPluginAvailable('Network')) {
+    const Network = window.Capacitor?.Plugins?.Network;
+    if (window.Capacitor?.isPluginAvailable('Network') && Network) {
         try {
-            const status = await window.Capacitor.Plugins.Network!.getStatus();
+            const status = await Network.getStatus();
             return status.connected;
         } catch (e) {
             console.warn("Capacitor Network plugin check failed, falling back to fetch test.", e);
@@ -225,13 +227,17 @@ export const mintorAiService = {
 
         // 2. CONNECTIVITY CHECK: If no KB answer, check network.
         if (!(await isOnline())) {
-            return { sender: 'bot', text: "It seems you're offline. I can answer general financial questions, but for personal spending analysis, I need an internet connection.", actions: [ { label: 'What is a credit score?', type: 'query', payload: 'What is a credit score?' } ] };
+            return { sender: 'bot', text: "It seems you're offline. I can answer general financial questions and tell you about the app, but for personal spending analysis, I need an internet connection.", actions: [ { label: 'What is a credit score?', type: 'query', payload: 'What is a credit score?' }, { label: 'How do I export my data?', type: 'query', payload: 'How do I export my data?' } ] };
         }
         
         // 3. ONLINE POWER: Use Gemini with function calling.
         try {
+            if (!process.env.API_KEY) {
+                 return { sender: 'bot', text: "I'm not connected to my core AI right now. My API key is missing. Please check the setup." };
+            }
+
             const data: AppData = { transactions: dbService.getTransactions() };
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             const systemInstruction = `You are Mintor, the friendly and helpful AI assistant within the Sentimint app. Your goal is to provide concise, helpful financial advice. Use the provided tools to answer questions about the user's spending data. For general conversation or questions outside your tools' scope, answer conversationally. Format currency using the Indian Rupee symbol (₹) and comma separators (e.g., ₹1,23,456). Use markdown for formatting, especially bolding.`;
 
             const response = await ai.models.generateContent({

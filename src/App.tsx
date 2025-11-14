@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useCallback, createContext, useContext, useMemo, useRef, useLayoutEffect } from 'react';
-import type { Screen, Theme, Transaction, Budget, RecurringTransaction, UserChallenge, Challenge } from './types';
+import type { Screen, Theme, Transaction, Budget, RecurringTransaction, UserChallenge, AppContextType } from './types';
 import { dbService } from './services/db';
 import { ALL_CHALLENGES } from './data/challenges';
 import { hapticClick, hapticSuccess, hapticError } from './services/haptics';
@@ -34,43 +35,6 @@ import RecurringTransactionModal from './components/RecurringTransactionModal';
 interface FabConfig {
     onClick: () => void;
     'aria-label': string;
-}
-
-export interface AppContextType {
-  transactions: Transaction[];
-  budgets: Budget[];
-  recurringTransactions: RecurringTransaction[];
-  customCategories: string[];
-  userChallenges: UserChallenge[];
-  streak: number;
-  theme: Theme;
-  screen: Screen;
-  setScreen: (screen: Screen) => void;
-  setTheme: (theme: Theme) => void;
-  addTransaction: (tx: Omit<Transaction, 'id' | 'ts'>) => Promise<void>;
-  updateTransaction: (tx: Transaction) => Promise<void>;
-  deleteTransaction: (id: string) => Promise<void>;
-  deleteTransactions: (ids: string[]) => Promise<void>;
-  addBudget: (budget: Omit<Budget, 'id' | 'created_at'>) => Promise<void>;
-  updateBudget: (budget: Budget) => Promise<void>;
-  deleteBudget: (id: string) => Promise<void>;
-  addRecurringTransaction: (rTx: Omit<RecurringTransaction, 'id' | 'last_added_date'>) => Promise<void>;
-  updateRecurringTransaction: (rTx: RecurringTransaction) => Promise<void>;
-  deleteRecurringTransaction: (id: string) => Promise<void>;
-  addCustomCategory: (category: string) => Promise<void>;
-  deleteCustomCategory: (category: string) => Promise<void>;
-  startChallenge: (challengeId: string) => Promise<void>;
-  formatCurrency: (amount: number) => string;
-  isBulkMode: boolean;
-  setIsBulkMode: (isBulk: boolean) => void;
-  setFabConfig: (config: FabConfig | null) => void;
-  openTransactionModal: (tx?: Transaction | null) => void;
-  openBudgetModal: (budget?: Budget | null) => void;
-  openRecurringTransactionModal: (rTx?: RecurringTransaction | null) => void;
-  openImportModal: () => void;
-  openExportModal: () => void;
-  openManageCategoriesModal: () => void;
-  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -257,8 +221,12 @@ export default function App() {
                         // and instead, close the open modal.
                         e.canGoBack = false;
                         handleCloseActions();
+                    } else if (screen !== 'Home') {
+                        // If not on home screen, navigate back to home.
+                        e.canGoBack = false;
+                        setScreen('Home');
                     } else {
-                        // If no modals are open, minimize the app for a native-like experience.
+                        // If on home screen with no modals, minimize the app.
                         App.minimizeApp();
                     }
                 });
@@ -278,7 +246,7 @@ export default function App() {
             listener?.remove();
         };
 
-    }, [isAModalOpen, isAddTxModalOpen, isMintorModalOpen, isSearchModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isImportModalOpen, isExportModalOpen, isManageCategoriesModalOpen]);
+    }, [isAModalOpen, screen, isAddTxModalOpen, isMintorModalOpen, isSearchModalOpen, isBudgetModalOpen, isRecurringTxModalOpen, isImportModalOpen, isExportModalOpen, isManageCategoriesModalOpen]);
 
 
     const setTheme = (newTheme: Theme) => {
@@ -310,6 +278,12 @@ export default function App() {
         hapticSuccess();
     };
     
+    const importTransactions = async (txs: Omit<Transaction, 'id'>[]) => {
+        await dbService.importTransactions(txs);
+        await refreshData();
+        hapticSuccess();
+    };
+
     const addBudget = async (budget: Omit<Budget, 'id' | 'created_at'>) => {
         await dbService.addBudget(budget);
         await refreshData();
@@ -500,6 +474,7 @@ export default function App() {
         updateTransaction,
         deleteTransaction,
         deleteTransactions,
+        importTransactions,
         addBudget,
         updateBudget,
         deleteBudget,

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { Transaction, Mood } from '../types';
 import { useAppContext } from '../App';
-import { DEFAULT_CATEGORIES, DEFAULT_TAGS, MOOD_MAP, CloseIcon, PlusIcon } from '../constants';
+import { DEFAULT_CATEGORIES, DEFAULT_TAGS, MOOD_MAP, ChevronDownIcon, PlusIcon, CloseIcon, SparkleIcon } from '../constants';
 import { hapticClick, hapticError } from '../services/haptics';
+import CustomSelect from './CustomSelect';
 
 interface AddTransactionModalProps {
     isOpen: boolean;
@@ -41,8 +42,7 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
 
     const allCategories = useMemo(() => [...DEFAULT_CATEGORIES, ...customCategories], [customCategories]);
 
-    // Available tags are now default + any custom tags for THIS transaction
-    const availableTags = Array.from(new Set([...DEFAULT_TAGS, ...tags]));
+    const availableTags = useMemo(() => Array.from(new Set([...DEFAULT_TAGS, ...tags])), [tags]);
 
     useEffect(() => {
         if (isAddingTag) {
@@ -118,15 +118,15 @@ export default function AddTransactionModal({ isOpen, onClose, transaction }: Ad
             onClose();
         }
     };
-    
+
+    if (!isOpen) return null;
+
     const formattedAmount = useMemo(() => {
         if (!amount) return '';
         const numericAmount = parseFloat(amount.replace(/,/g, ''));
         if (isNaN(numericAmount)) return '';
         return new Intl.NumberFormat('en-IN').format(numericAmount);
     }, [amount]);
-
-    if (!isOpen) return null;
     
     return (
         <>

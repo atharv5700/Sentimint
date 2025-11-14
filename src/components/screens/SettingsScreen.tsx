@@ -82,7 +82,7 @@ export default function SettingsScreen() {
                 <SegmentedControl 
                     options={[{label: 'Light', value: 'light'}, {label: 'Dark', value: 'dark'}]}
                     selected={theme}
-                    onSelect={setTheme}
+                    onSelect={(newTheme) => setTheme(newTheme as Theme)}
                 />
             </div>
 

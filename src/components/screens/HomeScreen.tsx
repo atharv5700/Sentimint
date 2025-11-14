@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Transaction, Screen, CoachingTip, FinanceTrick, Quote } from '../../types';
 import { useAppContext } from '../../App';

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Budget, Challenge, UserChallenge } from '../../types';
 import { useAppContext } from '../../App';
@@ -7,12 +8,6 @@ import { hapticClick, hapticError } from '../../services/haptics';
 import ProgressBar from '../ProgressBar';
 import { EmptyState } from '../EmptyState';
 import SegmentedControl from '../SegmentedControl';
-
-export const GoalModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-    // This component is no longer used but kept in the file to avoid breaking the export.
-    // It will be removed in a future cleanup.
-    return null;
-}
 
 const BudgetListItem: React.FC<{ budget: Budget, spent: number, onEdit: (budget: Budget) => void }> = ({ budget, spent, onEdit }) => {
     const { formatCurrency, deleteBudget } = useAppContext();
@@ -225,7 +220,7 @@ export default function GoalsScreen() {
         return (
             <div 
                 style={style}
-                className={`bg-surface-variant p-4 rounded-3xl transition-all duration-300 ${isStarted ? 'opacity-0 scale-95' : ''}`}>
+                className={`bg-surface-variant/60 dark:bg-surface-variant/40 p-4 rounded-3xl transition-all duration-300 ${isStarted ? 'opacity-0 scale-95' : ''}`}>
                 <div className="flex items-start gap-4">
                     <div className="bg-surface/50 rounded-full p-3 mt-1 flex-shrink-0">
                         <BadgeIcon className="w-6 h-6 text-on-surface-variant" />
@@ -316,7 +311,7 @@ export default function GoalsScreen() {
                              {completedChallenges.length > 0 && (
                                 <div>
                                     <h2 className="text-title-m font-medium mb-2">Achievements</h2>
-                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 p-4 bg-surface-variant rounded-3xl">
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 p-4 bg-surface-variant/60 dark:bg-surface-variant/40 rounded-3xl">
                                         {completedChallenges.map(c => <AchievementBadge key={c.challengeId} challenge={c} />)}
                                     </div>
                                 </div>

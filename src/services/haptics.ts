@@ -14,9 +14,9 @@
  */
 export const hapticClick = () => {
   try {
-    const { Capacitor } = window;
-    if (Capacitor?.isPluginAvailable('Haptics') && Capacitor.Plugins.Haptics) {
-      Capacitor.Plugins.Haptics.impact({ style: 'light' });
+    const Haptics = window.Capacitor?.Plugins?.Haptics;
+    if (window.Capacitor?.isPluginAvailable('Haptics') && Haptics) {
+      Haptics.impact({ style: 'light' });
     } else if (window.navigator?.vibrate) {
       window.navigator.vibrate(10);
     }
@@ -31,9 +31,9 @@ export const hapticClick = () => {
  */
 export const hapticSuccess = () => {
   try {
-    const { Capacitor } = window;
-    if (Capacitor?.isPluginAvailable('Haptics') && Capacitor.Plugins.Haptics) {
-      Capacitor.Plugins.Haptics.notification({ type: 'success' });
+    const Haptics = window.Capacitor?.Plugins?.Haptics;
+    if (window.Capacitor?.isPluginAvailable('Haptics') && Haptics) {
+      Haptics.notification({ type: 'success' });
     } else if (window.navigator?.vibrate) {
       window.navigator.vibrate([20, 80, 20]);
     }
@@ -48,9 +48,9 @@ export const hapticSuccess = () => {
  */
 export const hapticError = () => {
   try {
-    const { Capacitor } = window;
-    if (Capacitor?.isPluginAvailable('Haptics') && Capacitor.Plugins.Haptics) {
-       Capacitor.Plugins.Haptics.notification({ type: 'error' });
+    const Haptics = window.Capacitor?.Plugins?.Haptics;
+    if (window.Capacitor?.isPluginAvailable('Haptics') && Haptics) {
+       Haptics.notification({ type: 'error' });
     } else if (window.navigator?.vibrate) {
       window.navigator.vibrate([80, 40, 80]);
     }
